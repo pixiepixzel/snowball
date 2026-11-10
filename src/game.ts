@@ -13,6 +13,7 @@ import {
   MISSION_LOOP_FROM,
   NO_TWIST,
   RARITIES,
+  XP_FOR,
   SKINS,
   UPGRADES,
   UPGRADE_LEVELS,
@@ -32,10 +33,11 @@ import { Effects } from './effects';
 import { Environment } from './environment';
 import { Input } from './input';
 import { OBJECT_DEFS } from './objects';
+import { levelCoins, levelOf, titleFor } from './levels';
 import { PERKS, applyUpgrades, coinsFor, upgradeCost } from './perks';
 import { loadSave, writeSave, type MissionState, type SaveData } from './save';
 import { Thumbs } from './thumbs';
-import { UI, type MissionRow, type ShopRow, type SkinRow } from './ui';
+import { UI, type MissionRow, type ShopRow, type SkinRow, type XpView } from './ui';
 import { clamp, lerp, sizeLabel, sizeParts } from './util';
 import { World, type WorldObject } from './world';
 import { HAND_MADE_LAPS, worldForLap } from './worlds';
@@ -159,6 +161,9 @@ export class Game {
   /** Seconds the ball has been hopelessly small, and whether the avalanche is rushing in because of it. */
   private hopeless = 0;
   private surging = false;
+  /** Missions finished in this run (for XP), and whether this run has passed the best run's flag. */
+  private runMissions = 0;
+  private passedBest = false;
   private threat = 0;
   private pixelRatio = 1;
   private shadowsOn = false;
@@ -248,7 +253,7 @@ export class Game {
       if (this.paused) this.resume();
       else this.pause();
     });
-    applyUpgrades(this.save.upgrades);
+    applyUpgrades(this.save.upgrades, levelOf(this.save.xp).level);
     this.ball.setSkin(SKINS.find((s) => s.id === this.save.skin) ?? SKINS[0]);
     this.audio.setMuted(!this.save.sound);
     this.audio.setMusicOn(this.save.music);
@@ -274,6 +279,7 @@ export class Game {
     this.dealMissions();
     this.ui.setMissions(this.missionRows());
     this.ui.setBook(this.bookFound(), BOOK_TOTAL);
+    this.ui.setLevel(this.levelLabel());
     this.ui.showTitle(this.save.best > 0 ? sizeLabel(this.save.best) : null, this.save.coins);
     this.showPick();
     this.last = performance.now();
@@ -370,6 +376,10 @@ export class Game {
     this.toasts.length = 0;
     this.toastWait = 0;
     this.runCoins = 0;
+    this.runMissions = 0;
+    this.passedBest = false;
+    // The flag marking the furthest run only goes up for real runs.
+    this.world.bestAt = this.keepScores ? this.save.bestAt : null;
     this.ui.setPower('', 0);
     this.world.reset(this.seed ?? (Math.random() * 0x7fffffff) | 0, startD);
     this.effects.reset();
@@ -642,6 +652,16 @@ export class Game {
       this.tally.time = this.stats.time;
       this.tally.grow = Math.max(this.tally.grow, this.shown(ball.r) / this.runStartR);
       this.checkMissions();
+      // Rolling past the flag where the best run ended.
+      const flag = this.save.bestAt;
+      if (flag && !this.passedBest && this.keepScores && this.stats.time > 4) {
+        const p = locate(ball.d);
+        if (p.lap > flag.lap || (p.lap === flag.lap && (p.zone > flag.zone || (p.zone === flag.zone && p.t > flag.t)))) {
+          this.passedBest = true;
+          this.toasts.push('Past your best run!');
+          this.audio.chime();
+        }
+      }
     }
     if (this.toastWait > 0) this.toastWait -= realDt;
     else if (this.toasts.length > 0) {
@@ -1158,12 +1178,19 @@ export class Game {
     // for new ones afterwards, ready for the next run.
     this.checkMissions();
     this.claimDaily();
+    const xp = this.gainXp(r);
     this.ui.setMissions(this.missionRows());
     this.bankMissions();
     const book = this.recordBook();
     if (this.keepScores) {
       if (isBest) this.save.best = r;
       this.save.coins += coins;
+      // Remember where the furthest run ended, for the flag on the bank.
+      const p = locate(this.ball.d);
+      const far = this.save.bestAt;
+      if (!far || p.lap > far.lap || (p.lap === far.lap && (p.zone > far.zone || (p.zone === far.zone && p.t > far.t)))) {
+        this.save.bestAt = { lap: p.lap, zone: p.zone, t: p.t };
+      }
       writeSave(this.save);
     }
     this.ui.setBook(this.bookFound(), BOOK_TOTAL);
@@ -1182,7 +1209,61 @@ export class Game {
       quit: { title: 'Run ended', subtitle: `You stopped in the ${where}. ${walls}` },
     }[this.endKind];
     const [size, unit] = sizeParts(r);
-    this.ui.showEnd({ ...text, size, unit, best: sizeLabel(this.save.best), isBest, items, bookNote: book.note, coins: this.keepScores ? coins : null, totalCoins: this.save.coins });
+    this.ui.showEnd({ ...text, size, unit, best: sizeLabel(this.save.best), isBest, items, bookNote: book.note, xp, coins: this.keepScores ? coins : null, totalCoins: this.save.coins });
+  }
+
+  // ------------------------------------------------------------------ XP and levels
+
+  /** "Level 7 Slope Rider", for the title screen. */
+  private levelLabel(): string {
+    const level = levelOf(this.save.xp).level;
+    return `Level ${level} ${titleFor(level)}`;
+  }
+
+  /**
+   * The run is over: work out its XP (config.ts XP_FOR), add it, and pay a coin chest for
+   * each level gained. Returns what the end screen shows, or null for a run that doesn't count.
+   */
+  private gainXp(finalSize: number): XpView | null {
+    if (!this.keepScores) return null;
+    let superRare = 0;
+    let mythic = 0;
+    for (const [id, n] of this.counts) {
+      if (id.endsWith('_s')) superRare += n;
+      else if (id.endsWith('_m')) mythic += n;
+    }
+    const gained =
+      XP_FOR.scene * Math.max(0, this.stats.zoneLog.length - 1) +
+      XP_FOR.wall * this.stats.walls +
+      XP_FOR.world * this.tally.worlds +
+      XP_FOR.doubling * Math.max(0, Math.floor(Math.log2(Math.max(1, finalSize / this.runStartR)))) +
+      XP_FOR.slam * this.tally.slams +
+      XP_FOR.secret * this.tally.secrets +
+      XP_FOR.superRare * superRare +
+      XP_FOR.mythic * mythic +
+      XP_FOR.mission * this.runMissions;
+    const before = levelOf(this.save.xp);
+    this.save.xp += gained;
+    const after = levelOf(this.save.xp);
+    let chest = 0;
+    const unlocked: string[] = [];
+    for (let level = before.level + 1; level <= after.level; level++) {
+      chest += levelCoins(level);
+      for (const skin of SKINS) if (skin.level === level) unlocked.push(skin.name);
+    }
+    this.save.coins += chest;
+    applyUpgrades(this.save.upgrades, after.level);
+    this.ui.setLevel(this.levelLabel());
+    return {
+      gained,
+      level: after.level,
+      title: titleFor(after.level),
+      from: after.level > before.level ? 0 : before.into / before.need,
+      to: after.into / after.need,
+      levelsUp: after.level - before.level,
+      chest,
+      unlocked,
+    };
   }
 
   // ------------------------------------------------------------------ missions
@@ -1210,6 +1291,7 @@ export class Game {
       this.save.coins += def.reward;
       paid = true;
       this.toasts.push(`Mission done! +${def.reward} coins`);
+      this.runMissions++;
       this.audio.chime();
     }
     if (paid) writeSave(this.save);
@@ -1463,6 +1545,7 @@ export class Game {
     this.ui.clearTransient();
     this.ui.setMissions(this.missionRows());
     this.ui.setBook(this.bookFound(), BOOK_TOTAL);
+    this.ui.setLevel(this.levelLabel());
     this.ui.showTitle(this.save.best > 0 ? sizeLabel(this.save.best) : null, this.save.coins);
     this.showPick();
   }
@@ -1501,7 +1584,7 @@ export class Game {
     this.save.coins -= cost;
     this.save.upgrades[def.id] = level + 1;
     writeSave(this.save);
-    applyUpgrades(this.save.upgrades);
+    applyUpgrades(this.save.upgrades, levelOf(this.save.xp).level);
     this.audio.chime();
     // A bigger start shows straight away on the ball waiting on the title screen.
     if (this.state === 'title') {
@@ -1519,16 +1602,19 @@ export class Game {
 
   /** One tile per ball skin for the shop: its picture, price and whether it is owned or in use. */
   private skinRows(): SkinRow[] {
+    const level = levelOf(this.save.xp).level;
     return SKINS.map((def) => {
-      const owned = this.save.skins.includes(def.id);
+      // Some skins are bought; others unlock at a level and can't be bought.
+      const owned = def.level ? level >= def.level : this.save.skins.includes(def.id);
       return {
+        lock: def.level && !owned ? `Level ${def.level}` : '',
         id: def.id,
         name: def.name,
         picture: this.ball.swatch(def),
         price: def.price,
         owned,
         selected: this.save.skin === def.id,
-        affordable: owned || this.save.coins >= def.price,
+        affordable: owned || (!def.level && this.save.coins >= def.price),
       };
     });
   }
@@ -1537,7 +1623,9 @@ export class Game {
   private pickSkin(id: string): void {
     const def = SKINS.find((s) => s.id === id);
     if (!def || this.save.skin === id) return;
-    if (!this.save.skins.includes(id)) {
+    if (def.level) {
+      if (levelOf(this.save.xp).level < def.level) return;
+    } else if (!this.save.skins.includes(id)) {
       if (this.save.coins < def.price) return;
       this.save.coins -= def.price;
       this.save.skins.push(id);

@@ -15,6 +15,8 @@ export interface EndData {
   items: { label: string; color: string; fresh: boolean }[];
   /** A line about the collection book ("3 new in your collection"), or empty. */
   bookNote: string;
+  /** XP and level, or null for a run that doesn't count. */
+  xp: XpView | null;
   /** Coins this run earned, or null for a run that doesn't count (a demo or the bot). */
   coins: number | null;
   totalCoins: number;
@@ -32,6 +34,20 @@ export interface ShopRow {
   cost: number;
   maxed: boolean;
   affordable: boolean;
+}
+
+/** What a run did for the player's level, for the end screen. */
+export interface XpView {
+  gained: number;
+  level: number;
+  title: string;
+  /** How full the bar was before and is now, 0..1 (it starts from empty after a level-up). */
+  from: number;
+  to: number;
+  levelsUp: number;
+  /** Coins from level-up chests, and the names of any skins unlocked. */
+  chest: number;
+  unlocked: string[];
 }
 
 /** One page of the collection book. */
@@ -62,6 +78,8 @@ export interface SkinRow {
   /** The one the ball is wearing. */
   selected: boolean;
   affordable: boolean;
+  /** For a skin earned by level and not yet reached: "Level 10". Otherwise empty. */
+  lock: string;
 }
 
 /** One mission as the title screen, pause menu and end screen list it. */
@@ -204,7 +222,7 @@ export class UI {
     this.bookScreen.classList.add('hidden');
     this.hud.classList.add('hidden');
     this.setAvalanche(false, 0);
-    el('title-best').textContent = best ? `Best ${best}` : '';
+    el('title-best').textContent = [this.levelText, best ? `Best ${best}` : ''].filter(Boolean).join(' · ');
     this.setCoins(coins);
   }
 
@@ -279,6 +297,13 @@ export class UI {
     const text = coins.toLocaleString('en-US');
     el('title-coins').textContent = text;
     el('end-total').textContent = text;
+  }
+
+  private levelText = '';
+
+  /** The player's level and title ("Level 7 Slope Rider"), shown on the title screen beside the best size. */
+  setLevel(text: string): void {
+    this.levelText = text;
   }
 
   /** How much of the collection book is filled in, on the buttons that open it. */
@@ -375,6 +400,7 @@ export class UI {
       state.className = 'state';
       if (skin.selected) state.textContent = 'In use';
       else if (skin.owned) state.textContent = 'Use';
+      else if (skin.lock) state.textContent = skin.lock;
       else state.append(document.createElement('i'), document.createTextNode(skin.price.toLocaleString('en-US')));
       tile.append(picture, name, state);
       this.skinList.appendChild(tile);
@@ -626,6 +652,23 @@ export class UI {
     best.classList.toggle('new', data.isBest);
     el('end-coins').textContent = data.coins === null ? 'Practice run: no coins' : `+${data.coins.toLocaleString('en-US')} coins`;
     this.setCoins(data.totalCoins);
+    // XP: the bar fills from where it was to where it is now.
+    const xpBox = el('end-xp');
+    xpBox.hidden = data.xp === null;
+    if (data.xp) {
+      const xp = data.xp;
+      el('end-level').textContent = `Level ${xp.level} · ${xp.title}`;
+      el('end-xp-gain').textContent = `+${xp.gained.toLocaleString('en-US')} XP`;
+      const fill = el('end-xp-fill');
+      fill.style.transition = 'none';
+      fill.style.width = `${Math.round(xp.from * 100)}%`;
+      void fill.offsetWidth;
+      fill.style.transition = '';
+      fill.style.width = `${Math.round(xp.to * 100)}%`;
+      const up = el('end-levelup');
+      up.hidden = xp.levelsUp === 0;
+      up.textContent = xp.levelsUp === 0 ? '' : `Level up! +${xp.chest} coins${xp.unlocked.length > 0 ? ` · new skin: ${xp.unlocked.join(', ')}` : ''}`;
+    }
     const bookNote = el('end-book');
     bookNote.textContent = data.bookNote;
     bookNote.hidden = data.bookNote === '';

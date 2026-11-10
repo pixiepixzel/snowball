@@ -375,6 +375,8 @@ export class World {
   private riverSpawned = false;
   /** Walls at or before this distance are not built (see reset: where the run started). */
   private noGateBefore = 0;
+  /** Where the furthest run so far ended (the game sets it), so a flag can be stood there. */
+  bestAt: { lap: number; zone: number; t: number } | null = null;
   /** The one material every object is drawn with. */
   private material!: THREE.Material;
   /** Height of every model in its own units, by object id. */
@@ -888,6 +890,7 @@ export class World {
         this.generateBeat(bd0, len / beats);
       }
       this.generateScenery(d0, len);
+      this.placeMarkers(d0, d1, zoneStart, zoneEnd, lap, zone, R0);
 
       if (this.riverD >= d0 && this.riverD < d1 && !this.riverSpawned) this.spawnRiver();
 
@@ -1069,6 +1072,27 @@ export class World {
       }
     }
     return bankLift(h, u, key) * hw;
+  }
+
+/**
+   * Stand the markers on the bank, either side of the lane: a post a quarter, half and
+   * three-quarters of the way through each scene, and the gold flag where the best run ended.
+   */
+  private placeMarkers(d0: number, d1: number, zoneStart: number, zoneEnd: number, lap: number, zone: number, R: number): void {
+    const put = (id: string, d: number, size: number): void => {
+      const hw = laneHalfWidth(d);
+      const key = (this.chunkIndex + (d - d0) / (d1 - d0)) * CONFIG.GROUND_ROWS;
+      for (const u of [-1.24, 1.24]) this.spawn(defById(id), u * hw, d, size, true, this.bankHeight(u, hw, key) * 0.9);
+    };
+    for (let k = 1; k <= 3; k++) {
+      const d = zoneStart + (zoneEnd - zoneStart) * k * 0.25;
+      if (d >= d0 && d < d1) put(`post${k}`, d, R * 1.1);
+    }
+    const best = this.bestAt;
+    if (best && best.lap === lap && best.zone === zone) {
+      const d = zoneStart + (zoneEnd - zoneStart) * best.t;
+      if (d >= d0 && d < d1) put('bestFlag', d, R * 1.9);
+    }
   }
 
   private generateScenery(d0: number, len: number): void {

@@ -3,7 +3,7 @@
  * the levels into the multipliers the rest of the game reads from PERKS. With no upgrades
  * every value is 1, which is the game exactly as it is tuned in config.ts.
  */
-import { CONFIG, UPGRADES, type UpgradeDef } from './config';
+import { CONFIG, LEVEL_LUCK, LEVEL_LUCK_MAX, UPGRADES, type UpgradeDef } from './config';
 
 export const PERKS = {
   /** Starting radius. */
@@ -23,13 +23,13 @@ const bonus = (levels: Record<string, number>, id: UpgradeDef['id']): number => 
   return def ? (levels[id] ?? 0) * def.perLevel : 0;
 };
 
-/** Recompute PERKS from the levels in the save. */
-export function applyUpgrades(levels: Record<string, number>): void {
+/** Recompute PERKS from the upgrade levels in the save, and the player's own level (which adds a little luck). */
+export function applyUpgrades(levels: Record<string, number>, playerLevel = 1): void {
   PERKS.start = 1 + bonus(levels, 'start');
   PERKS.growth = 1 + bonus(levels, 'sticky');
   PERKS.hitLoss = 1 - bonus(levels, 'tough');
   PERKS.grip = 1 + bonus(levels, 'grip');
-  PERKS.luck = 1 + bonus(levels, 'luck');
+  PERKS.luck = 1 + bonus(levels, 'luck') + Math.min(LEVEL_LUCK_MAX, (playerLevel - 1) * LEVEL_LUCK);
 }
 
 /** Price of the next level of an upgrade the player holds at `level`. */

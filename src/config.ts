@@ -541,6 +541,8 @@ export interface SkinDef {
   name: string;
   /** Coins to buy it. */
   price: number;
+  /** If set, it can't be bought: it unlocks on reaching this level. */
+  level?: number;
   pattern: 'speckle' | 'wedges' | 'bands' | 'patches' | 'planet' | 'rainbow';
   colors: number[];
   weights?: number[];
@@ -564,6 +566,46 @@ export const SKINS: SkinDef[] = [
   { id: 'disco', name: 'Disco ball', price: 1500, pattern: 'speckle', colors: [0x9aa8be, 0xdfe6f2, 0x6f7f9a, 0xffffff, 0xff7ad9, 0x6fd3ff], weights: [0.3, 0.25, 0.2, 0.1, 0.075, 0.075], shine: 1, glow: 0x10141c },
   { id: 'rainbow', name: 'Rainbow', price: 2000, pattern: 'rainbow', colors: [], shine: 0.3, glow: 0x000000 },
   { id: 'gold', name: 'Solid gold', price: 3000, pattern: 'speckle', colors: [0xffc21a, 0xffd75a, 0xe8a200], weights: [0.45, 0.3, 0.25], shine: 0.85, glow: 0x2a1a00 },
+  // Earned by level, not bought.
+  { id: 'marble', name: 'Marble', price: 0, level: 3, pattern: 'speckle', colors: [0xf2f4f8, 0xc8ccd6, 0x8a93a3], weights: [0.6, 0.25, 0.15], shine: 0.6, glow: 0x000000 },
+  { id: 'zebra', name: 'Zebra', price: 0, level: 6, pattern: 'bands', colors: [0xffffff, 0x22262e], count: 9, shine: 0.1, glow: 0x000000 },
+  { id: 'ladybird', name: 'Ladybird', price: 0, level: 10, pattern: 'patches', colors: [0xe2473c, 0x12141a], count: 11, spread: 0.3, shine: 0.5, glow: 0x000000 },
+  { id: 'tiger', name: 'Tiger', price: 0, level: 15, pattern: 'wedges', colors: [0xff8a1a, 0x22262e], count: 14, shine: 0.15, glow: 0x000000 },
+  { id: 'galaxy', name: 'Galaxy', price: 0, level: 22, pattern: 'speckle', colors: [0x1a1040, 0x3a1a70, 0x8a5ad6, 0xffffff], weights: [0.5, 0.3, 0.15, 0.05], shine: 0.5, glow: 0x1a0a30 },
+  { id: 'diamond', name: 'Diamond', price: 0, level: 30, pattern: 'speckle', colors: [0xd8f6ff, 0xffffff, 0xa8e0f8], weights: [0.4, 0.3, 0.3], shine: 1, glow: 0x183040 },
+];
+
+// ---------------------------------------------------------------- XP and levels
+/**
+ * XP for a run. It rewards getting far and playing well, where coins reward growth:
+ *   scene     each scene rolled into        wall      each wall smashed
+ *   world     each world finished           doubling  each time the ball doubles in size
+ *   slam      each ramp slam                secret    each secret object found
+ *   superRare / mythic  each of those absorbed        mission   each mission completed
+ */
+export const XP_FOR = { scene: 20, wall: 15, world: 100, doubling: 6, slam: 4, secret: 15, superRare: 5, mythic: 20, mission: 25 };
+/** XP to reach level 2, and how much more each level needs than the one before. */
+export const LEVEL_XP_BASE = 120;
+export const LEVEL_XP_GROWTH = 1.12;
+/** The coin chest for reaching a level: this much, plus this much per level. */
+export const LEVEL_COIN_BASE = 20;
+export const LEVEL_COIN_STEP = 5;
+/** Each level makes secrets and rare things this much more likely, up to this much in all. */
+export const LEVEL_LUCK = 0.01;
+export const LEVEL_LUCK_MAX = 0.25;
+/** Titles: [the level it starts at, the title]. Keep them in order. */
+export const TITLES: [number, string][] = [
+  [1, 'Snowflake'],
+  [3, 'Snow Roller'],
+  [5, 'Slope Rider'],
+  [8, 'Wall Breaker'],
+  [12, 'Avalanche Dodger'],
+  [16, 'World Hopper'],
+  [20, 'Boulder Boss'],
+  [25, 'Mountain Mover'],
+  [30, 'Planet Eater'],
+  [40, 'Galaxy Gobbler'],
+  [50, 'Legend of the Slope'],
 ];
 
 // ---------------------------------------------------------------- Rarities

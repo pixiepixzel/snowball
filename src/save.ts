@@ -17,9 +17,9 @@ const OLD_BEST_KEY = 'snowball.best';
  * Version 2 added the sound and vibration switches, version 3 the furthest world reached,
  * version 4 the music switch, version 5 which first-time hints have been shown,
  * version 6 the missions, version 7 the ball skins, version 8 the collection book,
- * version 9 the daily reward.
+ * version 9 the daily reward, version 10 XP and where the best run ended.
  */
-export const SAVE_VERSION = 9;
+export const SAVE_VERSION = 10;
 
 /** One of the active missions. */
 export interface MissionState {
@@ -66,6 +66,10 @@ export interface SaveData {
    * calendar; 0 = never) and how many days in a row that made.
    */
   daily: { day: number; streak: number };
+  /** All the XP ever earned. The level is worked out from it (levels.ts). */
+  xp: number;
+  /** Where the run that got furthest ended: which world (lap), which scene, and how far through it (0..1). */
+  bestAt: { lap: number; zone: number; t: number } | null;
 }
 
 const num = (v: unknown, fallback = 0): number => (typeof v === 'number' && Number.isFinite(v) && v >= 0 ? v : fallback);
@@ -76,7 +80,7 @@ const firstMissions = (): MissionState[] => MISSIONS.slice(0, MISSION_SLOTS).map
 function fresh(): SaveData {
   const upgrades: Record<string, number> = {};
   for (const u of UPGRADES) upgrades[u.id] = 0;
-  return { version: SAVE_VERSION, best: 0, coins: 0, upgrades, sound: true, music: true, vibration: true, reached: 0, hints: [], missions: firstMissions(), missionNext: MISSION_SLOTS, skins: [SKINS[0].id], skin: SKINS[0].id, book: {}, bookPaid: [], daily: { day: 0, streak: 0 } };
+  return { version: SAVE_VERSION, best: 0, coins: 0, upgrades, sound: true, music: true, vibration: true, reached: 0, hints: [], missions: firstMissions(), missionNext: MISSION_SLOTS, skins: [SKINS[0].id], skin: SKINS[0].id, book: {}, bookPaid: [], daily: { day: 0, streak: 0 }, xp: 0, bestAt: null };
 }
 
 /** Turn whatever was stored into a valid save of the current version. */
@@ -117,7 +121,8 @@ function migrate(raw: unknown): SaveData {
   // longer exist are dropped, and the one in use has to be one that is owned.
   if (Array.isArray(data.skins)) {
     for (const def of SKINS) if (data.skins.includes(def.id) && !save.skins.includes(def.id)) save.skins.push(def.id);
-    if (typeof data.skin === 'string' && save.skins.includes(data.skin)) save.skin = data.skin;
+    // (A skin earned by level isn't in the list of bought ones; picking it checks the level.)
+    if (typeof data.skin === 'string' && (save.skins.includes(data.skin) || SKINS.some((s) => s.id === data.skin && s.level))) save.skin = data.skin;
   }
   // Before version 8 nothing absorbed was remembered, so the book starts empty.
   if (typeof data.book === 'object' && data.book !== null) {
@@ -131,6 +136,12 @@ function migrate(raw: unknown): SaveData {
   if (typeof data.daily === 'object' && data.daily !== null) {
     const daily = data.daily as Record<string, unknown>;
     save.daily = { day: Math.floor(num(daily.day)), streak: Math.floor(num(daily.streak)) };
+  }
+  // Before version 10 there was no XP: everyone starts at level 1.
+  save.xp = Math.floor(num(data.xp));
+  if (typeof data.bestAt === 'object' && data.bestAt !== null) {
+    const at = data.bestAt as Record<string, unknown>;
+    save.bestAt = { lap: Math.floor(num(at.lap)), zone: Math.floor(num(at.zone)), t: Math.min(1, num(at.t)) };
   }
   const levels = (typeof data.upgrades === 'object' && data.upgrades !== null ? data.upgrades : {}) as Record<string, unknown>;
   for (const u of UPGRADES) save.upgrades[u.id] = Math.min(UPGRADE_LEVELS, Math.floor(num(levels[u.id])));

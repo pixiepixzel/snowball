@@ -75,7 +75,7 @@ export interface ObjectDef {
    *   'plough'  a snowplough driving up the slope
    *   'secret'  a rare object with a special power (objects-secret.ts)
    */
-  special?: 'gate' | 'river' | 'bridge' | 'ramp' | 'plough' | 'secret';
+  special?: 'gate' | 'river' | 'bridge' | 'ramp' | 'plough' | 'secret' | 'marker';
   /** Lies on the snow (river, bridge): the model is tilted to the slope. */
   flat?: boolean;
   /** Height of the model in its own units (default 2). Low things are easier to jump. */
@@ -1492,6 +1492,12 @@ export const OBJECT_DEFS: ObjectDef[] = [
   secret('secretUfo', 'flying saucer', 0x8affb0, X.secretUfo, 2.5, 'spin'),
 
   // ---- Hazards: placed by the world generator (see the "Hazard" sections of config.ts)
+  // ---- Markers on the bank: a post a quarter, half and three-quarters of the way through
+  // each scene (one, two, three bands), and a gold flag where the best run ended.
+  hazard('post1', 'distance post', 'marker', 0xe2473c, N.distancePost(1), 12, false),
+  hazard('post2', 'distance post', 'marker', 0xe2473c, N.distancePost(2), 12, false),
+  hazard('post3', 'distance post', 'marker', 0xe2473c, N.distancePost(3), 12, false),
+  hazard('bestFlag', 'best-run flag', 'marker', 0xf2c230, N.bestFlag, 6, false),
   hazard('river', 'river', 'river', 0x2f7fd0, river, 6, true),
   // A bridge and a ramp for each world, named by `bridge` and `ramp` in worlds.ts.
   hazard('bridge', 'bridge', 'bridge', 0xb9833f, bridgeOf({ planks: [0x9a6a30, 0xb9833f], rail: 0x5a3d25, cap: SNOW }), 6, true),

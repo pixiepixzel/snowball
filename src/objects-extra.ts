@@ -521,3 +521,22 @@ export const megaRocket = () => {
   for (const y of [0.55, 1.0, 1.45]) parts.push(box(0.3, 0.04, 0.06, red, { x: -0.36, y }));
   return merge(parts);
 };
+
+// ------------------------------------------------------------------ Markers on the bank
+
+/** A distance post: a white pole with one, two or three red bands, for a quarter, half and three-quarters of a scene. */
+export const distancePost = (bands: number) => () => {
+  const parts: Parts = [cyl(0.09, 0.11, 1.9, 0xf0f2f6, {}, 6), cyl(0.16, 0.16, 0.06, 0x3a4150, {}, 6), blob(0.13, 0xe2473c, { y: 1.96 })];
+  for (let i = 0; i < bands; i++) parts.push(cyl(0.115, 0.115, 0.16, 0xe2473c, { y: 1.55 - i * 0.3 }, 6));
+  return merge(parts);
+};
+
+/** The best-run flag: a tall gold pole with a gold pennant and a star on top. It stands where the furthest run ended. */
+export const bestFlag = () => {
+  const parts: Parts = [cyl(0.05, 0.07, 1.9, GOLD, {}, 6), cyl(0.2, 0.24, 0.08, 0xd9920a, {}, 8), cone(0.5, 0.55, GOLD, { x: 0.3, y: 1.3, sz: 0.06, rz: -PI / 2 }, 4), blob(0.1, WHITE, { x: 0.22, y: 1.57, z: -0.05 })];
+  for (let i = 0; i < 5; i++) {
+    const a = PI / 2 + (i / 5) * TAU;
+    parts.push(spike(0.09, 0.22, 0xffe07a, [Math.cos(a) * 0.06, 2.05 + Math.sin(a) * 0.06, 0], [Math.cos(a), Math.sin(a), 0], 4));
+  }
+  return merge(parts);
+};

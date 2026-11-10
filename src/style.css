@@ -1637,3 +1637,60 @@ h1 {
 .thing.unknown .rarity {
   opacity: 0.55;
 }
+
+/* ------------------------------------------------------------------ XP and level on the end screen */
+.xp {
+  width: 100%;
+  margin-top: 10px;
+}
+
+.xp-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.xp-top span {
+  color: #6a3fd0;
+}
+
+.xp-bar {
+  height: 9px;
+  margin-top: 4px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: #dde6f3;
+}
+
+#end-xp-fill {
+  width: 0;
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #8a5ad6, #5ad0ff);
+  transition: width 0.9s ease-out 0.35s;
+}
+
+.levelup {
+  margin-top: 5px;
+  font-size: 13px;
+  font-weight: 900;
+  color: #b06a00;
+  text-align: center;
+}
+
+/* Short screens: the end card now carries the XP bar too, so its small headings go. */
+@media (max-height: 720px) {
+  #end .card h3 {
+    display: none;
+  }
+
+  #end .card .missions {
+    margin-top: 8px;
+  }
+
+  #end .chips {
+    margin-top: 8px;
+  }
+}
