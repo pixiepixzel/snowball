@@ -75,7 +75,7 @@ export interface Scenery {
    *   'scoops' round hills with icing on top, 'spires' thin dark spikes,
    *   'blocks' stacks of toy blocks, 'none' open sky.
    */
-  backdrop: 'peaks' | 'dunes' | 'hills' | 'scoops' | 'spires' | 'blocks' | 'none';
+  backdrop: 'peaks' | 'dunes' | 'hills' | 'scoops' | 'spires' | 'reef' | 'blocks' | 'none';
   /** White caps on the ridges beside the lane (snow, icing, cloud tops). */
   caps: boolean;
   /** Pattern on the ground: 'snow' drifts and glints, 'sand' ripples, 'soft' mottled, 'tiles' a play mat. */
@@ -284,7 +284,7 @@ export const WORLDS: WorldConfig[] = [
     ramp: 'rampSea',
     bridge: 'bridgeSea',
     chase: { label: 'Tidal wave', color: 0x2a7ad0, glow: 0x0e3a78, style: 'flood' },
-    scenery: { backdrop: 'spires', caps: false, ground: 'sand', weather: { color: 0xd0f4ff, size: 1.4, fall: -1.3, blow: 0 }, fog: 0.6 },
+    scenery: { backdrop: 'reef', caps: false, ground: 'sand', weather: { color: 0xd0f4ff, size: 1.4, fall: -1.3, blow: 0 }, fog: 0.6 },
     // Under water: a slow rocking three-time, a harp rippling up and down, soft strings,
     // glassy bell notes that hang, and bubbles.
     music: tune({ bpm: 88, beats: 3, root: 63, scale: LYDIAN, chords: [0, 1, 0, 4], lead: 'bell', busy: 0.4, hold: 1.6, bassLine: 'oompah', comp: 'harp', compLine: 'ripple', pad: true, extra: 'bubbles', echo: 0.35 }),

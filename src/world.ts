@@ -61,10 +61,30 @@ interface Chunk {
   decals: number[];
 }
 
-// Cross-section of the valley: u in lane half-widths, height in lane half-widths.
-const PROFILE_U = [-3.4, -2.3, -1.55, -1.14, -1, -0.5, 0, 0.5, 1, 1.14, 1.55, 2.3, 3.4];
-const PROFILE_H = [1.7, 0.95, 0.36, 0.05, 0, 0, 0, 0, 0, 0.05, 0.36, 0.95, 1.7];
+// Cross-section of the valley: u in lane half-widths, height in lane half-widths. The lane
+// is flat from -1 to 1; either side the bank climbs, gently at first and then steeply.
+const PROFILE_U = [-3.9, -3.0, -2.35, -1.8, -1.4, -1.12, -1, -0.5, 0, 0.5, 1, 1.12, 1.4, 1.8, 2.35, 3.0, 3.9];
+const PROFILE_H = [2.2, 1.5, 1.0, 0.6, 0.26, 0.04, 0, 0, 0, 0, 0, 0.04, 0.26, 0.6, 1.0, 1.5, 2.2];
 const COLS = PROFILE_U.length - 1;
+
+/** Smooth noise in 0..1 along a line: a random value at each whole number, eased in between. */
+function noise1(x: number, seed: number): number {
+  const i = Math.floor(x);
+  const f = x - i;
+  const s = f * f * (3 - 2 * f);
+  return hash2(i, seed) * (1 - s) + hash2(i + 1, seed) * s;
+}
+
+/**
+ * The bank's height at a point, given the cross-section height `h` there. The ridge rises
+ * into peaks and dips into saddles along the slope (a peak every seven or so rows of the
+ * ground mesh, with a smaller wobble on top), while the foot of the bank by the lane stays
+ * put. `key` counts mesh rows from the start of the run, so chunks join up.
+ */
+function bankLift(h: number, u: number, key: number): number {
+  const lift = 0.62 + 0.62 * noise1(key / 7, u > 0 ? 11 : 37) + 0.22 * noise1(key / 2.5, u > 0 ? 53 : 71);
+  return h * (1 + (lift - 1) * Math.min(1, h / 0.9));
+}
 
 const C_WHITE = new THREE.Color(0xffffff);
 /** Tint on a wall the ball is still too small to break. */
@@ -840,19 +860,22 @@ export class World {
     return mesh;
   }
 
-  private groundVertex(col: number, row: number, d0: number, d1: number, out: THREE.Vector3): void {
+  /** Place one corner of the ground mesh. Returns its height above the lane, in lane half-widths. */
+  private groundVertex(col: number, row: number, d0: number, d1: number, out: THREE.Vector3): number {
     const rows = CONFIG.GROUND_ROWS;
     const d = d0 + ((d1 - d0) * row) / rows;
     const hw = laneHalfWidth(d);
     let u = PROFILE_U[col];
     let h = PROFILE_H[col];
-    if (h > 0.04) {
-      // Rough up the banks. Keyed on the global row so neighbouring chunks line up.
+    if (h > 0.03) {
+      // Shape the ridge, then rough it up a little. Keyed on the global row so
+      // neighbouring chunks line up.
       const key = this.chunkIndex * rows + row;
-      h *= 0.8 + hash2(col * 7.3, key * 1.7) * 0.45;
+      h = bankLift(h, u, key) * (0.9 + hash2(col * 7.3, key * 1.7) * 0.2);
       u += (hash2(col * 3.1 + 5, key * 2.3) - 0.5) * 0.14 * Math.sign(u);
     }
     out.set(u * hw, groundY(d) + h * hw, -d);
+    return h;
   }
 
   private fillGround(mesh: THREE.Mesh, d0: number, d1: number, v0: number, vLen: number, pal: Palette): void {
@@ -898,23 +921,31 @@ export class World {
       const va = v0 + (vLen * r) / rows;
       const vb = v0 + (vLen * (r + 1)) / rows;
       for (let c = 0; c < COLS; c++) {
-        this.groundVertex(c, r, d0, d1, _a);
-        this.groundVertex(c + 1, r, d0, d1, _b);
-        this.groundVertex(c + 1, r + 1, d0, d1, _c);
-        this.groundVertex(c, r + 1, d0, d1, _d);
+        const ha = this.groundVertex(c, r, d0, d1, _a);
+        const hb = this.groundVertex(c + 1, r, d0, d1, _b);
+        const hc = this.groundVertex(c + 1, r + 1, d0, d1, _c);
+        const hd = this.groundVertex(c, r + 1, d0, d1, _d);
         const ua = PROFILE_U[c] * 0.9;
         const ub = PROFILE_U[c + 1] * 0.9;
         quadUv.set([ua, va, ub, va, ub, vb, ua, vb]);
-        const h = (PROFILE_H[c] + PROFILE_H[c + 1]) / 2;
+        // Where the caps (snow, icing, pale rock) begin wanders up and down along the ridge.
+        const capLine = 1.2 + (noise1(key / 4, c < COLS / 2 ? 5 : 24) - 0.5) * 0.5;
         for (let t = 0; t < 2; t++) {
           const rnd = hash2(c * 2 + t + 0.5, key * 0.77 + 3.1);
+          // Coloured by how high the facet really is, so the bank reads in bands from the
+          // lane up: foot, slope, rock, cap. The edges of the bands are slightly ragged.
+          const h = t === 0 ? (ha + hb + hc) / 3 : (ha + hc + hd) / 3;
+          const ragged = (rnd - 0.5) * 0.14;
           let color = pal.lane;
           let shade = 0.94 + rnd * 0.06;
-          if (h >= 0.6) {
-            color = rnd < 0.45 ? pal.ridgeSnow : pal.ridge;
-            shade = 0.9 + rnd * 0.2;
-          } else if (h >= 0.15) {
-            color = rnd < 0.22 ? pal.ridge : pal.bankMid;
+          if (h >= capLine + ragged) {
+            color = pal.ridgeSnow;
+            shade = 0.94 + rnd * 0.1;
+          } else if (h >= 0.62 + ragged) {
+            color = pal.ridge;
+            shade = 0.9 + rnd * 0.14;
+          } else if (h >= 0.16) {
+            color = pal.bankMid;
             shade = 0.94 + rnd * 0.08;
           } else if (h >= 0.02) {
             color = pal.bankLow;
@@ -931,16 +962,21 @@ export class World {
     col.needsUpdate = true;
   }
 
-  /** Height of the bank (m above the lane) at |u| lane half-widths from the centre. */
-  private bankHeight(u: number, hw: number): number {
+  /**
+   * Height of the bank (m above the lane) at u lane half-widths from the centre.
+   * @param key how far along the slope, in rows of the ground mesh (see bankLift)
+   */
+  private bankHeight(u: number, hw: number, key: number): number {
     const a = Math.abs(u);
+    let h = PROFILE_H[COLS];
     for (let i = COLS / 2; i < COLS; i++) {
       if (a <= PROFILE_U[i + 1]) {
         const t = (a - PROFILE_U[i]) / (PROFILE_U[i + 1] - PROFILE_U[i]);
-        return (PROFILE_H[i] + (PROFILE_H[i + 1] - PROFILE_H[i]) * t) * hw;
+        h = PROFILE_H[i] + (PROFILE_H[i + 1] - PROFILE_H[i]) * t;
+        break;
       }
     }
-    return PROFILE_H[COLS] * hw;
+    return bankLift(h, u, key) * hw;
   }
 
   private generateScenery(d0: number, len: number): void {
@@ -966,7 +1002,9 @@ export class World {
       const near = 1.4 + Math.min(1, def.size / R / 3.5) * 0.6;
       const u = (this.rng() < 0.5 ? -1 : 1) * (near + this.rng() * 1.3);
       const size = def.size * scale * (1 + (this.rng() * 2 - 1) * def.jitter);
-      this.spawn(def, u * hw, d, size, true, this.bankHeight(u, hw) * 0.95);
+      // Stand it on the bank where the bank really is at that point along the slope.
+      const key = (this.chunkIndex + (d - d0) / len) * CONFIG.GROUND_ROWS;
+      this.spawn(def, u * hw, d, size, true, this.bankHeight(u, hw, key) * 0.92);
     }
   }
 

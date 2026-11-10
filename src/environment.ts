@@ -133,60 +133,94 @@ export class Environment {
     // front with no depth test, so the order here is the draw order.
     this.peakMaterial = new THREE.MeshBasicMaterial({ vertexColors: true, fog: false, depthTest: false, depthWrite: false });
     const BLOCK_COLORS = [0xe8402a, 0x2f7de0, 0xffd23f, 0x3fb85a, 0xff8a2a, 0x9a5ad6];
+    const SCOOP_COLORS = [0xffb0d4, 0xbff0d0, 0xfff0b0, 0xd8c0ff];
     const build = (kind: Backdrop, far: [number, number], near: [number, number]): void => {
       const parts: THREE.BufferGeometry[] = [];
-      const range = (count: number, seed: number, dist: number, base: number, tall: number, wide: number, body: number, cap: number): void => {
+      /** @param gap leave this much of the middle empty (radians), so the valley opens onto the range behind */
+      const range = (count: number, seed: number, dist: number, base: number, tall: number, wide: number, body: number, cap: number, gap: number): void => {
         for (let i = 0; i < count; i++) {
           const angle = -1.4 + (2.8 * i) / (count - 1) + (hash2(i, seed + 1) - 0.5) * 0.14;
+          if (Math.abs(angle) < gap) continue;
           const h = tall * (0.55 + hash2(i, seed + 2) * 0.6);
           const w = wide * (0.7 + hash2(i, seed + 3) * 0.6);
           const d = dist * (1 + hash2(i, seed + 4) * 0.2);
           const x = Math.sin(angle) * d;
           const z = -Math.cos(angle) * d;
           const turn = hash2(i, seed + 5) * 3;
-          const add = (g: THREE.BufferGeometry, y: number, color: number, vary: number): void => {
+          /**
+           * Add one piece. It is painted `color`, or `cap` above the height `above`, and
+           * may sit a little to one side (`dx`) of the spot this item stands on.
+           */
+          const add = (g: THREE.BufferGeometry, y: number, color: number, vary: number, cap2?: number, above = Infinity, dx = 0): void => {
             const part = g.index ? g.toNonIndexed() : g;
             part.rotateY(turn);
-            part.translate(x, y, z);
-            paint(part, color, vary);
+            // Sideways as seen from the camera, which sits at the middle of the ring.
+            part.translate(x + Math.cos(angle) * dx, y, z + Math.sin(angle) * dx);
+            paint(part, color, vary, cap2, above);
             parts.push(part);
           };
           if (kind === 'peaks') {
-            add(new THREE.ConeGeometry(w, h, 5, 1), base + h / 2, body, 0.14);
-            add(new THREE.ConeGeometry(w * 0.45, h * 0.43, 5, 1), base + h * 0.787, cap, 0.08);
+            // A craggy mountain, with its cap wherever it is high enough.
+            add(crag(w, h, 7, 0.36, seed + i), base + h / 2, body, 0.07, cap, base + h * (0.56 + hash2(i, seed + 6) * 0.1));
           } else if (kind === 'dunes') {
             // Long low humps, half buried.
             const dune = new THREE.IcosahedronGeometry(1, 1);
             dune.scale(w * 1.9, h * 0.55, w);
-            add(dune, base + h * 0.05, body, 0.07);
-          } else if (kind === 'hills' || kind === 'scoops') {
+            add(dune, base + h * 0.05, body, 0.04);
+          } else if (kind === 'hills') {
             const hill = new THREE.IcosahedronGeometry(1, 1);
             hill.scale(w * 1.15, h * 0.8, w * 1.15);
-            add(hill, base + h * 0.1, body, 0.1);
-            if (kind === 'scoops') {
-              // Icing: a smaller cap sitting on top.
-              const icing = new THREE.IcosahedronGeometry(1, 1);
-              icing.scale(w * 0.8, h * 0.4, w * 0.8);
-              add(icing, base + h * 0.6, cap, 0.05);
+            add(hill, base + h * 0.1, body, 0.05);
+          } else if (kind === 'scoops') {
+            // A scoop of ice cream with sauce on top and a cherry; every third one is a double.
+            const r = w * 0.7;
+            const flavour = SCOOP_COLORS[(i + seed) % SCOOP_COLORS.length];
+            let top = base + r * 1.25;
+            add(new THREE.IcosahedronGeometry(r, 1), base + r * 0.35, flavour, 0.03);
+            if (i % 3 === 0) {
+              add(new THREE.IcosahedronGeometry(r * 0.72, 1), top + r * 0.2, SCOOP_COLORS[(i + seed + 1) % SCOOP_COLORS.length], 0.03);
+              top += r * 0.82;
             }
+            const sauce = new THREE.IcosahedronGeometry(1, 1);
+            sauce.scale(r * 0.62, r * 0.26, r * 0.62);
+            add(sauce, top, cap, 0.02);
+            add(new THREE.IcosahedronGeometry(r * 0.15, 1), top + r * 0.3, 0xe2473c, 0.03);
           } else if (kind === 'spires') {
-            add(new THREE.ConeGeometry(w * 0.34, h * 1.5, 4, 1), base + h * 0.75, body, 0.16);
-            add(new THREE.ConeGeometry(w * 0.2, h * 0.9, 4, 1), base + h * 0.45, cap, 0.12);
+            // Jagged crags: a tall one with a shorter one in front of it.
+            add(crag(w * 0.4, h * 1.5, 5, 0.32, seed + i), base + h * 0.75, body, 0.08);
+            add(crag(w * 0.26, h * 0.85, 5, 0.32, seed + i + 50), base + h * 0.42, cap, 0.08, undefined, Infinity, w * 0.32);
+          } else if (kind === 'reef') {
+            // Sea stacks: a cluster of rounded rock columns with weed growing on top.
+            const stacks: [number, number, number][] = [
+              [-0.5, 1.15, 0.5],
+              [0.45, 0.8, 0.44],
+              [0.02, 0.5, 0.36],
+            ];
+            for (const [side, tall2, thick] of stacks) {
+              const rr = w * thick;
+              const hh = h * tall2;
+              add(new THREE.CylinderGeometry(rr * 0.8, rr, hh, 7, 1, true), base + hh / 2, body, 0.06, undefined, Infinity, side * w);
+              const dome = new THREE.IcosahedronGeometry(1, 1);
+              dome.scale(rr * 0.86, rr * 0.5, rr * 0.86);
+              add(dome, base + hh, cap, 0.05, undefined, Infinity, side * w);
+            }
           } else if (kind === 'blocks') {
-            // A stack of two or three toy blocks.
+            // A stack of two or three toy blocks; some stacks end in a pointed roof.
             const layers = 2 + (i % 2);
             let y = base;
+            let s = w;
             for (let k = 0; k < layers; k++) {
-              const s = w * (0.9 - k * 0.2);
+              s = w * (0.9 - k * 0.2);
               const bh = (h / layers) * 0.9;
-              add(new THREE.BoxGeometry(s, bh, s), y + bh / 2, BLOCK_COLORS[(i + k * 2 + seed) % BLOCK_COLORS.length], 0.05);
+              add(new THREE.BoxGeometry(s, bh, s), y + bh / 2, BLOCK_COLORS[(i + k * 2 + seed) % BLOCK_COLORS.length], 0.02);
               y += bh;
             }
+            if (i % 3 === 1) add(new THREE.ConeGeometry(s * 0.72, s * 0.8, 4, 1, true), y + s * 0.4, BLOCK_COLORS[(i + seed + 3) % BLOCK_COLORS.length], 0.02);
           }
         }
       };
-      range(13, 40, 1.5, -0.42, 0.62, 0.34, far[0], far[1]);
-      range(11, 0, 1.0, -0.34, 0.42, 0.26, near[0], near[1]);
+      range(13, 40, 1.5, -0.42, 0.62, 0.34, far[0], far[1], 0);
+      range(11, 0, 1.0, -0.34, 0.42, 0.26, near[0], near[1], 0.2);
       const merged = mergeAll(parts);
       if (!merged) return;
       const mesh = new THREE.Mesh(merged, this.peakMaterial);
@@ -201,6 +235,7 @@ export class Environment {
     build('hills', [0xb4dcae, 0], [0x86c486, 0]);
     build('scoops', [0xffd0e6, 0xffffff], [0xffb0d4, 0xfff4d8]);
     build('spires', [0x97a3bc, 0x7a86a2], [0x6c7896, 0x525e7c]);
+    build('reef', [0x9ab8d2, 0xa8e0d0], [0x6f94b8, 0x74d0b8]);
     build('blocks', [0, 0], [0, 0]);
     scene.add(this.backdrop);
   }
@@ -309,16 +344,64 @@ function shadeByHeight(g: THREE.BufferGeometry): void {
   g.setAttribute('color', new THREE.BufferAttribute(colors, 3));
 }
 
-/** Give every facet of a non-indexed geometry the colour `hex`, varied by ±`vary`. */
-function paint(g: THREE.BufferGeometry, hex: number, vary: number): void {
-  const c = new THREE.Color(hex);
-  const n = g.getAttribute('position').count;
-  const colors = new Float32Array(n * 3);
-  for (let i = 0; i < n; i++) {
-    const shade = 1 - vary + hash2(Math.floor(i / 3), hex % 97) * vary * 2;
-    colors[i * 3] = Math.min(1, c.r * shade);
-    colors[i * 3 + 1] = Math.min(1, c.g * shade);
-    colors[i * 3 + 2] = Math.min(1, c.b * shade);
+/**
+ * A craggy cone for mountains and spires: `sides` faces round, in three tiers, with every
+ * corner pushed in or out and up or down by up to `rough` so no two look alike. Open
+ * underneath (the foot is always out of sight).
+ */
+function crag(w: number, h: number, sides: number, rough: number, seed: number): THREE.BufferGeometry {
+  const g = new THREE.ConeGeometry(w, h, sides, 3, true).toNonIndexed();
+  const p = g.getAttribute('position');
+  for (let i = 0; i < p.count; i++) {
+    const x = p.getX(i);
+    const y = p.getY(i);
+    const z = p.getZ(i);
+    const tier = Math.round(((y + h / 2) / h) * 3);
+    if (tier >= 3) continue; // the tip stays put
+    // Keyed on where the corner is, so the facets that share it move together.
+    const kx = Math.round((x / w) * 500) + seed * 13;
+    const kz = Math.round((z / w) * 500) + tier * 77;
+    const push = 1 + (hash2(kx, kz) - 0.5) * rough;
+    const lift = tier === 0 ? 0 : (hash2(kz + 9, kx + 4) - 0.5) * rough * h * 0.3;
+    p.setXYZ(i, x * push, y + lift, z * push);
+  }
+  return g;
+}
+
+/** Where the light on the far scenery comes from: the same side as the sun, high and to the left. */
+const FAR_LIGHT = new THREE.Vector3(-0.6, 0.75, 0.3).normalize();
+const _p0 = new THREE.Vector3();
+const _p1 = new THREE.Vector3();
+const _p2 = new THREE.Vector3();
+
+/**
+ * Colour every facet of a non-indexed geometry. Each gets `hex` (or `cap`, if its middle
+ * is above the height `above`), varied by ±`vary`, and lit by which way it faces: the far
+ * scenery has no real lighting, so the light is painted on here, once. Without it a block
+ * is a flat cut-out and a hill is a blob.
+ */
+function paint(g: THREE.BufferGeometry, hex: number, vary: number, cap?: number, above = Infinity): void {
+  const body = new THREE.Color(hex);
+  const top = new THREE.Color(cap ?? hex);
+  const pos = g.getAttribute('position');
+  const colors = new Float32Array(pos.count * 3);
+  for (let f = 0; f < pos.count / 3; f++) {
+    _p0.fromBufferAttribute(pos, f * 3);
+    _p1.fromBufferAttribute(pos, f * 3 + 1);
+    _p2.fromBufferAttribute(pos, f * 3 + 2);
+    const mid = (_p0.y + _p1.y + _p2.y) / 3;
+    _p1.sub(_p0);
+    _p2.sub(_p0);
+    const facing = Math.max(0, _p1.cross(_p2).normalize().dot(FAR_LIGHT));
+    const rnd = hash2(f, hex % 97);
+    const c = mid > above + (rnd - 0.5) * 0.03 ? top : body;
+    const shade = (0.72 + 0.3 * facing) * (1 - vary + rnd * vary * 2);
+    for (let k = 0; k < 3; k++) {
+      const o = (f * 3 + k) * 3;
+      colors[o] = Math.min(1, c.r * shade);
+      colors[o + 1] = Math.min(1, c.g * shade);
+      colors[o + 2] = Math.min(1, c.b * shade);
+    }
   }
   g.setAttribute('color', new THREE.BufferAttribute(colors, 3));
 }

@@ -105,7 +105,7 @@ export const CONFIG = {
   CHUNK_LEN_K: 34,
   BEATS_PER_CHUNK: 2,
   /** Ground mesh rows per chunk. */
-  GROUND_ROWS: 6,
+  GROUND_ROWS: 12,
   /** Chunks are generated this far ahead / removed this far behind (camera radii). */
   SPAWN_AHEAD_K: 170,
   DESPAWN_BEHIND_K: 16,
