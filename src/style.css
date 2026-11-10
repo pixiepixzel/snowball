@@ -1151,3 +1151,160 @@ h1 {
   color: #dff;
   background: rgba(8, 20, 40, 0.6);
 }
+
+/* ------------------------------------------------------------------ missions */
+/* Three small goals with coin rewards: on the title screen, the pause menu and the end screen. */
+.missions {
+  width: min(100%, 300px);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 9px 12px 10px;
+  border-radius: 18px;
+  background: rgba(14, 29, 51, 0.36);
+}
+
+.missions:empty {
+  display: none;
+}
+
+.mission {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.2;
+  text-align: left;
+}
+
+/* An empty ring until the mission is done, then a green tick. */
+.mission .tick {
+  position: relative;
+  flex: none;
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 2px currentColor;
+  opacity: 0.55;
+}
+
+.mission.done .tick {
+  background: #2fae5f;
+  box-shadow: none;
+  opacity: 1;
+}
+
+.mission.done .tick::after {
+  content: '';
+  position: absolute;
+  left: 5px;
+  top: 2.5px;
+  width: 3px;
+  height: 7px;
+  border: solid #fff;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+.mission .what {
+  flex: 1;
+  min-width: 0;
+}
+
+.mission .what em {
+  margin-left: 7px;
+  font-style: normal;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  opacity: 0.7;
+}
+
+.mission.done .what {
+  opacity: 0.7;
+}
+
+.mission .coins {
+  flex: none;
+  color: #ffd98a;
+}
+
+.card .missions {
+  width: 100%;
+  background: #e9f1fb;
+}
+
+.card .mission .coins {
+  color: #8a5400;
+}
+
+/* The end screen now lists missions too, so the list of what was absorbed gets less room. */
+#end .card h3 {
+  margin: 14px 0 8px;
+}
+
+#end .chips {
+  max-height: 20vh;
+  margin-bottom: 18px;
+}
+
+/* Short screens (small phones, or a browser with its bars showing): tighten things so
+   the missions still fit on the title screen and the end screen. */
+.card {
+  overflow-y: auto;
+  touch-action: pan-y;
+}
+
+@media (max-height: 720px) {
+  .screen {
+    padding: calc(env(safe-area-inset-top, 0px) + 12px) 18px calc(env(safe-area-inset-bottom, 0px) + 14px);
+  }
+
+  .title-wrap {
+    margin-top: 5vh;
+  }
+
+  #title .tag,
+  #title .hint {
+    display: none;
+  }
+
+  .bottom {
+    gap: 9px;
+  }
+
+  .card {
+    padding: 16px 16px 14px;
+  }
+
+  .card h2 {
+    font-size: 27px;
+  }
+
+  .final {
+    margin-top: 6px;
+    font-size: 48px;
+  }
+
+  #end .card h3 {
+    margin: 10px 0 6px;
+  }
+
+  #end .chips {
+    margin-bottom: 12px;
+  }
+
+  #end .card .btn {
+    padding-top: 12px;
+    padding-bottom: 12px;
+  }
+
+  #end .card .btn.alt {
+    padding-top: 9px;
+    padding-bottom: 9px;
+  }
+
+  .card .btn + .btn {
+    margin-top: 9px;
+  }
+}

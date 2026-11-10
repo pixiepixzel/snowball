@@ -6,7 +6,7 @@
  * their progress. Anything unreadable falls back to a fresh save rather than breaking
  * the game, and every access is wrapped because storage can be blocked or full.
  */
-import { BASIC_HINTS, CONFIG, UPGRADES, UPGRADE_LEVELS } from './config';
+import { BASIC_HINTS, CONFIG, MISSIONS, MISSION_SLOTS, UPGRADES, UPGRADE_LEVELS } from './config';
 import { LAP_GROWTH } from './zones';
 
 const SAVE_KEY = 'snowball.save';
@@ -15,9 +15,20 @@ const OLD_BEST_KEY = 'snowball.best';
 
 /**
  * Version 2 added the sound and vibration switches, version 3 the furthest world reached,
- * version 4 the music switch, version 5 which first-time hints have been shown.
+ * version 4 the music switch, version 5 which first-time hints have been shown,
+ * version 6 the missions.
  */
-export const SAVE_VERSION = 5;
+export const SAVE_VERSION = 6;
+
+/** One of the active missions. */
+export interface MissionState {
+  /** Which mission (config.ts MISSIONS). */
+  id: string;
+  /** For missions that add up over runs: how far along it was when the last run ended. */
+  progress: number;
+  /** Finished and paid; it is swapped for a new one when the run ends. */
+  done: boolean;
+}
 
 export interface SaveData {
   version: number;
@@ -37,14 +48,20 @@ export interface SaveData {
   reached: number;
   /** Ids of the first-time hints already shown (config.ts HINTS). */
   hints: string[];
+  /** The active missions, and how many have been handed out so far (which picks the next). */
+  missions: MissionState[];
+  missionNext: number;
 }
 
 const num = (v: unknown, fallback = 0): number => (typeof v === 'number' && Number.isFinite(v) && v >= 0 ? v : fallback);
 
+/** A new player's missions: the first few on the list. */
+const firstMissions = (): MissionState[] => MISSIONS.slice(0, MISSION_SLOTS).map((m) => ({ id: m.id, progress: 0, done: false }));
+
 function fresh(): SaveData {
   const upgrades: Record<string, number> = {};
   for (const u of UPGRADES) upgrades[u.id] = 0;
-  return { version: SAVE_VERSION, best: 0, coins: 0, upgrades, sound: true, music: true, vibration: true, reached: 0, hints: [] };
+  return { version: SAVE_VERSION, best: 0, coins: 0, upgrades, sound: true, music: true, vibration: true, reached: 0, hints: [], missions: firstMissions(), missionNext: MISSION_SLOTS };
 }
 
 /** Turn whatever was stored into a valid save of the current version. */
@@ -69,6 +86,17 @@ function migrate(raw: unknown): SaveData {
   // so those are marked as seen; the tips for rivers, ramps and the rest still appear once.
   if (Array.isArray(data.hints)) save.hints = data.hints.filter((id): id is string => typeof id === 'string');
   else if (save.best > 0) save.hints = [...BASIC_HINTS];
+  // Before version 6 there were no missions: `fresh()` has already dealt the first three.
+  // Otherwise keep the stored ones that still exist, and top up to a full set.
+  if (Array.isArray(data.missions)) {
+    const known = (data.missions as unknown[])
+      .filter((m): m is Record<string, unknown> => typeof m === 'object' && m !== null)
+      .filter((m) => MISSIONS.some((def) => def.id === m.id))
+      .map((m) => ({ id: m.id as string, progress: num(m.progress), done: m.done === true }));
+    save.missionNext = Math.max(MISSION_SLOTS, Math.floor(num(data.missionNext, MISSION_SLOTS)));
+    for (const m of firstMissions()) if (known.length < MISSION_SLOTS && !known.some((k) => k.id === m.id)) known.push(m);
+    save.missions = known.slice(0, MISSION_SLOTS);
+  }
   const levels = (typeof data.upgrades === 'object' && data.upgrades !== null ? data.upgrades : {}) as Record<string, unknown>;
   for (const u of UPGRADES) save.upgrades[u.id] = Math.min(UPGRADE_LEVELS, Math.floor(num(levels[u.id])));
   return save;

@@ -3,7 +3,22 @@
  * collisions and hazards into growth, damage, juice and the end of the run.
  */
 import * as THREE from 'three';
-import { CONFIG, HINTS, HINT_TIME, MILESTONES, NO_TWIST, UPGRADES, UPGRADE_LEVELS, WIND_PERIOD, ZONES, type HintId, type Twist } from './config';
+import {
+  CONFIG,
+  HINTS,
+  HINT_TIME,
+  MILESTONES,
+  MISSIONS,
+  MISSION_LOOP_FROM,
+  NO_TWIST,
+  UPGRADES,
+  UPGRADE_LEVELS,
+  WIND_PERIOD,
+  ZONES,
+  type HintId,
+  type MissionDef,
+  type Twist,
+} from './config';
 import { AudioEngine } from './audio';
 import { Ball } from './ball';
 import { botControl, rebaseBot } from './bot';
@@ -14,8 +29,8 @@ import { Environment } from './environment';
 import { Input } from './input';
 import { OBJECT_DEFS } from './objects';
 import { PERKS, applyUpgrades, coinsFor, upgradeCost } from './perks';
-import { loadSave, writeSave, type SaveData } from './save';
-import { UI, type ShopRow } from './ui';
+import { loadSave, writeSave, type MissionState, type SaveData } from './save';
+import { UI, type MissionRow, type ShopRow } from './ui';
 import { clamp, lerp, sizeLabel, sizeParts } from './util';
 import { World, type WorldObject } from './world';
 import { HAND_MADE_LAPS, worldForLap } from './worlds';
@@ -46,6 +61,12 @@ export type GameState = 'title' | 'playing' | 'dying' | 'finishing' | 'ended';
  * (caught by the avalanche), sunk (fell in a river) or quit (ended from the pause menu).
  */
 export type EndKind = 'shattered' | 'gate' | 'buried' | 'sunk' | 'quit';
+
+/** What this run has done so far towards each kind of mission (config.ts MISSIONS). */
+type Tally = Record<MissionDef['kind'], number>;
+const newTally = (): Tally => ({ walls: 0, streak: 0, slams: 0, absorb: 0, secrets: 0, freeze: 0, time: 0, worlds: 0, grow: 0 });
+/** Seconds one gold tag ("Mission done!") stays up before the next may replace it. */
+const TOAST_GAP = 2.3;
 
 export interface RunStats {
   /** Seconds of play (real time). */
@@ -149,6 +170,12 @@ export class Game {
   /** Seconds until another first-time hint may go up, and until the next look for one. */
   private hintWait = 0;
   private hintScan = 0;
+  /** Mission progress made in this run, and walls smashed since the last hit. */
+  private tally: Tally = newTally();
+  private streak = 0;
+  /** Gold tags waiting their turn, so one never wipes out another. */
+  private toasts: string[] = [];
+  private toastWait = 0;
   /** Which world the next run starts in (a lap number), picked on the title screen. */
   private startLap = 0;
   /** The ball's size when this run began, as shown to the player. Coins are paid for growth since then. */
@@ -225,6 +252,9 @@ export class Game {
     this.resize();
     this.reset();
     this.ui.setStages(ZONES.length);
+    // A mission finished in a run that was never ended (the page was closed) is swapped now.
+    this.dealMissions();
+    this.ui.setMissions(this.missionRows());
     this.ui.showTitle(this.save.best > 0 ? sizeLabel(this.save.best) : null, this.save.coins);
     this.showPick();
     this.last = performance.now();
@@ -238,6 +268,7 @@ export class Game {
     if (this.paused || this.state !== 'playing') return;
     this.paused = true;
     this.audio.suspend();
+    this.ui.setMissions(this.missionRows());
     this.ui.setPaused(true);
   }
 
@@ -315,6 +346,10 @@ export class Game {
     this.beam = 0;
     this.hintWait = 0;
     this.hintScan = 0;
+    this.tally = newTally();
+    this.streak = 0;
+    this.toasts.length = 0;
+    this.toastWait = 0;
     this.runCoins = 0;
     this.ui.setPower('', 0);
     this.world.reset(this.seed ?? (Math.random() * 0x7fffffff) | 0, startD);
@@ -582,6 +617,15 @@ export class Game {
     if (this.hintScan <= 0) {
       this.hintScan = 0.2;
       this.checkHints();
+      // Missions that tick up by themselves: time survived, and how much the ball has grown.
+      this.tally.time = this.stats.time;
+      this.tally.grow = Math.max(this.tally.grow, this.shown(ball.r) / this.runStartR);
+      this.checkMissions();
+    }
+    if (this.toastWait > 0) this.toastWait -= realDt;
+    else if (this.toasts.length > 0) {
+      this.ui.milestone(this.toasts.shift() as string);
+      this.toastWait = TOAST_GAP;
     }
 
     // Un-stick: if the ball is pushing forward but something keeps shoving it back
@@ -620,7 +664,7 @@ export class Game {
       if (this.keepScores && lap > this.save.reached) {
         this.save.reached = lap;
         writeSave(this.save);
-        this.ui.milestone('New world unlocked!');
+        this.toasts.push('New world unlocked!');
       }
       // Arriving in a new world gets a bigger announcement than a new scene.
       if (this.stage.world !== oldWorld) {
@@ -678,7 +722,7 @@ export class Game {
     const passed = this.milestonesPassed(ball.r);
     if (passed > this.milestone) {
       this.milestone = passed;
-      this.ui.milestone(`Bigger than ${MILESTONES[passed - 1][1]}!`);
+      this.toasts.push(`Bigger than ${MILESTONES[passed - 1][1]}!`);
       this.ui.bumpSize();
       this.audio.chime();
     }
@@ -753,6 +797,7 @@ export class Game {
 
     this.counts.set(def.id, (this.counts.get(def.id) ?? 0) + 1);
     this.stats.absorbs++;
+    this.tally.absorb++;
     this.combo = this.comboTimer > 0 ? this.combo + 1 : 0;
     this.comboTimer = C.COMBO_WINDOW;
 
@@ -793,6 +838,8 @@ export class Game {
     const C = CONFIG;
     const id = o.def.id;
     this.onAbsorb(o, index);
+    this.tally.secrets++;
+    this.checkMissions();
     this.rig.shake(0.5);
     this.rig.kick(5);
     this.ui.flash('big');
@@ -802,7 +849,7 @@ export class Game {
     if (id === 'goldenSnowflake') {
       this.runCoins += C.SECRET_GOLD_COINS;
       this.floatAtBall(`+${C.SECRET_GOLD_COINS} COINS!`, true);
-      this.ui.milestone('Golden snowflake!');
+      this.toasts.push('Golden snowflake!');
     } else if (id === 'yeti') {
       this.rage = C.YETI_RAGE_TIME;
       this.beam = 0;
@@ -860,6 +907,7 @@ export class Game {
   private hurt(radiusBefore: number, hitstop: number): void {
     const ball = this.ball;
     this.stats.hits++;
+    this.streak = 0;
     this.combo = 0;
     this.hitstop = hitstop;
     this.rig.shake(0.9);
@@ -900,6 +948,10 @@ export class Game {
       }
       this.world.remove(index);
       this.stats.walls++;
+      this.tally.walls++;
+      this.tally.streak = Math.max(this.tally.streak, ++this.streak);
+      if (dam) this.tally.worlds++;
+      this.checkMissions();
       ball.r *= 1 + C.GATE_BONUS;
       ball.popVel += 6;
       this.slowmo = dam ? 1.0 : 0.45;
@@ -941,6 +993,8 @@ export class Game {
     const p = ball.position;
     if (freeze) {
       this.world.freeze(o);
+      this.tally.freeze++;
+      this.checkMissions();
       ball.r *= 1 + CONFIG.RIVER_BONUS;
       ball.popVel += 4;
       this.audio.freeze();
@@ -1019,6 +1073,8 @@ export class Game {
     this.vibrate(35);
     if (smashed > 0) this.ui.flash('big');
     this.floatAtBall(smashed > 1 ? `SLAM! ×${smashed}` : 'SLAM!', true);
+    this.tally.slams++;
+    this.checkMissions();
   }
 
   /** The ball is destroyed: burst it, then show the end screen after a moment. */
@@ -1051,6 +1107,11 @@ export class Game {
     const isBest = this.keepScores && r > this.save.best;
     // Coins are for growth during the run, so starting in a later world isn't free money.
     const coins = this.keepScores ? Math.max(0, coinsFor(r) - coinsFor(this.runStartR)) + this.runCoins : 0;
+    // The end screen shows the missions as this run left them; finished ones are swapped
+    // for new ones afterwards, ready for the next run.
+    this.checkMissions();
+    this.ui.setMissions(this.missionRows());
+    this.bankMissions();
     if (this.keepScores) {
       if (isBest) this.save.best = r;
       this.save.coins += coins;
@@ -1072,6 +1133,80 @@ export class Game {
     }[this.endKind];
     const [size, unit] = sizeParts(r);
     this.ui.showEnd({ ...text, size, unit, best: sizeLabel(this.save.best), isBest, items, coins: this.keepScores ? coins : null, totalCoins: this.save.coins });
+  }
+
+  // ------------------------------------------------------------------ missions
+
+  /** Bot runs and demos don't count towards missions, like everything else they do. */
+  private get missionsOn(): boolean {
+    return this.keepScores && !this.autoplay;
+  }
+
+  /** How far along a mission is: what this run has done, plus earlier runs if it adds up. */
+  private missionValue(m: MissionState, def: MissionDef): number {
+    const run = this.missionsOn ? this.tally[def.kind] : 0;
+    return def.scope === 'total' ? m.progress + run : run;
+  }
+
+  /** Pay out any mission this run has just finished. Its place is refilled when the run ends. */
+  private checkMissions(): void {
+    if (!this.missionsOn) return;
+    let paid = false;
+    for (const m of this.save.missions) {
+      if (m.done) continue;
+      const def = MISSIONS.find((d) => d.id === m.id);
+      if (!def || this.missionValue(m, def) < def.target) continue;
+      m.done = true;
+      this.save.coins += def.reward;
+      paid = true;
+      this.toasts.push(`Mission done! +${def.reward} coins`);
+      this.audio.chime();
+    }
+    if (paid) writeSave(this.save);
+  }
+
+  /** The run is over: keep what counts towards missions that add up, and deal new ones. */
+  private bankMissions(): void {
+    if (!this.missionsOn) return;
+    for (const m of this.save.missions) {
+      const def = MISSIONS.find((d) => d.id === m.id);
+      if (def && !m.done && def.scope === 'total') m.progress += this.tally[def.kind];
+    }
+    this.tally = newTally();
+    this.dealMissions();
+    writeSave(this.save);
+  }
+
+  /** Swap every finished mission for the next one on the list. */
+  private dealMissions(): void {
+    const active = this.save.missions;
+    const loop = MISSIONS.length - MISSION_LOOP_FROM;
+    let changed = false;
+    for (let i = 0; i < active.length; i++) {
+      if (!active[i].done) continue;
+      // Easy first, in order; after the last one they come round again without the beginner ones.
+      for (let tries = 0; tries < MISSIONS.length; tries++) {
+        const n = this.save.missionNext++;
+        const def = MISSIONS[n < MISSIONS.length ? n : MISSION_LOOP_FROM + ((n - MISSIONS.length) % loop)];
+        if (active.some((m) => m.id === def.id)) continue;
+        active[i] = { id: def.id, progress: 0, done: false };
+        break;
+      }
+      changed = true;
+    }
+    if (changed) writeSave(this.save);
+  }
+
+  /** The active missions as the title screen, pause menu and end screen list them. */
+  private missionRows(): MissionRow[] {
+    const rows: MissionRow[] = [];
+    for (const m of this.save.missions) {
+      const def = MISSIONS.find((d) => d.id === m.id);
+      if (!def) continue;
+      const value = Math.min(def.target, Math.floor(this.missionValue(m, def)));
+      rows.push({ text: def.text, progress: m.done || value <= 0 || def.target <= 1 ? '' : `${value}/${def.target}`, reward: def.reward, done: m.done });
+    }
+    return rows;
   }
 
   // ------------------------------------------------------------------ first-time hints
@@ -1168,6 +1303,7 @@ export class Game {
     const from = this.startPoint(this.startLap);
     this.reset(from.d, from.base);
     this.ui.clearTransient();
+    this.ui.setMissions(this.missionRows());
     this.ui.showTitle(this.save.best > 0 ? sizeLabel(this.save.best) : null, this.save.coins);
     this.showPick();
   }

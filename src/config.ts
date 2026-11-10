@@ -389,6 +389,56 @@ export const ZONES: ZoneConfig[] = [
 /** Design radius at the very bottom of the mountain. */
 export const END_RADIUS = 48;
 
+// ---------------------------------------------------------------- Missions
+/**
+ * Small goals with a coin reward. Three are active at a time; finishing one pays out
+ * straight away and a new one takes its place after the run.
+ *
+ * `kind` is what is counted:
+ *   walls    walls smashed            streak   walls in a row without being hit
+ *   slams    ramp slams landed        absorb   things absorbed
+ *   secrets  secret objects found     freeze   rivers frozen
+ *   time     seconds survived         worlds   worlds finished (last wall smashed)
+ *   grow     times bigger than the ball started the run
+ * `scope` is 'run' if it must be done in a single run, 'total' if it adds up over runs.
+ *
+ * They are handed out in this order, easy first. After the last one they come round
+ * again from MISSION_LOOP_FROM, skipping the beginner ones.
+ */
+export interface MissionDef {
+  id: string;
+  kind: 'walls' | 'streak' | 'slams' | 'absorb' | 'secrets' | 'freeze' | 'time' | 'worlds' | 'grow';
+  scope: 'run' | 'total';
+  target: number;
+  /** Coins paid for finishing it. */
+  reward: number;
+  text: string;
+}
+
+export const MISSIONS: MissionDef[] = [
+  { id: 'walls3', kind: 'walls', scope: 'run', target: 3, reward: 30, text: 'Smash 3 walls in one run' },
+  { id: 'absorb100', kind: 'absorb', scope: 'total', target: 100, reward: 25, text: 'Absorb 100 things' },
+  { id: 'slam2', kind: 'slams', scope: 'total', target: 2, reward: 30, text: 'Land 2 ramp slams' },
+  { id: 'grow20', kind: 'grow', scope: 'run', target: 20, reward: 35, text: 'Grow 20 times bigger in one run' },
+  { id: 'streak2', kind: 'streak', scope: 'run', target: 2, reward: 40, text: 'Smash 2 walls in a row without being hit' },
+  // Secrets are rare (roughly one every few runs), so this pays well and is only asked once.
+  { id: 'secret1', kind: 'secrets', scope: 'total', target: 1, reward: 60, text: 'Find a secret object' },
+  { id: 'freeze2', kind: 'freeze', scope: 'total', target: 2, reward: 30, text: 'Freeze 2 rivers' },
+  { id: 'walls5', kind: 'walls', scope: 'run', target: 5, reward: 50, text: 'Smash 5 walls in one run' },
+  { id: 'time90', kind: 'time', scope: 'run', target: 90, reward: 40, text: 'Last 90 seconds in one run' },
+  { id: 'world1', kind: 'worlds', scope: 'run', target: 1, reward: 60, text: "Smash a world's last wall" },
+  { id: 'absorb300', kind: 'absorb', scope: 'total', target: 300, reward: 50, text: 'Absorb 300 things' },
+  { id: 'slam3', kind: 'slams', scope: 'run', target: 3, reward: 60, text: 'Land 3 ramp slams in one run' },
+  { id: 'grow100', kind: 'grow', scope: 'run', target: 100, reward: 70, text: 'Grow 100 times bigger in one run' },
+  { id: 'streak4', kind: 'streak', scope: 'run', target: 4, reward: 80, text: 'Smash 4 walls in a row without being hit' },
+  { id: 'absorb250', kind: 'absorb', scope: 'run', target: 250, reward: 70, text: 'Absorb 250 things in one run' },
+  { id: 'walls8', kind: 'walls', scope: 'run', target: 8, reward: 90, text: 'Smash 8 walls in one run' },
+  { id: 'time180', kind: 'time', scope: 'run', target: 180, reward: 80, text: 'Last 3 minutes in one run' },
+  { id: 'world2', kind: 'worlds', scope: 'run', target: 2, reward: 150, text: "Smash 2 worlds' last walls in one run" },
+];
+export const MISSION_SLOTS = 3;
+export const MISSION_LOOP_FROM = 7;
+
 // ---------------------------------------------------------------- First-time hints
 /**
  * One-line tips, each shown once ever, the first time the thing it explains turns up

@@ -31,6 +31,15 @@ export interface ShopRow {
   affordable: boolean;
 }
 
+/** One mission as the title screen, pause menu and end screen list it. */
+export interface MissionRow {
+  text: string;
+  /** How far along it is, e.g. "40/100"; empty when there is nothing to show yet. */
+  progress: string;
+  reward: number;
+  done: boolean;
+}
+
 function el<T extends HTMLElement>(id: string): T {
   const node = document.getElementById(id);
   if (!node) throw new Error(`#${id} missing from index.html`);
@@ -178,6 +187,37 @@ export class UI {
     show(['sound-btn', 'title-sound-btn'], 'Sound', sound);
     show(['music-btn', 'title-music-btn'], 'Music', music);
     show(['vibration-btn', 'title-vibration-btn'], 'Vibration', vibration);
+  }
+
+  /**
+   * The three missions, wherever they are listed (title screen, pause menu, end screen).
+   * Only one of those is on screen at a time, so they all show the same rows.
+   */
+  setMissions(rows: MissionRow[]): void {
+    for (const list of document.querySelectorAll('.missions')) {
+      list.innerHTML = '';
+      for (const row of rows) {
+        const item = document.createElement('div');
+        item.className = row.done ? 'mission done' : 'mission';
+        const tick = document.createElement('i');
+        tick.className = 'tick';
+        const what = document.createElement('span');
+        what.className = 'what';
+        what.textContent = row.text;
+        if (row.progress) {
+          const so = document.createElement('em');
+          so.textContent = row.progress;
+          what.appendChild(so);
+        }
+        const reward = document.createElement('span');
+        reward.className = 'coins';
+        const amount = document.createElement('b');
+        amount.textContent = `${row.done ? '+' : ''}${row.reward}`;
+        reward.append(document.createElement('i'), amount);
+        item.append(tick, what, reward);
+        list.appendChild(item);
+      }
+    }
   }
 
   /** The coin balance shown on the Upgrades buttons. */
