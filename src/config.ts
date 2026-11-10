@@ -273,7 +273,9 @@ export const CONFIG = {
 
   // ---------------------------------------------------------------- Hazard: ramps
   /** Chance per beat (from the Forest on), size in design radii, and launch height in ball radii. */
-  RAMP_CHANCE: 0.1,
+  RAMP_CHANCE: 0.14,
+  /** How many spots across the lane are tried before giving up on placing a ramp. */
+  RAMP_TRIES: 8,
   RAMP_SIZE_K: 1.6,
   RAMP_HEIGHT_K: 4.5,
   /** Landing with sideways speed below this fraction of max steering speed is "clean". */

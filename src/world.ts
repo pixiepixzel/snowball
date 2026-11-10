@@ -1154,11 +1154,19 @@ export class World {
 
       if (rng() < C.RAMP_CHANCE * theme.twist.ramp) {
         const size = C.RAMP_SIZE_K * R;
-        const x = (rng() * 2 - 1) * Math.max(0, hw - size * 1.6);
         const d = bd0 + blen * 0.12;
         // A ramp needs clear ground to stand on and a long clear run to land in.
         const landing = riverD < 0 || riverD < d || riverD - d > 26 * R;
-        if (landing && !blocked(d, size * 1.3) && zoneEnd - d > 24 * R && roomFor(x, d, size * 1.3)) {
+        let x = 0;
+        let found = false;
+        if (landing && !blocked(d, size * 1.3) && zoneEnd - d > 24 * R) {
+          // The lane is usually busy, so look in several places across it for a free spot.
+          for (let attempt = 0; attempt < C.RAMP_TRIES && !found; attempt++) {
+            x = (rng() * 2 - 1) * Math.max(0, hw - size * 1.6);
+            found = roomFor(x, d, size * 1.3);
+          }
+        }
+        if (found) {
           const ramp = this.spawn(defById('ramp'), x, d, size);
           if (ramp) {
             ramp.sink = size * 0.26;
