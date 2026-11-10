@@ -395,6 +395,9 @@ body {
 
 .banner-sub {
   margin-top: 4px;
+  padding: 0 14px;
+  /* A long line breaks into two even halves rather than leaving one word on its own. */
+  text-wrap: balance;
   font-size: 14px;
   font-weight: 800;
   letter-spacing: 2px;

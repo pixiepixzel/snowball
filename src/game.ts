@@ -180,6 +180,8 @@ export class Game {
   /** Draws the collection book's pictures, and the page of the book last looked at. */
   private thumbs: Thumbs;
   private bookPage = 0;
+  /** Goes up each time a page is shown, so pictures still being drawn for an earlier page stop. */
+  private bookTurn = 0;
   /** Gold tags waiting their turn, so one never wipes out another. */
   private toasts: string[] = [];
   private toastWait = 0;
@@ -1298,11 +1300,28 @@ export class Game {
   private showBook(step: number): void {
     this.bookPage = clamp(this.bookPage + step, 0, BOOK_PAGES.length - 1);
     const page = BOOK_PAGES[this.bookPage];
+    // Pictures already drawn go straight in; the rest are drawn a few per frame after the
+    // page is up, so a slow phone shows the page at once instead of freezing on it.
     const items = page.defs.map((def) => ({
       name: def.name,
-      picture: this.thumbs.get(def),
+      picture: this.thumbs.peek(def) ?? '',
       count: this.save.book[def.id] ?? 0,
     }));
+    const turn = ++this.bookTurn;
+    let next = 0;
+    const drawSome = (): void => {
+      if (turn !== this.bookTurn || !this.ui.bookOpen) return;
+      const until = performance.now() + 12;
+      while (next < page.defs.length) {
+        const def = page.defs[next];
+        const drawn = this.thumbs.peek(def) !== undefined;
+        if (!drawn) this.ui.setBookPicture(next, this.thumbs.get(def));
+        next++;
+        if (!drawn && performance.now() > until) break;
+      }
+      if (next < page.defs.length) requestAnimationFrame(drawSome);
+    };
+    requestAnimationFrame(drawSome);
     this.ui.openBook({
       found: this.bookFound(),
       total: BOOK_TOTAL,

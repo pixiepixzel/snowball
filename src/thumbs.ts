@@ -61,6 +61,11 @@ export class Thumbs {
     this.small.width = this.small.height = OUT;
   }
 
+  /** The picture of one object if it has already been drawn, otherwise undefined. */
+  peek(def: ObjectDef): string | undefined {
+    return this.cache.get(def.id);
+  }
+
   /** The picture of one object, as an image URL (empty if it could not be drawn). */
   get(def: ObjectDef): string {
     const have = this.cache.get(def.id);

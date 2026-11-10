@@ -309,12 +309,11 @@ export class UI {
       const found = item.count > 0;
       const tile = document.createElement('div');
       tile.className = found ? 'thing' : 'thing unknown';
-      if (item.picture) {
-        const picture = document.createElement('img');
-        picture.src = item.picture;
-        picture.alt = '';
-        tile.appendChild(picture);
-      }
+      // The picture may arrive a moment later (setBookPicture); its space is kept meanwhile.
+      const picture = document.createElement('img');
+      picture.alt = '';
+      if (item.picture) picture.src = item.picture;
+      tile.appendChild(picture);
       const name = document.createElement('span');
       name.className = 'name';
       name.textContent = found ? item.name : '???';
@@ -326,6 +325,17 @@ export class UI {
     }
     this.bookList.scrollTop = 0;
     this.bookScreen.classList.remove('hidden');
+  }
+
+  /** True while the collection book is on screen. */
+  get bookOpen(): boolean {
+    return !this.bookScreen.classList.contains('hidden');
+  }
+
+  /** Put a picture that has just been drawn into its place on the open page (by position). */
+  setBookPicture(index: number, url: string): void {
+    const picture = this.bookList.children[index]?.querySelector('img');
+    if (picture && url) picture.src = url;
   }
 
   /** The shop has two pages, upgrades and ball skins; this shows one of them. */
