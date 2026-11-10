@@ -436,6 +436,12 @@ export const MISSIONS: MissionDef[] = [
   { id: 'time180', kind: 'time', scope: 'run', target: 180, reward: 80, text: 'Last 3 minutes in one run' },
   { id: 'world2', kind: 'worlds', scope: 'run', target: 2, reward: 150, text: "Smash 2 worlds' last walls in one run" },
 ];
+/**
+ * Coins for finishing the first run of the day. One entry per day played in a row: the
+ * first day pays the first amount, the next day the second, and so on; after the last it
+ * stays there. Missing a day starts again from the first.
+ */
+export const DAILY_REWARDS = [20, 30, 40, 50, 60, 80, 100];
 export const MISSION_SLOTS = 3;
 export const MISSION_LOOP_FROM = 7;
 

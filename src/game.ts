@@ -5,6 +5,7 @@
 import * as THREE from 'three';
 import {
   CONFIG,
+  DAILY_REWARDS,
   HINTS,
   HINT_TIME,
   MILESTONES,
@@ -1122,6 +1123,7 @@ export class Game {
     // The end screen shows the missions as this run left them; finished ones are swapped
     // for new ones afterwards, ready for the next run.
     this.checkMissions();
+    this.claimDaily();
     this.ui.setMissions(this.missionRows());
     this.bankMissions();
     const book = this.recordBook();
@@ -1211,9 +1213,38 @@ export class Game {
     if (changed) writeSave(this.save);
   }
 
-  /** The active missions as the title screen, pause menu and end screen list them. */
+  /**
+   * Where the daily reward stands: whether today's has been paid, which day in a row
+   * today is (or would be), and what that day pays. Days are counted on the player's own
+   * calendar, so a new one starts at their midnight.
+   */
+  private daily(): { today: number; claimed: boolean; streak: number; reward: number } {
+    const now = new Date();
+    const today = Math.floor(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()) / 86400000);
+    const last = this.save.daily;
+    const claimed = last.day >= today;
+    const streak = Math.max(1, claimed ? last.streak : last.day === today - 1 ? last.streak + 1 : 1);
+    return { today, claimed, streak, reward: DAILY_REWARDS[Math.min(streak, DAILY_REWARDS.length) - 1] };
+  }
+
+  /** The first run of the day has ended: pay the daily reward. Bot runs and demos don't count. */
+  private claimDaily(): void {
+    if (!this.missionsOn) return;
+    const daily = this.daily();
+    if (daily.claimed) return;
+    this.save.daily = { day: daily.today, streak: daily.streak };
+    this.save.coins += daily.reward;
+    writeSave(this.save);
+  }
+
+  /** The daily reward and the active missions, as the title screen, pause menu and end screen list them. */
   private missionRows(): MissionRow[] {
-    const rows: MissionRow[] = [];
+    const daily = this.daily();
+    const rows: MissionRow[] = [
+      daily.claimed
+        ? { text: 'Daily reward', progress: 'back tomorrow', reward: daily.reward, done: true }
+        : { text: 'Daily: finish a run', progress: daily.streak > 1 ? `day ${daily.streak}` : '', reward: daily.reward, done: false },
+    ];
     for (const m of this.save.missions) {
       const def = MISSIONS.find((d) => d.id === m.id);
       if (!def) continue;

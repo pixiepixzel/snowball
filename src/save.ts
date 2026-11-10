@@ -16,9 +16,10 @@ const OLD_BEST_KEY = 'snowball.best';
 /**
  * Version 2 added the sound and vibration switches, version 3 the furthest world reached,
  * version 4 the music switch, version 5 which first-time hints have been shown,
- * version 6 the missions, version 7 the ball skins, version 8 the collection book.
+ * version 6 the missions, version 7 the ball skins, version 8 the collection book,
+ * version 9 the daily reward.
  */
-export const SAVE_VERSION = 8;
+export const SAVE_VERSION = 9;
 
 /** One of the active missions. */
 export interface MissionState {
@@ -60,6 +61,11 @@ export interface SaveData {
    */
   book: Record<string, number>;
   bookPaid: string[];
+  /**
+   * The daily reward: the day it was last paid (a count of days, by the player's own
+   * calendar; 0 = never) and how many days in a row that made.
+   */
+  daily: { day: number; streak: number };
 }
 
 const num = (v: unknown, fallback = 0): number => (typeof v === 'number' && Number.isFinite(v) && v >= 0 ? v : fallback);
@@ -70,7 +76,7 @@ const firstMissions = (): MissionState[] => MISSIONS.slice(0, MISSION_SLOTS).map
 function fresh(): SaveData {
   const upgrades: Record<string, number> = {};
   for (const u of UPGRADES) upgrades[u.id] = 0;
-  return { version: SAVE_VERSION, best: 0, coins: 0, upgrades, sound: true, music: true, vibration: true, reached: 0, hints: [], missions: firstMissions(), missionNext: MISSION_SLOTS, skins: [SKINS[0].id], skin: SKINS[0].id, book: {}, bookPaid: [] };
+  return { version: SAVE_VERSION, best: 0, coins: 0, upgrades, sound: true, music: true, vibration: true, reached: 0, hints: [], missions: firstMissions(), missionNext: MISSION_SLOTS, skins: [SKINS[0].id], skin: SKINS[0].id, book: {}, bookPaid: [], daily: { day: 0, streak: 0 } };
 }
 
 /** Turn whatever was stored into a valid save of the current version. */
@@ -120,6 +126,11 @@ function migrate(raw: unknown): SaveData {
     }
   }
   if (Array.isArray(data.bookPaid)) save.bookPaid = data.bookPaid.filter((key): key is string => typeof key === 'string');
+  // Before version 9 there was no daily reward: it starts as never paid.
+  if (typeof data.daily === 'object' && data.daily !== null) {
+    const daily = data.daily as Record<string, unknown>;
+    save.daily = { day: Math.floor(num(daily.day)), streak: Math.floor(num(daily.streak)) };
+  }
   const levels = (typeof data.upgrades === 'object' && data.upgrades !== null ? data.upgrades : {}) as Record<string, unknown>;
   for (const u of UPGRADES) save.upgrades[u.id] = Math.min(UPGRADE_LEVELS, Math.floor(num(levels[u.id])));
   return save;
