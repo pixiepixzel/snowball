@@ -455,7 +455,10 @@ export class UI {
   }
 
   /** The crates page: the price, and what the last crate held. */
-  private fillCrate(crate: { price: number; affordable: boolean; result: CrateResult | null }): void {
+  private crateTimer = 0;
+  private cratesSeen = 0;
+
+  private fillCrate(crate: { price: number; affordable: boolean; result: CrateResult | null; opened: number }): void {
     const open = el('crate-open') as HTMLButtonElement;
     open.disabled = !crate.affordable;
     open.textContent = '';
@@ -485,13 +488,25 @@ export class UI {
       const text = document.createElement('div');
       text.textContent = r.text;
       box.appendChild(text);
-      // Play the pop each time a crate is opened.
+    }
+    // A crate has just been opened: it rattles, bursts open, and only then shows its prize.
+    if (crate.opened !== this.cratesSeen) {
+      this.cratesSeen = crate.opened;
       const crateEl = el('crate-box');
-      crateEl.classList.remove('pop');
+      window.clearTimeout(this.crateTimer);
+      crateEl.classList.remove('rattle', 'burst');
       box.classList.remove('pop');
-      void box.offsetWidth;
-      crateEl.classList.add('pop');
-      box.classList.add('pop');
+      box.classList.add('waiting');
+      open.disabled = true;
+      void crateEl.offsetWidth;
+      crateEl.classList.add('rattle');
+      this.crateTimer = window.setTimeout(() => {
+        crateEl.classList.remove('rattle');
+        crateEl.classList.add('burst');
+        box.classList.remove('waiting');
+        box.classList.add('pop');
+        open.disabled = !crate.affordable;
+      }, 850);
     }
   }
 
@@ -555,7 +570,7 @@ export class UI {
   }
 
   /** Show (or refresh) the shop on top of whichever screen opened it. It stays on the page it was on. */
-  openShop(coins: number, rows: ShopRow[], skins: SkinRow[], crate: { price: number; affordable: boolean; result: CrateResult | null }, boosts: BoostRow[]): void {
+  openShop(coins: number, rows: ShopRow[], skins: SkinRow[], crate: { price: number; affordable: boolean; result: CrateResult | null; opened: number }, boosts: BoostRow[]): void {
     el('shop-coins').textContent = coins.toLocaleString('en-US');
     this.fillSkins(skins);
     this.fillCrate(crate);

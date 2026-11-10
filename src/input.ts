@@ -39,7 +39,14 @@ export class Input {
     window.addEventListener('keyup', (e) => this.onKey(e, false));
     // Stop the browser from scrolling, zooming or opening menus mid-run.
     el.addEventListener('contextmenu', (e) => e.preventDefault());
-    el.addEventListener('touchmove', (e) => e.preventDefault(), { passive: false });
+    // (Except over a card: the end screen, shop and book have to scroll under a finger.)
+    el.addEventListener(
+      'touchmove',
+      (e) => {
+        if (!(e.target instanceof Element && e.target.closest('.card'))) e.preventDefault();
+      },
+      { passive: false },
+    );
     document.addEventListener('gesturestart', (e) => e.preventDefault());
   }
 

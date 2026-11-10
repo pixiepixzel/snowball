@@ -175,6 +175,7 @@ export class Game {
   private doubleXp = false;
   private distance = 0;
   private lastCrate: CrateResult | null = null;
+  private cratesOpened = 0;
   private threat = 0;
   private pixelRatio = 1;
   private shadowsOn = false;
@@ -1774,6 +1775,7 @@ export class Game {
     }
     writeSave(this.save);
     this.lastCrate = result;
+    this.cratesOpened++;
     if (result.picture) this.audio.fanfare();
     else this.audio.chime();
     this.showShop();
@@ -1782,7 +1784,7 @@ export class Game {
 
   /** Open the shop, or redraw it after something was bought. */
   private showShop(): void {
-    this.ui.openShop(this.save.coins, this.shopRows(), this.skinRows(), { price: CRATE_PRICE, affordable: this.save.coins >= CRATE_PRICE, result: this.lastCrate }, this.boostRows());
+    this.ui.openShop(this.save.coins, this.shopRows(), this.skinRows(), { price: CRATE_PRICE, affordable: this.save.coins >= CRATE_PRICE, result: this.lastCrate, opened: this.cratesOpened }, this.boostRows());
   }
 
   /** One tile per ball skin for the shop: its picture, price and whether it is owned or in use. */
