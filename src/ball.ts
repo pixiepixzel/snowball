@@ -335,7 +335,7 @@ export class Ball {
     // --- plain snow slowly packs on; faster if the run is going badly.
     if (this.rolling && this.speed > 0 && !this.airborne) {
       const behind = this.r < designRadius(this.d) * C.CATCHUP_BELOW;
-      const rate = C.SNOW_GROWTH * (behind ? C.CATCHUP_MULT : 1);
+      const rate = C.SNOW_GROWTH * PERKS.pack * (behind ? C.CATCHUP_MULT : 1);
       this.r *= Math.exp(rate * dt * Math.min(1, this.speed / cruise));
     }
 
@@ -345,7 +345,7 @@ export class Ball {
     this.pop = clamp(this.pop + this.popVel * dt, 0.7, 1.45);
 
     if (this.invuln > 0) this.invuln = Math.max(0, this.invuln - dt);
-    const flash = this.invuln / C.HIT_INVULN;
+    const flash = Math.min(1, this.invuln / C.HIT_INVULN);
     // Red while hurt; icy blue during a yeti rage; green under a tractor beam.
     const g = this.glow;
     const own = this.skinGlow;
@@ -433,7 +433,7 @@ export class Ball {
     this.vx = 0;
     this.targetX = this.x;
     this.r *= 1 - C.HIT_RADIUS_LOSS * PERKS.hitLoss;
-    this.invuln = C.HIT_INVULN;
+    this.invuln = C.HIT_INVULN * PERKS.invuln;
     this.popVel -= 5;
     const lose = Math.ceil(this.stuck.length * C.HIT_KNOCK_OFF);
     for (let i = 0; i < lose; i++) this.dropStuck(this.stuck.length - 1);

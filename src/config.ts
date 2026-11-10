@@ -208,7 +208,7 @@ export const CONFIG = {
    * Coins earned by a run: COIN_PER_DOUBLING × (number of times the ball doubled in size)
    * raised to COIN_POWER. Reaching the dam is about 7.6 doublings, roughly 125 coins.
    */
-  COIN_PER_DOUBLING: 9,
+  COIN_PER_DOUBLING: 6,
   COIN_POWER: 1.3,
 
   // ---------------------------------------------------------------- Secret objects
@@ -441,25 +441,25 @@ export interface MissionDef {
 }
 
 export const MISSIONS: MissionDef[] = [
-  { id: 'walls3', kind: 'walls', scope: 'run', target: 3, reward: 30, text: 'Smash 3 walls in one run' },
-  { id: 'absorb100', kind: 'absorb', scope: 'total', target: 100, reward: 25, text: 'Absorb 100 things' },
-  { id: 'slam2', kind: 'slams', scope: 'total', target: 2, reward: 30, text: 'Land 2 ramp slams' },
-  { id: 'grow20', kind: 'grow', scope: 'run', target: 20, reward: 35, text: 'Grow 20 times bigger in one run' },
-  { id: 'streak2', kind: 'streak', scope: 'run', target: 2, reward: 40, text: 'Smash 2 walls in a row without being hit' },
+  { id: 'walls3', kind: 'walls', scope: 'run', target: 3, reward: 20, text: 'Smash 3 walls in one run' },
+  { id: 'absorb100', kind: 'absorb', scope: 'total', target: 100, reward: 15, text: 'Absorb 100 things' },
+  { id: 'slam2', kind: 'slams', scope: 'total', target: 2, reward: 20, text: 'Land 2 ramp slams' },
+  { id: 'grow20', kind: 'grow', scope: 'run', target: 20, reward: 20, text: 'Grow 20 times bigger in one run' },
+  { id: 'streak2', kind: 'streak', scope: 'run', target: 2, reward: 25, text: 'Smash 2 walls in a row without being hit' },
   // Secrets are rare (roughly one every few runs), so this pays well and is only asked once.
-  { id: 'secret1', kind: 'secrets', scope: 'total', target: 1, reward: 60, text: 'Find a secret object' },
-  { id: 'freeze2', kind: 'freeze', scope: 'total', target: 2, reward: 30, text: 'Freeze 2 rivers' },
-  { id: 'walls5', kind: 'walls', scope: 'run', target: 5, reward: 50, text: 'Smash 5 walls in one run' },
-  { id: 'time90', kind: 'time', scope: 'run', target: 90, reward: 40, text: 'Last 90 seconds in one run' },
-  { id: 'world1', kind: 'worlds', scope: 'run', target: 1, reward: 60, text: "Smash a world's last wall" },
-  { id: 'absorb300', kind: 'absorb', scope: 'total', target: 300, reward: 50, text: 'Absorb 300 things' },
-  { id: 'slam3', kind: 'slams', scope: 'run', target: 3, reward: 60, text: 'Land 3 ramp slams in one run' },
-  { id: 'grow100', kind: 'grow', scope: 'run', target: 100, reward: 70, text: 'Grow 100 times bigger in one run' },
-  { id: 'streak4', kind: 'streak', scope: 'run', target: 4, reward: 80, text: 'Smash 4 walls in a row without being hit' },
-  { id: 'absorb250', kind: 'absorb', scope: 'run', target: 250, reward: 70, text: 'Absorb 250 things in one run' },
-  { id: 'walls8', kind: 'walls', scope: 'run', target: 8, reward: 90, text: 'Smash 8 walls in one run' },
-  { id: 'time180', kind: 'time', scope: 'run', target: 180, reward: 80, text: 'Last 3 minutes in one run' },
-  { id: 'world2', kind: 'worlds', scope: 'run', target: 2, reward: 150, text: "Smash 2 worlds' last walls in one run" },
+  { id: 'secret1', kind: 'secrets', scope: 'total', target: 1, reward: 35, text: 'Find a secret object' },
+  { id: 'freeze2', kind: 'freeze', scope: 'total', target: 2, reward: 20, text: 'Freeze 2 rivers' },
+  { id: 'walls5', kind: 'walls', scope: 'run', target: 5, reward: 30, text: 'Smash 5 walls in one run' },
+  { id: 'time90', kind: 'time', scope: 'run', target: 90, reward: 25, text: 'Last 90 seconds in one run' },
+  { id: 'world1', kind: 'worlds', scope: 'run', target: 1, reward: 35, text: "Smash a world's last wall" },
+  { id: 'absorb300', kind: 'absorb', scope: 'total', target: 300, reward: 30, text: 'Absorb 300 things' },
+  { id: 'slam3', kind: 'slams', scope: 'run', target: 3, reward: 35, text: 'Land 3 ramp slams in one run' },
+  { id: 'grow100', kind: 'grow', scope: 'run', target: 100, reward: 40, text: 'Grow 100 times bigger in one run' },
+  { id: 'streak4', kind: 'streak', scope: 'run', target: 4, reward: 50, text: 'Smash 4 walls in a row without being hit' },
+  { id: 'absorb250', kind: 'absorb', scope: 'run', target: 250, reward: 40, text: 'Absorb 250 things in one run' },
+  { id: 'walls8', kind: 'walls', scope: 'run', target: 8, reward: 55, text: 'Smash 8 walls in one run' },
+  { id: 'time180', kind: 'time', scope: 'run', target: 180, reward: 50, text: 'Last 3 minutes in one run' },
+  { id: 'world2', kind: 'worlds', scope: 'run', target: 2, reward: 90, text: "Smash 2 worlds' last walls in one run" },
 ];
 /**
  * Coins for finishing the first run of the day. One entry per day played in a row: the
@@ -495,12 +495,18 @@ export const HINT_TIME = 4.5;
 
 // ---------------------------------------------------------------- Upgrades
 /**
- * Permanent upgrades bought with coins between runs. Each has UPGRADE_LEVELS levels; level
- * n costs baseCost × costGrowth^n (rounded), and every level adds `perLevel` to its effect.
- * What each one changes is in perks.ts.
+ * Permanent upgrades bought with coins between runs: three tracks of UPGRADE_LEVELS levels.
+ * Level n costs baseCost × costGrowth^n (rounded to 5), every level adds `perLevel` to
+ * the track's effect, and at levels 3, 6 and 10 it also gains something new
+ * (`milestones` says what, in words; UPGRADE_EFFECTS has the numbers; perks.ts applies them).
+ *
+ * They stay fair because every wall demands a fixed size: a stronger ball gets further
+ * before one stops it, but the early scenes are no different.
  */
 export interface UpgradeDef {
-  id: 'start' | 'sticky' | 'tough' | 'grip' | 'luck';
+  id: 'snow' | 'armour' | 'reach';
+  /** [the level it arrives at, what it is]. */
+  milestones: [number, string][];
   name: string;
   /** One line for the shop. */
   blurb: string;
@@ -515,12 +521,66 @@ export interface UpgradeDef {
 export const UPGRADE_LEVELS = 10;
 
 export const UPGRADES: UpgradeDef[] = [
-  { id: 'start', name: 'Head start', blurb: 'Begin every run bigger', baseCost: 30, costGrowth: 1.5, perLevel: 0.04, effect: 'bigger at the start' },
-  { id: 'sticky', name: 'Sticky snow', blurb: 'Grow more from everything you absorb', baseCost: 30, costGrowth: 1.5, perLevel: 0.03, effect: 'more growth' },
-  { id: 'tough', name: 'Packed ice', blurb: 'Lose less size when you hit something', baseCost: 30, costGrowth: 1.5, perLevel: 0.05, effect: 'less size lost' },
-  { id: 'grip', name: 'Grip', blurb: 'Steer quicker and tighter', baseCost: 30, costGrowth: 1.5, perLevel: 0.03, effect: 'quicker steering' },
-  { id: 'luck', name: 'Lucky charm', blurb: 'Secrets and rare things turn up more often', baseCost: 30, costGrowth: 1.5, perLevel: 0.12, effect: 'more secrets' },
+  {
+    id: 'snow',
+    name: 'Snow',
+    blurb: 'Grow more from everything you absorb',
+    baseCost: 100,
+    costGrowth: 1.45,
+    perLevel: 0.015,
+    effect: 'more growth',
+    milestones: [
+      [3, 'snow packs on faster as you roll'],
+      [6, 'smashing a wall grows you half as much again'],
+      [10, 'a big extra lump of growth'],
+    ],
+  },
+  {
+    id: 'armour',
+    name: 'Armour',
+    blurb: 'Lose less size when you hit something',
+    baseCost: 100,
+    costGrowth: 1.45,
+    perLevel: 0.04,
+    effect: 'less size lost',
+    milestones: [
+      [3, 'longer before you can be hurt again'],
+      [6, 'a free shield every 45 seconds'],
+      [10, 'a free shield every 25 seconds'],
+    ],
+  },
+  {
+    id: 'reach',
+    name: 'Reach',
+    blurb: 'Absorb things from further away',
+    baseCost: 100,
+    costGrowth: 1.45,
+    perLevel: 0.02,
+    effect: 'more reach',
+    milestones: [
+      [3, 'small things drift towards you'],
+      [6, 'they come from further away'],
+      [10, 'a strong pull, all the time'],
+    ],
+  },
 ];
+
+/** The numbers behind the milestones above. */
+export const UPGRADE_EFFECTS = {
+  /** Snow 3: plain snow packs on this many times faster. Snow 6: a wall's growth bonus times this. Snow 10: this much more growth. */
+  snowPack: 1.15,
+  snowGate: 1.5,
+  snowBonus: 0.05,
+  /** Armour 3: this many times longer unhurtable after a hit. Armour 6 and 10: seconds between free shields. */
+  armourInvuln: 1.5,
+  armourShield: [45, 25],
+  /** Reach 3, 6 and 10: [how many ball radii away things start to drift in, how fast]. */
+  reachPull: [
+    [1.8, 1.5],
+    [2.3, 2],
+    [2.8, 2.5],
+  ],
+};
 
 // ---------------------------------------------------------------- Ball skins
 /**
@@ -597,10 +657,10 @@ export interface BoostDef {
   price: number;
 }
 export const BOOSTS: BoostDef[] = [
-  { id: 'headStart', name: 'Head start', blurb: 'Begin the run 60% bigger', price: 40 },
-  { id: 'shield', name: 'Shield', blurb: 'The first hit costs you nothing', price: 50 },
-  { id: 'magnet', name: 'Magnet', blurb: 'Small things fly to you for 20 seconds', price: 40 },
-  { id: 'doubleXp', name: 'Double XP', blurb: 'Twice the XP from the run', price: 60 },
+  { id: 'headStart', name: 'Head start', blurb: 'Begin the run 60% bigger', price: 100 },
+  { id: 'shield', name: 'Shield', blurb: 'The first hit costs you nothing', price: 120 },
+  { id: 'magnet', name: 'Magnet', blurb: 'Small things fly to you for 20 seconds', price: 100 },
+  { id: 'doubleXp', name: 'Double XP', blurb: 'Twice the XP from the run', price: 150 },
 ];
 /** How much bigger a Head start makes the ball, and how long the Magnet lasts (s). */
 export const BOOST_HEAD_START = 1.6;
@@ -613,16 +673,16 @@ export const BOOST_MAGNET_TIME = 20;
  * (config SKINS with `crate`). A skin you already have every one of at that rarity pays
  * CRATE_DUPLICATE_COINS instead.
  */
-export const CRATE_PRICE = 120;
+export const CRATE_PRICE = 300;
 export const CRATE_REWARDS: { kind: 'boosts' | 'coins' | 'xp' | 'skin'; chance: number; count?: number; min?: number; max?: number; amount?: number; rarity?: RarityId }[] = [
   { kind: 'boosts', count: 2, chance: 0.42 },
-  { kind: 'coins', min: 60, max: 150, chance: 0.2 },
-  { kind: 'xp', amount: 80, chance: 0.15 },
+  { kind: 'coins', min: 150, max: 400, chance: 0.2 },
+  { kind: 'xp', amount: 250, chance: 0.15 },
   { kind: 'skin', rarity: 'rare', chance: 0.15 },
   { kind: 'skin', rarity: 'superRare', chance: 0.06 },
   { kind: 'skin', rarity: 'mythic', chance: 0.02 },
 ];
-export const CRATE_DUPLICATE_COINS: Record<string, number> = { rare: 80, superRare: 160, mythic: 320 };
+export const CRATE_DUPLICATE_COINS: Record<string, number> = { rare: 200, superRare: 400, mythic: 800 };
 
 // ---------------------------------------------------------------- XP and levels
 /**
@@ -634,11 +694,11 @@ export const CRATE_DUPLICATE_COINS: Record<string, number> = { rare: 80, superRa
  */
 export const XP_FOR = { scene: 20, wall: 15, world: 100, doubling: 6, slam: 4, secret: 15, superRare: 5, mythic: 20, mission: 25 };
 /** XP to reach level 2, and how much more each level needs than the one before. */
-export const LEVEL_XP_BASE = 120;
-export const LEVEL_XP_GROWTH = 1.12;
+export const LEVEL_XP_BASE = 350;
+export const LEVEL_XP_GROWTH = 1.14;
 /** The coin chest for reaching a level: this much, plus this much per level. */
-export const LEVEL_COIN_BASE = 20;
-export const LEVEL_COIN_STEP = 5;
+export const LEVEL_COIN_BASE = 15;
+export const LEVEL_COIN_STEP = 3;
 /** Each level makes secrets and rare things this much more likely, up to this much in all. */
 export const LEVEL_LUCK = 0.01;
 export const LEVEL_LUCK_MAX = 0.25;

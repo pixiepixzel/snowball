@@ -18,9 +18,10 @@ const OLD_BEST_KEY = 'snowball.best';
  * version 4 the music switch, version 5 which first-time hints have been shown,
  * version 6 the missions, version 7 the ball skins, version 8 the collection book,
  * version 9 the daily reward, version 10 XP and where the best run ended,
- * version 11 run boosts.
+ * version 11 run boosts,
+ * version 12 the three new upgrade tracks (the five old upgrades are refunded).
  */
-export const SAVE_VERSION = 11;
+export const SAVE_VERSION = 12;
 
 /** One of the active missions. */
 export interface MissionState {
@@ -153,6 +154,14 @@ function migrate(raw: unknown): SaveData {
   }
   if (Array.isArray(data.armed)) save.armed = data.armed.filter((id): id is string => typeof id === 'string');
   const levels = (typeof data.upgrades === 'object' && data.upgrades !== null ? data.upgrades : {}) as Record<string, unknown>;
+  // Before version 12 there were five different upgrades. They are gone: give back every
+  // coin that was spent on them, at the prices they cost then (30, 45, 68... per level).
+  if (num(data.version) < 12) {
+    for (const id of ['start', 'sticky', 'tough', 'grip', 'luck']) {
+      const had = Math.min(10, Math.floor(num(levels[id])));
+      for (let i = 0; i < had; i++) save.coins += Math.round(30 * Math.pow(1.5, i));
+    }
+  }
   for (const u of UPGRADES) save.upgrades[u.id] = Math.min(UPGRADE_LEVELS, Math.floor(num(levels[u.id])));
   return save;
 }

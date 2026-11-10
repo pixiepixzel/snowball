@@ -10,6 +10,7 @@
  * jump or sink), ramps (launch) and snowploughs (scrape).
  */
 import { CONFIG } from './config';
+import { PERKS } from './perks';
 import type { Ball } from './ball';
 import type { World, WorldObject } from './world';
 
@@ -71,7 +72,8 @@ export function collide(ball: Ball, world: World, h: CollisionHandlers): void {
       continue;
     }
 
-    const reach = reachR + o.fp;
+    // The Reach upgrade stretches how far the ball reaches for what it can absorb (never for what can hurt it).
+    const reach = reachR * (o.size < ball.r * C.ABSORB_RATIO ? PERKS.reach : 1) + o.fp;
     if (dd > reach || dd < -reach) continue;
     if (dx > reach || dx < -reach) continue;
     const dist2 = dx * dx + dd * dd;

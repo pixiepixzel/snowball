@@ -172,6 +172,7 @@ export class Game {
   private passedBest = false;
   /** Boosts working in this run, how far it has rolled (as shown to the player), and what the last crate held. */
   private shield = false;
+  private shieldClock = 0;
   private doubleXp = false;
   private distance = 0;
   private lastCrate: CrateResult | null = null;
@@ -396,6 +397,7 @@ export class Game {
     this.runMissions = 0;
     this.passedBest = false;
     this.shield = false;
+    this.shieldClock = 0;
     this.doubleXp = false;
     this.distance = 0;
     // The flag marking the furthest run only goes up for real runs.
@@ -634,6 +636,8 @@ export class Game {
 
     this.world.update(ball.d, ball.r, this.rig.camR, this.rig.camX, dt, this.time, raging);
     if (beaming) this.world.pull(ball.x, ball.d, ball.r, CONFIG.UFO_BEAM_RANGE_K * ball.r, CONFIG.UFO_BEAM_PULL_K * ball.r * dt, this.time);
+    // The Reach upgrade: a gentler pull of its own, all the time.
+    else if (PERKS.pullRange > 0 && this.state === 'playing') this.world.pull(ball.x, ball.d, ball.r, PERKS.pullRange * ball.r, PERKS.pullPower * ball.r * dt, this.time);
 
     if (active) {
       collide(ball, this.world, this.handlers);
@@ -693,6 +697,15 @@ export class Game {
     // (wedged between obstacles, or against one near the bank), roll it back uphill a
     // little so there is room to steer out. Guarantees the run can never dead-end.
     const cruise = ball.cruiseSpeed();
+    // The Armour upgrade: a free shield every so often.
+    if (PERKS.shieldEvery > 0 && !this.shield) {
+      this.shieldClock += realDt;
+      if (this.shieldClock >= PERKS.shieldEvery) {
+        this.shieldClock = 0;
+        this.shield = true;
+        this.floatAtBall('Shield ready', false);
+      }
+    }
     const advanced = ball.d - this.lastD;
     this.distance += Math.max(0, advanced) * displayScale();
     this.lastD = ball.d;
@@ -1050,7 +1063,7 @@ export class Game {
       this.tally.streak = Math.max(this.tally.streak, ++this.streak);
       if (dam) this.tally.worlds++;
       this.checkMissions();
-      ball.r *= 1 + C.GATE_BONUS;
+      ball.r *= 1 + C.GATE_BONUS * PERKS.gate;
       ball.popVel += 6;
       this.slowmo = dam ? 1.0 : 0.45;
       this.lastSlowmo = this.stats.time;
@@ -1628,13 +1641,15 @@ export class Game {
       const maxed = level >= UPGRADE_LEVELS;
       const cost = maxed ? 0 : upgradeCost(def, level);
       const percent = Math.round(level * def.perLevel * 100);
+      const next = def.milestones.find(([at]) => at > level);
       return {
         id: def.id,
         name: def.name,
         blurb: def.blurb,
         level,
         levels: UPGRADE_LEVELS,
-        effect: level > 0 ? `${percent}% ${def.effect}` : '',
+        // What it adds up to so far, and the next new thing it will bring.
+        effect: `${level > 0 ? `${percent}% ${def.effect} · ` : ''}${next ? `Level ${next[0]}: ${next[1]}` : 'everything unlocked'}`,
         cost,
         maxed,
         affordable: !maxed && this.save.coins >= cost,
