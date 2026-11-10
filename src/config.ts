@@ -251,8 +251,16 @@ export const CONFIG = {
   AVALANCHE_WARN_K: 16,
 
   // ---------------------------------------------------------------- Hazard: snowploughs
-  /** Chance per beat (from the Ski Resort on), size in design radii, speed as a fraction of cruise speed. */
-  PLOUGH_CHANCE: 0.11,
+  /**
+   * The things that drive up the slope at the ball and scrape snow off it: the snowplough,
+   * and its stand-in in every other world (stampede, meteor, shark...).
+   *
+   * SWITCHED OFF in every world: the chance is 0, so none ever appear. It was 0.11; put
+   * that back to bring them back.
+   *
+   * Chance per beat (from the Ski Resort on), size in design radii, speed as a fraction of cruise speed.
+   */
+  PLOUGH_CHANCE: 0,
   PLOUGH_SIZE_K: 1.3,
   PLOUGH_SPEED: 0.45,
   /** Fraction of radius scraped off on contact. */
@@ -459,7 +467,6 @@ export const HINTS = {
   riverSmall: 'Too small! Take the bridge or jump',
   riverBig: "You're big enough to freeze the river",
   ramp: 'Ramps launch you. Land to SLAM!',
-  plough: 'Dodge it, or tap to jump over',
   secret: 'Gold disc: grab it for a power!',
 };
 export type HintId = keyof typeof HINTS;
@@ -638,7 +645,8 @@ export const TWISTS: Twist[] = [
   twist('Fog', "You can't see far ahead", { fog: 0.4 }),
   twist('Ramp park', 'Ramps everywhere', { ramp: 3, wall: 0.92 }),
   twist('Black ice', 'The ball slides when you steer', { slide: 1.6, wall: 0.93 }),
-  twist('Stampede', 'More things charge at you', { plough: 2.2, wall: 0.93 }),
+  // (There was a "Stampede" twist, more things charging at you. It went when the charging
+  // hazards were switched off: see PLOUGH_CHANCE.)
 ];
 
 /** Seconds for the crosswind to swing one way and back. */

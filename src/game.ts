@@ -1373,8 +1373,6 @@ export class Game {
         if (o.state === 0 && this.tryHint(ball.r >= o.need ? 'riverBig' : 'riverSmall')) return;
       } else if (special === 'ramp') {
         if (ahead < 18 * r && aside < 7 * r && this.tryHint('ramp')) return;
-      } else if (special === 'plough') {
-        if (o.size >= absorbMax && this.tryHint('plough')) return;
       } else if (special === 'secret') {
         if (ahead < 20 * r && this.tryHint('secret')) return;
       } else if (!special && o.danger && ahead < 12 * r && aside < 3.5 * r) {

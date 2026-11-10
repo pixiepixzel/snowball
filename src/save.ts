@@ -6,7 +6,7 @@
  * their progress. Anything unreadable falls back to a fresh save rather than breaking
  * the game, and every access is wrapped because storage can be blocked or full.
  */
-import { BASIC_HINTS, CONFIG, MISSIONS, MISSION_SLOTS, SKINS, UPGRADES, UPGRADE_LEVELS } from './config';
+import { BASIC_HINTS, CONFIG, HINTS, MISSIONS, MISSION_SLOTS, SKINS, UPGRADES, UPGRADE_LEVELS } from './config';
 import { LAP_GROWTH } from './zones';
 
 const SAVE_KEY = 'snowball.save';
@@ -99,7 +99,8 @@ function migrate(raw: unknown): SaveData {
   save.coins = Math.floor(num(data.coins));
   // Before version 5 there were no hints. Someone who has already played knows the basics,
   // so those are marked as seen; the tips for rivers, ramps and the rest still appear once.
-  if (Array.isArray(data.hints)) save.hints = data.hints.filter((id): id is string => typeof id === 'string');
+  // (Hints that no longer exist are dropped, so the count of hints left to show stays right.)
+  if (Array.isArray(data.hints)) save.hints = data.hints.filter((id): id is string => typeof id === 'string' && id in HINTS);
   else if (save.best > 0) save.hints = [...BASIC_HINTS];
   // Before version 6 there were no missions: `fresh()` has already dealt the first three.
   // Otherwise keep the stored ones that still exist, and top up to a full set.
