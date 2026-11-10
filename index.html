@@ -21,7 +21,7 @@
           <div id="progress">
             <div id="progress-fill"></div>
           </div>
-          <div id="size"><b id="size-value">0.50</b><span id="size-unit">m</span></div>
+          <div id="size"><i id="size-label">Size:</i><b id="size-value">0.50</b><span id="size-unit">m</span></div>
           <div id="zone">Summit</div>
           <div id="twist" class="hidden"></div>
           <div id="gate">
@@ -41,6 +41,7 @@
           <div id="avalanche-bar"><div id="avalanche-fill"></div></div>
         </div>
 
+        <div id="post-labels"></div>
         <div id="banner"></div>
         <div id="milestone"><span id="milestone-text"></span></div>
         <div id="hint"><span id="hint-text"></span></div>
@@ -49,12 +50,19 @@
         <div id="debug" class="hidden"></div>
 
         <section id="title" class="screen">
+          <div class="pair">
+            <button id="shop-btn" class="btn alt" type="button">Shop <span class="coins"><i></i><b id="title-coins">0</b></span></button>
+            <button id="book-btn" class="btn alt" type="button">Book <span class="coins"><b id="title-book">0/0</b></span></button>
+          </div>
+          <aside id="mission-drawer">
+            <button id="mission-tab" type="button">Missions</button>
+            <div class="missions" aria-label="Missions"></div>
+          </aside>
           <div class="title-wrap">
             <h1>SNOW<br />BALL</h1>
             <p class="tag">Roll down. Stick everything. Get huge.</p>
           </div>
           <div class="bottom">
-            <div class="missions" aria-label="Missions"></div>
             <div id="world-pick">
               <button id="world-prev" class="step" type="button" aria-label="Previous world"></button>
               <div class="world">
@@ -64,10 +72,6 @@
               <button id="world-next" class="step next" type="button" aria-label="Next world"></button>
             </div>
             <button id="start-btn" class="btn" type="button">Tap to roll</button>
-            <div class="pair">
-              <button id="shop-btn" class="btn alt" type="button">Shop <span class="coins"><i></i><b id="title-coins">0</b></span></button>
-              <button id="book-btn" class="btn alt" type="button">Book <span class="coins"><b id="title-book">0/0</b></span></button>
-            </div>
             <div id="title-best" class="best"></div>
             <div class="switches">
               <button id="title-sound-btn" class="switch" type="button">Sound: on</button>

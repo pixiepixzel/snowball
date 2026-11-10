@@ -37,7 +37,7 @@ import { levelCoins, levelOf, titleFor } from './levels';
 import { PERKS, applyUpgrades, coinsFor, upgradeCost } from './perks';
 import { loadSave, writeSave, type MissionState, type SaveData } from './save';
 import { Thumbs } from './thumbs';
-import { UI, type MissionRow, type ShopRow, type SkinRow, type XpView } from './ui';
+import { UI, type MissionRow, type PostLabel, type ShopRow, type SkinRow, type XpView } from './ui';
 import { clamp, lerp, sizeLabel, sizeParts } from './util';
 import { World, type WorldObject } from './world';
 import { HAND_MADE_LAPS, worldForLap } from './worlds';
@@ -799,6 +799,7 @@ export class Game {
 
   private render(): void {
     this.world.commit();
+    this.updatePostLabels();
     this.renderer.render(this.scene, this.rig.camera);
     if (this.showDebug) {
       const info = this.renderer.info.render;
@@ -1210,6 +1211,37 @@ export class Game {
     }[this.endKind];
     const [size, unit] = sizeParts(r);
     this.ui.showEnd({ ...text, size, unit, best: sizeLabel(this.save.best), isBest, items, bookNote: book.note, xp, coins: this.keepScores ? coins : null, totalCoins: this.save.coins });
+  }
+
+  // ------------------------------------------------------------------ distance posts
+
+  /**
+   * Write the distance on each distance post's board (and BEST on the best-run flag).
+   * The words are ordinary text laid over the game where the board is on screen, sized to
+   * fit it, so they stay sharp however far away the post is.
+   */
+  private updatePostLabels(): void {
+    const labels: PostLabel[] = [];
+    if (this.state === 'playing' || this.state === 'title') {
+      const w = this.frameEl.clientWidth;
+      const h = this.frameEl.clientHeight;
+      const camera = this.rig.camera;
+      for (const o of this.world.objects) {
+        if (o.def.special !== 'marker') continue;
+        const flag = o.def.id === 'bestFlag';
+        const foot = groundY(o.d) + o.yOff - o.sink;
+        // The middle of the board (or the flag's pennant), and a point a board's height above it.
+        _v.set(o.x + (flag ? o.size * 0.3 : 0), foot + o.size * (flag ? 1.3 : 1.7), -o.d).project(camera);
+        if (_v.z > 1 || Math.abs(_v.x) > 1.15) continue;
+        const x = (_v.x * 0.5 + 0.5) * w;
+        const y = (-_v.y * 0.5 + 0.5) * h;
+        _v.set(o.x, foot + o.size * (flag ? 1.3 : 1.7) + o.size * 0.4, -o.d).project(camera);
+        const tall = Math.abs((-_v.y * 0.5 + 0.5) * h - y);
+        if (tall < 6) continue; // too far off to read
+        labels.push({ x, y, size: Math.min(26, tall * 0.62), text: flag ? 'BEST' : sizeLabel(this.shown(o.d)), gold: flag });
+      }
+    }
+    this.ui.setPostLabels(labels);
   }
 
   // ------------------------------------------------------------------ XP and levels

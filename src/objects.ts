@@ -62,7 +62,7 @@ export interface ObjectDef {
    */
   tints?: number[];
   /** Optional idle animation. */
-  motion?: 'spin' | 'hop' | 'ski';
+  motion?: 'spin' | 'hop' | 'ski' | 'waddle';
   /** Landmarks get slow-motion and a bigger shake when absorbed. */
   landmark?: boolean;
   /**
@@ -1065,7 +1065,7 @@ const MOUNTAIN: ObjectDef[] = [
   { id: 'snowflake', name: 'snowflake', plural: 'snowflakes', zone: 0, span: [0, 1.3], size: 0.06, jitter: 0.15, footprint: 0.9, weight: 3, color: 0x4fbcff, build: snowflake, motion: 'spin' },
   { id: 'mitten', name: 'mitten', plural: 'mittens', zone: 0, span: [0, 1.5], size: 0.1, jitter: 0.15, footprint: 0.6, weight: 2.5, color: RED, build: mitten, tints: BRIGHT_TINTS },
   // (The id is still 'hat': it was a bobble hat, and saves and the other worlds know it by that id.)
-  { id: 'hat', name: 'penguin', plural: 'penguins', zone: 0, span: [0, 1.8], size: 0.15, jitter: 0.15, footprint: 0.7, weight: 2, color: 0x2a3140, build: N.penguin, tints: BRIGHT_TINTS },
+  { id: 'hat', name: 'penguin', plural: 'penguins', zone: 0, span: [0, 1.8], size: 0.15, jitter: 0.15, footprint: 0.7, weight: 2, color: 0x2a3140, build: N.penguin, tints: BRIGHT_TINTS, motion: 'waddle' },
   { id: 'snowboard', name: 'snowboard', plural: 'snowboards', zone: 0, span: [0.3, 2.2], size: 0.26, jitter: 0.12, footprint: 0.4, weight: 1.5, color: 0xff8a1a, build: snowboard },
   { id: 'iceSpike', name: 'ice spike', plural: 'ice spikes', zone: 0, span: [0.1, 2.4], size: 0.5, jitter: 0.3, footprint: 0.65, weight: 1, color: 0x38a9f0, build: iceSpike },
 
@@ -1124,7 +1124,8 @@ const themed = (
 ): ObjectDef => {
   const base = MOUNTAIN.find((def) => def.id === like);
   if (!base) throw new Error(`themed(): no mountain object called "${like}"`);
-  return { ...base, tints: undefined, id, name, plural, color, build, world, ...extra };
+  // (Waddling is the penguin's own: what stands in for it elsewhere is an egg, a cloud...)
+  return { ...base, tints: undefined, motion: base.motion === 'waddle' ? undefined : base.motion, id, name, plural, color, build, world, ...extra };
 };
 
 // Number the mountain objects before the other worlds copy them: an object and its

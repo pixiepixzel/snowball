@@ -36,6 +36,16 @@ export interface ShopRow {
   affordable: boolean;
 }
 
+/** Words to lay over a distance post's board: where on screen, how big, and what. */
+export interface PostLabel {
+  x: number;
+  y: number;
+  /** Font size in pixels. */
+  size: number;
+  text: string;
+  gold: boolean;
+}
+
 /** What a run did for the player's level, for the end screen. */
 export interface XpView {
   gained: number;
@@ -185,6 +195,8 @@ export class UI {
     el('book-prev').addEventListener('click', () => this.onBookStep(-1));
     el('book-next').addEventListener('click', () => this.onBookStep(1));
     el('book-close').addEventListener('click', () => this.bookScreen.classList.add('hidden'));
+    // The missions drawer on the title screen: its tab slides it out and back.
+    el('mission-tab').addEventListener('click', () => el('mission-drawer').classList.toggle('open'));
     el('tab-upgrades').addEventListener('click', () => this.setShopTab('upgrades'));
     el('tab-skins').addEventListener('click', () => this.setShopTab('skins'));
     el('world-prev').addEventListener('click', () => this.onWorldStep(-1));
@@ -297,6 +309,31 @@ export class UI {
     const text = coins.toLocaleString('en-US');
     el('title-coins').textContent = text;
     el('end-total').textContent = text;
+  }
+
+  private postLabels: HTMLDivElement[] = [];
+
+  /** Show these words over the distance posts (and hide any left over from the last frame). */
+  setPostLabels(labels: PostLabel[]): void {
+    const box = el('post-labels');
+    while (this.postLabels.length < labels.length) {
+      const d = document.createElement('div');
+      d.className = 'post-label';
+      box.appendChild(d);
+      this.postLabels.push(d);
+    }
+    this.postLabels.forEach((d, i) => {
+      const label = labels[i];
+      if (!label) {
+        if (d.style.display !== 'none') d.style.display = 'none';
+        return;
+      }
+      d.style.display = '';
+      d.style.transform = `translate(${label.x.toFixed(1)}px, ${label.y.toFixed(1)}px) translate(-50%, -50%)`;
+      d.style.fontSize = `${label.size.toFixed(1)}px`;
+      if (d.textContent !== label.text) d.textContent = label.text;
+      d.classList.toggle('gold', label.gold);
+    });
   }
 
   private levelText = '';

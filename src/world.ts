@@ -286,6 +286,7 @@ const _e1 = new THREE.Vector3();
 const _e2 = new THREE.Vector3();
 const UP = new THREE.Vector3(0, 1, 0);
 const RIGHT = new THREE.Vector3(1, 0, 0);
+const FORWARD = new THREE.Vector3(0, 0, 1);
 const _tilt = new THREE.Quaternion();
 
 /** How a hopping creature is posed at one moment (see hopPose). */
@@ -789,10 +790,17 @@ export class World {
       rot += time * 1.6;
       y += (0.25 + 0.12 * Math.sin(time * 2.2 + o.phase)) * o.size;
     }
+    // Waddling: rocking from foot to foot, with a little bob, looking this way and that.
+    const waddling = o.def.motion === 'waddle' && !o.scenery;
+    if (waddling) {
+      y += Math.abs(Math.sin(time * 7 + o.phase)) * 0.06 * o.size;
+      rot += Math.sin(time * 0.7 + o.phase * 3) * 0.9;
+    }
     _pos.set(o.x, y, -o.d);
     _quat.setFromAxisAngle(UP, rot);
     if (o.sx > 0) _scale.set(o.sx, o.sz, o.sz);
     else _scale.setScalar(o.size * o.fade);
+    if (waddling) _quat.multiply(_tilt.setFromAxisAngle(FORWARD, Math.sin(time * 7 + o.phase) * 0.24));
     if (hopping) {
       // Lean into the jump, and squash and stretch from the feet.
       _quat.multiply(_tilt.setFromAxisAngle(RIGHT, _hop.pitch));
@@ -1086,7 +1094,7 @@ export class World {
     };
     for (let k = 1; k <= 3; k++) {
       const d = zoneStart + (zoneEnd - zoneStart) * k * 0.25;
-      if (d >= d0 && d < d1) put(`post${k}`, d, R * 1.1);
+      if (d >= d0 && d < d1) put(`post${k}`, d, R * 2.6);
     }
     const best = this.bestAt;
     if (best && best.lap === lap && best.zone === zone) {

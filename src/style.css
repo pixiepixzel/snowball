@@ -1694,3 +1694,84 @@ h1 {
     margin-top: 8px;
   }
 }
+
+/* ------------------------------------------------------------------ "Size:" on the HUD */
+#size #size-label {
+  margin-right: 8px;
+  font-size: 20px;
+  font-style: normal;
+  font-weight: 800;
+  letter-spacing: 0;
+  opacity: 0.9;
+}
+
+/* ------------------------------------------------------------------ words on the distance posts */
+#post-labels {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.post-label {
+  position: absolute;
+  left: 0;
+  top: 0;
+  font-weight: 900;
+  line-height: 1;
+  white-space: nowrap;
+  color: #17365c;
+  text-shadow: none;
+  will-change: transform;
+}
+
+.post-label.gold {
+  color: #7a4a00;
+}
+
+/* ------------------------------------------------------------------ title screen layout */
+/* Shop and Book across the very top; the title in the middle; the world picker and the
+   start button at the bottom; missions in a drawer that slides out from the right. */
+#title .title-wrap {
+  margin-top: 0;
+}
+
+#mission-drawer {
+  position: absolute;
+  right: 0;
+  top: 44%;
+  z-index: 2;
+  display: flex;
+  align-items: flex-start;
+  /* Closed: only the tab shows. */
+  transform: translateX(calc(100% - 36px));
+  transition: transform 0.28s ease;
+}
+
+#mission-drawer.open {
+  transform: none;
+}
+
+#mission-tab {
+  appearance: none;
+  flex: none;
+  width: 36px;
+  padding: 14px 0;
+  border: 0;
+  border-radius: 14px 0 0 14px;
+  cursor: pointer;
+  writing-mode: vertical-rl;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: #fff;
+  background: rgba(14, 29, 51, 0.72);
+}
+
+#mission-drawer .missions {
+  width: min(76vw, 290px);
+  border-radius: 0 0 0 16px;
+  background: rgba(14, 29, 51, 0.82);
+}

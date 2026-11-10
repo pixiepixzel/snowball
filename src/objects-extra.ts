@@ -526,8 +526,14 @@ export const megaRocket = () => {
 
 /** A distance post: a white pole with one, two or three red bands, for a quarter, half and three-quarters of a scene. */
 export const distancePost = (bands: number) => () => {
-  const parts: Parts = [cyl(0.09, 0.11, 1.9, 0xf0f2f6, {}, 6), cyl(0.16, 0.16, 0.06, 0x3a4150, {}, 6), blob(0.13, 0xe2473c, { y: 1.96 })];
-  for (let i = 0; i < bands; i++) parts.push(cyl(0.115, 0.115, 0.16, 0xe2473c, { y: 1.55 - i * 0.3 }, 6));
+  // The board near the top is where the game writes the distance (game.ts updatePostLabels).
+  const parts: Parts = [
+    cyl(0.09, 0.11, 1.5, 0xf0f2f6, {}, 6),
+    cyl(0.2, 0.2, 0.06, 0x3a4150, {}, 6),
+    box(1.3, 0.56, 0.1, 0x22324a, { y: 1.42 }),
+    box(1.2, 0.46, 0.12, 0xf4f6fa, { y: 1.47 }),
+  ];
+  for (let i = 0; i < bands; i++) parts.push(cyl(0.115, 0.115, 0.14, 0xe2473c, { y: 1.12 - i * 0.24 }, 6));
   return merge(parts);
 };
 
