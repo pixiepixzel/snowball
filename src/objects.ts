@@ -21,6 +21,7 @@ import * as X from './objects-secret';
 import * as S from './objects-space';
 import * as H from './objects-spooky';
 import * as T from './objects-toys';
+import * as W from './objects-walls';
 import { blob, box, cone, cyl, frustum, grade, merge, move, prism, speckle, torus } from './shapes';
 
 export interface ObjectDef {
@@ -1403,47 +1404,47 @@ export const OBJECT_DEFS: ObjectDef[] = [
   gate('vineWall', 'vine wall', 2, 0x3f9a4a, D.vineWall),
   gate('boneWall', 'bone fence', 3, 0xe8dfc8, D.boneWall),
   gate('redRockWall', 'rock slide', 4, 0xb8714a, S.rockWall(0xb8714a, 0x9a5a3a)),
-  gate('ashWall', 'ash heap', 5, 0x4a4046, S.rockWall(0x4a4046, 0x5e525a)),
+  gate('ashWall', 'ash heap', 5, 0x4a4046, W.ashHeap),
   gate('lavaWall', 'lava wall', 6, 0xff7a1a, D.moltenWall(0x3a2a2c, 0xff7a1a, 0xffd23f)),
   // Space
   gate('junkWall', 'space junk', 0, 0xe2b23c, S.junkWall),
-  gate('moonWall', 'crater rim', 1, 0xb8bcc8, S.rockWall(0xb8bcc8, 0x8a8e9a)),
+  gate('moonWall', 'crater rim', 1, 0xb8bcc8, W.craterRim),
   gate('laserWall', 'laser fence', 2, 0xff3b30, S.laserWall),
-  gate('marsWall', 'canyon wall', 3, 0xc8683a, S.rockWall(0xc8683a, 0x9a4a28)),
+  gate('marsWall', 'canyon wall', 3, 0xc8683a, W.mesaWall),
   gate('ringWall', 'ice ring', 4, 0x9a7ae8, S.crystalWall(0x5a3ac8, 0xd8c8ff)),
-  gate('plasmaWall', 'solar flare', 5, 0xffc23a, D.moltenWall(0x8a2a10, 0xffd23f, 0xfff4b8)),
+  gate('plasmaWall', 'solar flare', 5, 0xffc23a, W.flareWall),
   gate('voidWall', 'event horizon', 6, 0xb06aff, S.voidWall),
 
   // Candy World
   gate('caneWall', 'candy cane fence', 0, 0xd81e3a, C.caneWall),
   gate('waferWall', 'wafer wall', 1, 0xe0b070, C.slabWall(0xe0b070, 0xd8a460, 0xff7ab8, 0xfff4e0)),
-  gate('jellyWall', 'jelly wall', 2, 0xff6a8a, S.crystalWall(0xc81e4a, 0xff9ab0)),
+  gate('jellyWall', 'jelly wall', 2, 0xff6a8a, W.jellyWall),
   gate('cookieWall', 'cookie wall', 3, 0xe0b070, C.cookieWall),
-  gate('gingerWall', 'gingerbread wall', 4, 0xb8743a, C.slabWall(0xb8743a, 0xa8642e, 0xfdfdfd, 0xd81e3a)),
-  gate('chocWall', 'chocolate wall', 5, 0x6a3e22, C.slabWall(0x6a3e22, 0x4a2a16, 0x8a5a36, 0xfff4e0)),
+  gate('gingerWall', 'gingerbread wall', 4, 0xb8743a, W.gingerWall),
+  gate('chocWall', 'chocolate wall', 5, 0x6a3e22, W.chocWall),
   gate('cakeWall', 'giant cake', 6, 0xff7ab8, C.cakeWall),
   // Ancient Desert
   gate('stakeWall', 'stake fence', 0, 0x8a5a32, E.stakeWall),
   gate('mudWall', 'mud-brick wall', 1, 0xc49a62, E.blockWall(0xc49a62, 0xb08a54, 0x8a6238)),
   gate('sandRockWall', 'rock fall', 2, 0xd2b078, S.rockWall(0xd2b078, 0xa88656)),
   gate('columnWall', 'colonnade', 3, 0xf2ead8, E.columnWall),
-  gate('tombWall', 'tomb wall', 4, 0xd2b078, E.blockWall(0xd2b078, 0xa88656, 0xf2c230)),
+  gate('tombWall', 'tomb wall', 4, 0xd2b078, W.tombWall),
   gate('obeliskWall', 'row of obelisks', 5, 0xe2c388, E.obeliskWall),
   gate('pyramidWall', 'pyramid wall', 6, 0xe2c388, E.pyramidWall),
   // Under the Sea
   gate('coralWall', 'coral reef', 0, 0xff6a5a, U.coralWall),
   gate('kelpWall', 'kelp curtain', 1, 0x2f8a4a, U.kelpWall),
-  gate('fishNet', 'fishing net', 2, 0xff7a1a, netWall),
-  gate('hullWall', 'wrecked hull', 3, 0x7a5232, plankWall),
+  gate('fishNet', 'fishing net', 2, 0xd8c8a0, W.fishNet),
+  gate('hullWall', 'wrecked hull', 3, 0x7a5232, W.hullWall),
   gate('chainWall', 'anchor chains', 4, 0x8a98a8, U.chainWall),
-  gate('trenchWall', 'trench rocks', 5, 0x3a5470, S.rockWall(0x3a5470, 0x2a3e5e)),
-  gate('atlantisWall', 'crystal gate', 6, 0x8ae0e8, S.crystalWall(0x1a6a8a, 0xb8fff4)),
+  gate('trenchWall', 'trench rocks', 5, 0x3a5470, W.basaltWall),
+  gate('atlantisWall', 'crystal gate', 6, 0x8ae0e8, W.crystalGate),
   // Spooky Hollow
   gate('pumpkinWall', 'row of pumpkins', 0, 0xff7a1a, H.pumpkinWall),
   gate('graveWall', 'row of tombstones', 1, 0x8a8a96, H.graveWall),
   gate('thornWall', 'thorn hedge', 2, 0x4a3a32, H.thornWall),
   gate('ironFence', 'iron fence', 3, 0x2c2c36, H.ironFence),
-  gate('mossWall', 'mossy stones', 4, 0x4a6a3e, S.rockWall(0x4a6a3e, 0x5a5e66)),
+  gate('mossWall', 'mossy stones', 4, 0x4a6a3e, W.hengeWall),
   gate('cryptWall', 'crypt wall', 5, 0x5e5e6c, E.blockWall(0x5e5e6c, 0x4a4458, 0x8a5ad0)),
   gate('castleWall', 'castle wall', 6, 0xa8202a, H.battlement(0x4a4458, 0x3a3448, 0xa8202a)),
   // Toy Room
@@ -1451,7 +1452,7 @@ export const OBJECT_DEFS: ObjectDef[] = [
   gate('dominoWall', 'row of dominoes', 1, 0x26262e, T.dominoWall),
   gate('pencilWall', 'pencil fence', 2, 0xffd23f, T.pencilWall),
   gate('bookWall', 'row of books', 3, 0x2f7de0, T.bookWall),
-  gate('raceWall', 'crash barrier', 4, 0xe8402a, E.blockWall(0xe8402a, 0xf4f4f4, 0x26262e)),
+  gate('raceWall', 'crash barrier', 4, 0xe8402a, W.tyreWall),
   gate('brickWall', 'brick wall', 5, 0xc8502f, C.slabWall(0xc8502f, 0xb04428, 0xe8dcc8, 0xe8dcc8)),
   gate('pillowWall', 'pillow fort', 6, 0xffc0d8, T.pillowWall),
   // Sky Kingdom
@@ -1460,8 +1461,8 @@ export const OBJECT_DEFS: ObjectDef[] = [
   gate('balloonWall', 'wall of balloons', 2, 0xe8402a, K.balloonWall),
   gate('rainbowWall', 'rainbow', 3, 0xff8a2a, K.rainbowWall),
   gate('stormWall', 'thundercloud', 4, 0x5a6478, K.cloudWall(true)),
-  gate('isleWall', 'floating rocks', 5, 0x8a6a4a, S.rockWall(0x8a6a4a, 0x5aa84a)),
-  gate('auroraWall', 'aurora', 6, 0x7ae0c0, S.crystalWall(0x2a8a7a, 0xb8ffe0)),
+  gate('isleWall', 'floating rocks', 5, 0x8a6a4a, W.isleWall),
+  gate('auroraWall', 'aurora', 6, 0x7ae0c0, W.auroraWall),
 
   // Each world's stand-in for the snowplough: the thing that charges up the slope at you.
   { ...hazard('stampede', 'charging triceratops', 'plough', 0xc8502f, D.chargingTrike, 24, false), height: 1.4 },
