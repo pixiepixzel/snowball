@@ -11,7 +11,10 @@ export interface EndData {
   /** Best size as a full label, e.g. "12.4 km". */
   best: string;
   isBest: boolean;
-  items: { label: string; color: string }[];
+  /** `fresh` marks something absorbed for the first time ever. */
+  items: { label: string; color: string; fresh: boolean }[];
+  /** A line about the collection book ("3 new in your collection"), or empty. */
+  bookNote: string;
   /** Coins this run earned, or null for a run that doesn't count (a demo or the bot). */
   coins: number | null;
   totalCoins: number;
@@ -29,6 +32,22 @@ export interface ShopRow {
   cost: number;
   maxed: boolean;
   affordable: boolean;
+}
+
+/** One page of the collection book. */
+export interface BookView {
+  /** Different things found so far, out of how many there are, over the whole book. */
+  found: number;
+  total: number;
+  /** The page's name: a world, or "Secrets". */
+  name: string;
+  /** Coins for finding everything on this page, and whether that has been paid. */
+  reward: number;
+  paid: boolean;
+  hasPrev: boolean;
+  hasNext: boolean;
+  /** `count` is how many have been absorbed over every run; 0 means not found yet. */
+  items: { name: string; picture: string; count: number }[];
 }
 
 /** One ball skin as the shop shows it. */
@@ -67,6 +86,10 @@ export class UI {
   onBuy: (id: string) => void = () => {};
   /** A skin was tapped in the shop: buy it, or put it on if it is already owned. */
   onSkin: (id: string) => void = () => {};
+  /** The player opened the collection book; the game answers with openBook(). */
+  onBook: () => void = () => {};
+  /** An arrow in the book: -1 or +1 page. */
+  onBookStep: (step: number) => void = () => {};
   /** The player pressed an arrow on the world picker: -1 or +1. */
   onWorldStep: (step: number) => void = () => {};
   /** "Change world" on the end screen: back to the title. */
@@ -99,6 +122,8 @@ export class UI {
   private pauseScreen = el('pause');
   private shopList = el('shop-list');
   private skinList = el('skin-list');
+  private bookScreen = el('book');
+  private bookList = el('book-list');
   private powerBox = el('power');
   private powerLabel = el('power-label');
   private powerFill = el('power-fill');
@@ -137,6 +162,10 @@ export class UI {
       const tile = (e.target as HTMLElement).closest('button[data-skin]') as HTMLButtonElement | null;
       if (tile && !tile.disabled) this.onSkin(tile.dataset.skin ?? '');
     });
+    for (const id of ['book-btn', 'end-book-btn']) el(id).addEventListener('click', () => this.onBook());
+    el('book-prev').addEventListener('click', () => this.onBookStep(-1));
+    el('book-next').addEventListener('click', () => this.onBookStep(1));
+    el('book-close').addEventListener('click', () => this.bookScreen.classList.add('hidden'));
     el('tab-upgrades').addEventListener('click', () => this.setShopTab('upgrades'));
     el('tab-skins').addEventListener('click', () => this.setShopTab('skins'));
     el('world-prev').addEventListener('click', () => this.onWorldStep(-1));
@@ -154,6 +183,7 @@ export class UI {
     window.addEventListener('keydown', (e) => {
       if (e.code !== 'Enter' && e.code !== 'Space') return;
       if (!this.shopScreen.classList.contains('hidden') || !this.pauseScreen.classList.contains('hidden')) return;
+      if (!this.bookScreen.classList.contains('hidden')) return;
       if (!this.titleScreen.classList.contains('hidden')) this.onStart();
       else if (!this.endScreen.classList.contains('hidden')) this.onRestart();
     });
@@ -170,6 +200,7 @@ export class UI {
     this.titleScreen.classList.remove('hidden');
     this.endScreen.classList.add('hidden');
     this.shopScreen.classList.add('hidden');
+    this.bookScreen.classList.add('hidden');
     this.hud.classList.add('hidden');
     this.setAvalanche(false, 0);
     el('title-best').textContent = best ? `Best ${best}` : '';
@@ -247,6 +278,54 @@ export class UI {
     const text = coins.toLocaleString('en-US');
     el('title-coins').textContent = text;
     el('end-total').textContent = text;
+  }
+
+  /** How much of the collection book is filled in, on the buttons that open it. */
+  setBook(found: number, total: number): void {
+    el('title-book').textContent = `${found}/${total}`;
+  }
+
+  /** Show (or turn the page of) the collection book, on top of whichever screen opened it. */
+  openBook(view: BookView): void {
+    el('book-total').textContent = `${view.found} of ${view.total} found`;
+    el('book-name').textContent = view.name;
+    const have = view.items.filter((item) => item.count > 0).length;
+    const note = el('book-note');
+    note.textContent = '';
+    if (view.paid) {
+      note.textContent = `All ${view.items.length} found!`;
+    } else {
+      const coin = document.createElement('span');
+      coin.className = 'coins';
+      const amount = document.createElement('b');
+      amount.textContent = view.reward.toLocaleString('en-US');
+      coin.append(document.createElement('i'), amount);
+      note.append(document.createTextNode(`${have}/${view.items.length} · find all for `), coin);
+    }
+    (el('book-prev') as HTMLButtonElement).disabled = !view.hasPrev;
+    (el('book-next') as HTMLButtonElement).disabled = !view.hasNext;
+    this.bookList.innerHTML = '';
+    for (const item of view.items) {
+      const found = item.count > 0;
+      const tile = document.createElement('div');
+      tile.className = found ? 'thing' : 'thing unknown';
+      if (item.picture) {
+        const picture = document.createElement('img');
+        picture.src = item.picture;
+        picture.alt = '';
+        tile.appendChild(picture);
+      }
+      const name = document.createElement('span');
+      name.className = 'name';
+      name.textContent = found ? item.name : '???';
+      const count = document.createElement('span');
+      count.className = 'count';
+      count.textContent = found ? `×${item.count.toLocaleString('en-US')}` : '';
+      tile.append(name, count);
+      this.bookList.appendChild(tile);
+    }
+    this.bookList.scrollTop = 0;
+    this.bookScreen.classList.remove('hidden');
   }
 
   /** The shop has two pages, upgrades and ball skins; this shows one of them. */
@@ -346,6 +425,7 @@ export class UI {
     this.titleScreen.classList.add('hidden');
     this.endScreen.classList.add('hidden');
     this.shopScreen.classList.add('hidden');
+    this.bookScreen.classList.add('hidden');
     this.hud.classList.remove('hidden');
     this.setFragile(false);
     this.setAvalanche(false, 0);
@@ -526,6 +606,9 @@ export class UI {
     best.classList.toggle('new', data.isBest);
     el('end-coins').textContent = data.coins === null ? 'Practice run: no coins' : `+${data.coins.toLocaleString('en-US')} coins`;
     this.setCoins(data.totalCoins);
+    const bookNote = el('end-book');
+    bookNote.textContent = data.bookNote;
+    bookNote.hidden = data.bookNote === '';
     this.setPower('', 0);
     const list = el('end-list');
     list.innerHTML = '';
@@ -537,7 +620,7 @@ export class UI {
     }
     for (const item of data.items) {
       const chip = document.createElement('div');
-      chip.className = 'chip';
+      chip.className = item.fresh ? 'chip new' : 'chip';
       const dot = document.createElement('i');
       dot.style.background = item.color;
       chip.appendChild(dot);

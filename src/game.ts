@@ -22,6 +22,7 @@ import {
 } from './config';
 import { AudioEngine } from './audio';
 import { Ball } from './ball';
+import { BOOK_PAGES, BOOK_TOTAL } from './book';
 import { botControl, rebaseBot } from './bot';
 import { CameraRig } from './camera';
 import { collide, type CollisionHandlers } from './collision';
@@ -31,6 +32,7 @@ import { Input } from './input';
 import { OBJECT_DEFS } from './objects';
 import { PERKS, applyUpgrades, coinsFor, upgradeCost } from './perks';
 import { loadSave, writeSave, type MissionState, type SaveData } from './save';
+import { Thumbs } from './thumbs';
 import { UI, type MissionRow, type ShopRow, type SkinRow } from './ui';
 import { clamp, lerp, sizeLabel, sizeParts } from './util';
 import { World, type WorldObject } from './world';
@@ -174,6 +176,9 @@ export class Game {
   /** Mission progress made in this run, and walls smashed since the last hit. */
   private tally: Tally = newTally();
   private streak = 0;
+  /** Draws the collection book's pictures, and the page of the book last looked at. */
+  private thumbs: Thumbs;
+  private bookPage = 0;
   /** Gold tags waiting their turn, so one never wipes out another. */
   private toasts: string[] = [];
   private toastWait = 0;
@@ -220,6 +225,9 @@ export class Game {
     this.ui.onShop = () => this.showShop();
     this.ui.onBuy = (id) => this.buy(id);
     this.ui.onSkin = (id) => this.pickSkin(id);
+    this.thumbs = new Thumbs(this.renderer);
+    this.ui.onBook = () => this.openBook();
+    this.ui.onBookStep = (step) => this.showBook(step);
     this.ui.onWorldStep = (step) => this.pickWorld(step);
     this.ui.onMenu = () => this.toTitle();
     this.ui.onPause = () => this.pause();
@@ -258,6 +266,7 @@ export class Game {
     // A mission finished in a run that was never ended (the page was closed) is swapped now.
     this.dealMissions();
     this.ui.setMissions(this.missionRows());
+    this.ui.setBook(this.bookFound(), BOOK_TOTAL);
     this.ui.showTitle(this.save.best > 0 ? sizeLabel(this.save.best) : null, this.save.coins);
     this.showPick();
     this.last = performance.now();
@@ -1115,15 +1124,17 @@ export class Game {
     this.checkMissions();
     this.ui.setMissions(this.missionRows());
     this.bankMissions();
+    const book = this.recordBook();
     if (this.keepScores) {
       if (isBest) this.save.best = r;
       this.save.coins += coins;
       writeSave(this.save);
     }
-    const items: { label: string; color: string }[] = [];
+    this.ui.setBook(this.bookFound(), BOOK_TOTAL);
+    const items: { label: string; color: string; fresh: boolean }[] = [];
     for (const def of OBJECT_DEFS) {
       const n = this.counts.get(def.id) ?? 0;
-      if (n > 0) items.push({ label: `${n} ${n === 1 ? def.name : def.plural}`, color: `#${def.color.toString(16).padStart(6, '0')}` });
+      if (n > 0) items.push({ label: `${n} ${n === 1 ? def.name : def.plural}`, color: `#${def.color.toString(16).padStart(6, '0')}`, fresh: book.fresh.has(def.id) });
     }
     const where = this.stage.name;
     const walls = `${this.stats.walls} wall${this.stats.walls === 1 ? '' : 's'} smashed.`;
@@ -1135,7 +1146,7 @@ export class Game {
       quit: { title: 'Run ended', subtitle: `You stopped in the ${where}. ${walls}` },
     }[this.endKind];
     const [size, unit] = sizeParts(r);
-    this.ui.showEnd({ ...text, size, unit, best: sizeLabel(this.save.best), isBest, items, coins: this.keepScores ? coins : null, totalCoins: this.save.coins });
+    this.ui.showEnd({ ...text, size, unit, best: sizeLabel(this.save.best), isBest, items, bookNote: book.note, coins: this.keepScores ? coins : null, totalCoins: this.save.coins });
   }
 
   // ------------------------------------------------------------------ missions
@@ -1210,6 +1221,67 @@ export class Game {
       rows.push({ text: def.text, progress: m.done || value <= 0 || def.target <= 1 ? '' : `${value}/${def.target}`, reward: def.reward, done: m.done });
     }
     return rows;
+  }
+
+  // ------------------------------------------------------------------ collection book
+
+  /** How many different things have been absorbed at least once. */
+  private bookFound(): number {
+    let found = 0;
+    for (const page of BOOK_PAGES) for (const def of page.defs) if (this.save.book[def.id]) found++;
+    return found;
+  }
+
+  /**
+   * The run is over: add what it absorbed to the book, and pay for any page that is now
+   * complete. Returns what was absorbed for the first time and a line for the end screen.
+   * Bot runs and demos add nothing.
+   */
+  private recordBook(): { fresh: Set<string>; note: string } {
+    const fresh = new Set<string>();
+    if (!this.keepScores) return { fresh, note: '' };
+    for (const [id, n] of this.counts) {
+      if (n <= 0) continue;
+      if (!this.save.book[id]) fresh.add(id);
+      this.save.book[id] = (this.save.book[id] ?? 0) + n;
+    }
+    const done: string[] = [];
+    for (const page of BOOK_PAGES) {
+      if (this.save.bookPaid.includes(page.key) || !page.defs.every((def) => this.save.book[def.id])) continue;
+      this.save.bookPaid.push(page.key);
+      this.save.coins += page.reward;
+      done.push(`${page.name} page complete! +${page.reward} coins`);
+    }
+    const note = done.length > 0 ? done.join(' · ') : fresh.size > 0 ? `${fresh.size} new in your collection` : '';
+    return { fresh, note };
+  }
+
+  /** Open the book at the world being played (or picked on the title screen). */
+  private openBook(): void {
+    const lap = this.state === 'title' ? this.startLap : locate(this.ball.d).lap;
+    if (lap < HAND_MADE_LAPS) this.bookPage = lap;
+    this.showBook(0);
+  }
+
+  /** Show a page of the book: the one it is on, or the next (+1) or previous (-1). */
+  private showBook(step: number): void {
+    this.bookPage = clamp(this.bookPage + step, 0, BOOK_PAGES.length - 1);
+    const page = BOOK_PAGES[this.bookPage];
+    const items = page.defs.map((def) => ({
+      name: def.name,
+      picture: this.thumbs.get(def),
+      count: this.save.book[def.id] ?? 0,
+    }));
+    this.ui.openBook({
+      found: this.bookFound(),
+      total: BOOK_TOTAL,
+      name: page.name,
+      reward: page.reward,
+      paid: this.save.bookPaid.includes(page.key),
+      hasPrev: this.bookPage > 0,
+      hasNext: this.bookPage < BOOK_PAGES.length - 1,
+      items,
+    });
   }
 
   // ------------------------------------------------------------------ first-time hints
@@ -1307,6 +1379,7 @@ export class Game {
     this.reset(from.d, from.base);
     this.ui.clearTransient();
     this.ui.setMissions(this.missionRows());
+    this.ui.setBook(this.bookFound(), BOOK_TOTAL);
     this.ui.showTitle(this.save.best > 0 ? sizeLabel(this.save.best) : null, this.save.coins);
     this.showPick();
   }

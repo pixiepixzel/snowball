@@ -535,6 +535,15 @@ export const SKINS: SkinDef[] = [
   { id: 'gold', name: 'Solid gold', price: 3000, pattern: 'speckle', colors: [0xffc21a, 0xffd75a, 0xe8a200], weights: [0.45, 0.3, 0.25], shine: 0.85, glow: 0x2a1a00 },
 ];
 
+// ---------------------------------------------------------------- Collection book
+/**
+ * The book lists every object, a page per world, greyed out until one has been absorbed.
+ * Finding everything on a world's page pays BOOK_PAGE_REWARD coins, once; the page of
+ * secret objects pays BOOK_SECRETS_REWARD because they are so much rarer.
+ */
+export const BOOK_PAGE_REWARD = 150;
+export const BOOK_SECRETS_REWARD = 500;
+
 // ---------------------------------------------------------------- Size milestones
 /**
  * Things the ball outgrows. When its diameter passes one, the game says so: "Bigger than

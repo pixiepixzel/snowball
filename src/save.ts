@@ -16,9 +16,9 @@ const OLD_BEST_KEY = 'snowball.best';
 /**
  * Version 2 added the sound and vibration switches, version 3 the furthest world reached,
  * version 4 the music switch, version 5 which first-time hints have been shown,
- * version 6 the missions, version 7 the ball skins.
+ * version 6 the missions, version 7 the ball skins, version 8 the collection book.
  */
-export const SAVE_VERSION = 7;
+export const SAVE_VERSION = 8;
 
 /** One of the active missions. */
 export interface MissionState {
@@ -54,6 +54,12 @@ export interface SaveData {
   /** Ids of the ball skins bought (config.ts SKINS; the free one is always here), and the one in use. */
   skins: string[];
   skin: string;
+  /**
+   * The collection book: how many of each object have been absorbed over every run, by
+   * object id, and the pages (world keys) whose reward for finding everything has been paid.
+   */
+  book: Record<string, number>;
+  bookPaid: string[];
 }
 
 const num = (v: unknown, fallback = 0): number => (typeof v === 'number' && Number.isFinite(v) && v >= 0 ? v : fallback);
@@ -64,7 +70,7 @@ const firstMissions = (): MissionState[] => MISSIONS.slice(0, MISSION_SLOTS).map
 function fresh(): SaveData {
   const upgrades: Record<string, number> = {};
   for (const u of UPGRADES) upgrades[u.id] = 0;
-  return { version: SAVE_VERSION, best: 0, coins: 0, upgrades, sound: true, music: true, vibration: true, reached: 0, hints: [], missions: firstMissions(), missionNext: MISSION_SLOTS, skins: [SKINS[0].id], skin: SKINS[0].id };
+  return { version: SAVE_VERSION, best: 0, coins: 0, upgrades, sound: true, music: true, vibration: true, reached: 0, hints: [], missions: firstMissions(), missionNext: MISSION_SLOTS, skins: [SKINS[0].id], skin: SKINS[0].id, book: {}, bookPaid: [] };
 }
 
 /** Turn whatever was stored into a valid save of the current version. */
@@ -106,6 +112,14 @@ function migrate(raw: unknown): SaveData {
     for (const def of SKINS) if (data.skins.includes(def.id) && !save.skins.includes(def.id)) save.skins.push(def.id);
     if (typeof data.skin === 'string' && save.skins.includes(data.skin)) save.skin = data.skin;
   }
+  // Before version 8 nothing absorbed was remembered, so the book starts empty.
+  if (typeof data.book === 'object' && data.book !== null) {
+    for (const [id, n] of Object.entries(data.book as Record<string, unknown>)) {
+      const count = Math.floor(num(n));
+      if (count > 0) save.book[id] = count;
+    }
+  }
+  if (Array.isArray(data.bookPaid)) save.bookPaid = data.bookPaid.filter((key): key is string => typeof key === 'string');
   const levels = (typeof data.upgrades === 'object' && data.upgrades !== null ? data.upgrades : {}) as Record<string, unknown>;
   for (const u of UPGRADES) save.upgrades[u.id] = Math.min(UPGRADE_LEVELS, Math.floor(num(levels[u.id])));
   return save;
