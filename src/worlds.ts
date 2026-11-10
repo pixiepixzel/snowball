@@ -97,6 +97,9 @@ export interface WorldConfig {
   ice: number;
   /** Object id of this world's "snowplough" (the thing that charges up the slope at you). */
   plough: string;
+  /** Object ids of this world's ramp and of the bridge over its rivers. */
+  ramp: string;
+  bridge: string;
   /**
    * The thing chasing the ball: its name on the meter, its colours, and how it moves.
    *   'tumble'  boulders rolling and bouncing (avalanche)
@@ -144,6 +147,8 @@ export const WORLDS: WorldConfig[] = [
     water: 0x2f86e0,
     ice: 0xeaf6ff,
     plough: 'plough',
+    ramp: 'ramp',
+    bridge: 'bridge',
     chase: { label: 'Avalanche', color: 0xffffff, glow: 0x55617a, style: 'tumble' },
     scenery: { backdrop: 'peaks', caps: true, ground: 'snow', weather: { color: 0xffffff, size: 1, fall: 1.6, blow: 0 }, fog: 1 },
     // A sleigh ride: glockenspiel tune, plucked bass bouncing along, sleigh bells jingling.
@@ -168,6 +173,8 @@ export const WORLDS: WorldConfig[] = [
     water: 0x2aa6b8,
     ice: 0xeaf6ff,
     plough: 'stampede',
+    ramp: 'rampLost',
+    bridge: 'bridgeLost',
     chase: { label: 'Lava flow', color: 0xff7a2a, glow: 0xaa2a00, style: 'flood' },
     scenery: { backdrop: 'hills', caps: false, ground: 'soft', weather: { color: 0xeaf2a0, size: 0.7, fall: 0.25, blow: 0.3 }, fog: 1 },
     // The jungle: a pan flute over a marimba pattern, low drums and a shaker.
@@ -192,6 +199,8 @@ export const WORLDS: WorldConfig[] = [
     water: 0xc040e0,
     ice: 0xf6e4ff,
     plough: 'meteor',
+    ramp: 'rampSpace',
+    bridge: 'bridgeSpace',
     chase: { label: 'Black hole', color: 0x3a2466, glow: 0x6a2ad0, style: 'cloud' },
     scenery: { backdrop: 'none', caps: false, ground: 'soft', weather: null, fog: 1 },
     // Deep space: a held drone and strings, a quiet computer arpeggio, and a few far-off
@@ -217,6 +226,8 @@ export const WORLDS: WorldConfig[] = [
     water: 0xff8ac0,
     ice: 0xfff0f6,
     plough: 'gobstopper',
+    ramp: 'rampCandy',
+    bridge: 'bridgeCandy',
     chase: { label: 'Chocolate flood', color: 0x7a4a2a, glow: 0x3a1e0e, style: 'flood' },
     scenery: { backdrop: 'scoops', caps: true, ground: 'soft', weather: { color: 0xffa8d4, size: 0.9, fall: 0.9, blow: 0 }, fog: 1 },
     // Bubblegum arcade music: a quick chirpy tune, a busy arpeggio, a bouncing bass and claps.
@@ -241,6 +252,8 @@ export const WORLDS: WorldConfig[] = [
     water: 0x2aa6c8,
     ice: 0xeaf6ff,
     plough: 'chariotCharge',
+    ramp: 'rampDesert',
+    bridge: 'bridgeDesert',
     chase: { label: 'Sandstorm', color: 0xe0b878, glow: 0x8a6238, style: 'cloud' },
     scenery: { backdrop: 'dunes', caps: false, ground: 'sand', weather: { color: 0xecd096, size: 0.8, fall: 0.15, blow: 2.4 }, fog: 1 },
     // The bazaar: a reed pipe in the snake-charmer scale over a drone, a plucked lute and
@@ -266,6 +279,8 @@ export const WORLDS: WorldConfig[] = [
     water: 0x1a4a9a,
     ice: 0xd8f6ff,
     plough: 'sharkAttack',
+    ramp: 'rampSea',
+    bridge: 'bridgeSea',
     chase: { label: 'Tidal wave', color: 0x2a7ad0, glow: 0x0e3a78, style: 'flood' },
     scenery: { backdrop: 'spires', caps: false, ground: 'sand', weather: { color: 0xd0f4ff, size: 1.4, fall: -1.3, blow: 0 }, fog: 0.6 },
     // Under water: a slow rocking three-time, a harp rippling up and down, soft strings,
@@ -291,6 +306,8 @@ export const WORLDS: WorldConfig[] = [
     water: 0x5ac83a,
     ice: 0xd8ffd0,
     plough: 'ghoul',
+    ramp: 'rampSpooky',
+    bridge: 'bridgeSpooky',
     chase: { label: 'Ghost swarm', color: 0xd8ffe8, glow: 0x5a9a7a, style: 'swarm' },
     scenery: { backdrop: 'spires', caps: false, ground: 'soft', weather: { color: 0xc8ff8a, size: 0.8, fall: 0.05, blow: 0.25 }, fog: 0.85 },
     // A haunted house: a wailing theremin over church-organ chords, a kettledrum and a
@@ -316,6 +333,8 @@ export const WORLDS: WorldConfig[] = [
     water: 0x4a9af0,
     ice: 0xeaf6ff,
     plough: 'windupCar',
+    ramp: 'rampToys',
+    bridge: 'bridgeToys',
     chase: { label: 'Dust bunnies', color: 0xb8b4c0, glow: 0x4a4658, style: 'tumble' },
     scenery: { backdrop: 'blocks', caps: false, ground: 'tiles', weather: null, fog: 1 },
     // A music-box waltz: tinkling tune, oom-pah-pah underneath, nothing else.
@@ -340,6 +359,8 @@ export const WORLDS: WorldConfig[] = [
     water: 0x6ab8ff,
     ice: 0xffffff,
     plough: 'thunderhead',
+    ramp: 'rampSky',
+    bridge: 'bridgeSky',
     chase: { label: 'Thunderstorm', color: 0x5a6478, glow: 0x2a3040, style: 'cloud' },
     scenery: { backdrop: 'none', caps: true, ground: 'soft', weather: null, fog: 1 },
     // Flying: a soaring whistle with long notes, a harp, soft strings and a light brush.
@@ -541,13 +562,17 @@ function buildRemix(lap: number): WorldConfig {
   const count = rng() < 0.5 ? 2 : 3;
   while (sources.length < count) sources.push(pool.splice(Math.floor(rng() * pool.length), 1)[0]);
 
+  let hazards: WorldConfig;
   return {
     key: `remix${nth + 1}`,
     name: `${style.adj} ${REMIX_PLACES[shuffledPick(REMIX_PLACES.length, nth, 29)]}`,
     scenes,
     water: pick(WORLDS).water,
     ice: pick(WORLDS).ice,
-    plough: pick(WORLDS).plough,
+    // The charging hazard, the ramp and the bridge all come from one world, so they match.
+    plough: (hazards = pick(WORLDS)).plough,
+    ramp: hazards.ramp,
+    bridge: hazards.bridge,
     chase: pick(WORLDS).chase,
     scenery: pick(WORLDS).scenery,
     // A borrowed tune, a little faster: remix worlds are the late game.

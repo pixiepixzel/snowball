@@ -802,7 +802,7 @@ export class World {
       this.poolOf(river.def).setColor(river.slot, _color.setHex(worldAt(d).water));
       this.writeMatrix(river, 0);
     }
-    const bridge = this.spawn(defById('bridge'), bridgeX, d, depth, false, lift * 2);
+    const bridge = this.spawn(defById(worldAt(d).bridge), bridgeX, d, depth, false, lift * 2);
     if (bridge) {
       bridge.sx = bridgeHalf;
       bridge.sz = depth / 2 + 0.5 * R;
@@ -1167,7 +1167,7 @@ export class World {
           }
         }
         if (found) {
-          const ramp = this.spawn(defById('ramp'), x, d, size);
+          const ramp = this.spawn(defById(theme.ramp), x, d, size);
           if (ramp) {
             ramp.sink = size * 0.26;
             this.writeMatrix(ramp, 0);

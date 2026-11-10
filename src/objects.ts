@@ -877,37 +877,117 @@ const river = () => {
   return merge(parts);
 };
 
-/** A plank bridge: deck 2 × 2 units (x and z from -1 to 1), stretched by the game to fit. */
-const bridge = () => {
+/**
+ * A bridge: deck 2 × 2 units (x and z from -1 to 1), stretched by the game to fit. Every
+ * world has its own (worlds.ts names it): the same shape in that world's materials.
+ */
+interface BridgeLook {
+  /** Deck colours, repeated plank by plank. */
+  planks: number[];
+  /** True if the strips run the length of the bridge rather than across it (the rainbow). */
+  along?: boolean;
+  rail: number;
+  /** Posts, if they are a different colour from the rail. */
+  post?: number;
+  /** The strip along the top of each rail: snow, vines, icing, a glowing light. */
+  cap: number;
+}
+
+const bridgeOf = (look: BridgeLook) => () => {
   const parts: Parts = [];
-  for (let i = 0; i < 9; i++) parts.push(box(2.0, 0.035, 0.24, i % 2 ? 0xb9833f : 0x9a6a30, { y: 0.03, z: -1.04 + i * 0.26 }));
+  const n = look.planks.length;
+  if (look.along) {
+    for (let i = 0; i < n; i++) parts.push(box(2 / n, 0.035, 2.34, look.planks[i], { x: -1 + ((i + 0.5) * 2) / n, y: 0.03 }));
+  } else {
+    for (let i = 0; i < 9; i++) parts.push(box(2.0, 0.035, 0.24, look.planks[i % n], { y: 0.03, z: -1.04 + i * 0.26 }));
+  }
   for (const x of [-1, 1]) {
-    parts.push(box(0.06, 0.05, 2.3, 0x5a3d25, { x, y: 0.32 }));
-    for (let i = 0; i < 4; i++) parts.push(box(0.07, 0.36, 0.07, 0x5a3d25, { x, y: 0, z: -1.05 + i * 0.7 }));
-    parts.push(box(0.1, 0.03, 2.34, SNOW, { x, y: 0.37 }));
+    parts.push(box(0.06, 0.05, 2.3, look.rail, { x, y: 0.32 }));
+    for (let i = 0; i < 4; i++) parts.push(box(0.07, 0.36, 0.07, look.post ?? look.rail, { x, y: 0, z: -1.05 + i * 0.7 }));
+    parts.push(box(0.1, 0.03, 2.34, look.cap, { x, y: 0.37 }));
   }
   return merge(parts);
 };
 
 /**
- * A snow kicker. The ball arrives from +Z (uphill), rolls up the slope and is launched
- * off the lip at -Z.
+ * A kicker. The ball arrives from +Z (uphill), rolls up the slope and is launched off the
+ * lip at -Z. Every world has its own (worlds.ts names it): the same wedge with three
+ * bright stripes so it reads as a ramp from a distance, in that world's materials, with
+ * that world's markers standing either side of the lip.
  */
-const ramp = () => {
+interface RampLook {
+  body: number;
+  /** The three stripes across the face, bottom to top. */
+  stripes: [number, number, number];
+  rail: number;
+  /** What stands at one end of the lip, built at (x, 1.0, -1.15) and about 0.75 tall. */
+  marker: (x: number) => Parts;
+}
+
+const LIP_Z = -1.15;
+const rampOf = (look: RampLook) => () => {
   const lean = 0.41; // slope of the ramp face, radians
   return merge([
-    frustum(2.0, 2.4, 2.0, 0.12, 1.0, 0xe9f1fb, {}, 0, -1.14),
-    box(1.7, 0.04, 0.28, 0xff7a1a, { y: 0.27, z: 0.55, rx: lean }),
-    box(1.7, 0.04, 0.28, 0xff7a1a, { y: 0.53, z: -0.05, rx: lean }),
-    box(1.7, 0.04, 0.28, 0xff7a1a, { y: 0.79, z: -0.65, rx: lean }),
-    box(0.1, 0.1, 2.5, RED, { x: -1.0, y: 0.5, z: 0.02, rx: lean }),
-    box(0.1, 0.1, 2.5, RED, { x: 1.0, y: 0.5, z: 0.02, rx: lean }),
-    cyl(0.05, 0.05, 0.7, 0xffffff, { x: -1.0, y: 1.0, z: -1.15 }, 5),
-    cyl(0.05, 0.05, 0.7, 0xffffff, { x: 1.0, y: 1.0, z: -1.15 }, 5),
-    prism(0.04, 0.3, 0.4, RED, { x: -1.0, y: 1.42, z: -1.33, ry: PI / 2, rz: -PI / 2 }),
-    prism(0.04, 0.3, 0.4, RED, { x: 1.0, y: 1.42, z: -1.33, ry: PI / 2, rz: -PI / 2 }),
+    frustum(2.0, 2.4, 2.0, 0.12, 1.0, look.body, {}, 0, -1.14),
+    box(1.7, 0.04, 0.28, look.stripes[0], { y: 0.27, z: 0.55, rx: lean }),
+    box(1.7, 0.04, 0.28, look.stripes[1], { y: 0.53, z: -0.05, rx: lean }),
+    box(1.7, 0.04, 0.28, look.stripes[2], { y: 0.79, z: -0.65, rx: lean }),
+    box(0.1, 0.1, 2.5, look.rail, { x: -1.0, y: 0.5, z: 0.02, rx: lean }),
+    box(0.1, 0.1, 2.5, look.rail, { x: 1.0, y: 0.5, z: 0.02, rx: lean }),
+    ...look.marker(-1.0),
+    ...look.marker(1.0),
   ]);
 };
+
+/** A thin pole standing at the lip, for markers that are "something on a stick". */
+const lipPole = (x: number, color: number, h = 0.7): BufferGeometry => cyl(0.05, 0.05, h, color, { x, y: 1.0, z: LIP_Z }, 5);
+
+// The markers, one kind per world.
+const flagMarker = (x: number): Parts => [lipPole(x, 0xffffff), prism(0.04, 0.3, 0.4, RED, { x, y: 1.42, z: -1.33, ry: PI / 2, rz: -PI / 2 })];
+const torchMarker = (x: number): Parts => [
+  lipPole(x, 0x6b4a2e, 0.55),
+  cyl(0.11, 0.07, 0.1, 0x3a2a1c, { x, y: 1.52, z: LIP_Z }, 6),
+  cone(0.12, 0.3, 0xff7a1a, { x, y: 1.6, z: LIP_Z }, 5),
+  cone(0.06, 0.18, 0xffd23f, { x, y: 1.64, z: LIP_Z }, 4),
+];
+const beaconMarker = (x: number): Parts => [
+  lipPole(x, 0x6a7383, 0.6),
+  box(0.22, 0.04, 0.22, 0x3a4150, { x, y: 1.58, z: LIP_Z }),
+  blob(0.12, 0x5ae0ff, { x, y: 1.74, z: LIP_Z }),
+];
+const lollipopMarker = (x: number): Parts => [
+  lipPole(x, 0xffffff, 0.5),
+  blob(0.2, x < 0 ? 0xff5a9a : 0x5ad0ff, { x, y: 1.66, z: LIP_Z }, 1),
+  torus(0.12, 0.035, 0xffffff, { x, y: 1.66, z: LIP_Z, rx: PI / 2 }, 8, 4),
+];
+const obeliskMarker = (x: number): Parts => [
+  frustum(0.22, 0.22, 0.13, 0.13, 0.6, 0xd8c090, { x, y: 1.0, z: LIP_Z }),
+  cone(0.1, 0.16, 0xf2c230, { x, y: 1.6, z: LIP_Z, ry: PI / 4 }, 4),
+];
+const buoyMarker = (x: number): Parts => [
+  cyl(0.1, 0.17, 0.32, 0xe2473c, { x, y: 1.0, z: LIP_Z }, 8),
+  cyl(0.11, 0.11, 0.07, 0xffffff, { x, y: 1.14, z: LIP_Z }, 8),
+  lipPole(x, 0xe8e8e8, 0.62),
+  blob(0.09, 0xffd23f, { x, y: 1.7, z: LIP_Z }),
+];
+const pumpkinMarker = (x: number): Parts => [
+  lipPole(x, 0x2a222e, 0.4),
+  blob(0.21, 0xff8a1a, { x, y: 1.55, z: LIP_Z, sy: 0.8 }, 1),
+  cyl(0.03, 0.04, 0.1, 0x3f8a2a, { x, y: 1.7, z: LIP_Z }, 5),
+  box(0.07, 0.06, 0.03, 0xffe066, { x: x - 0.07, y: 1.55, z: LIP_Z + 0.19 }),
+  box(0.07, 0.06, 0.03, 0xffe066, { x: x + 0.07, y: 1.55, z: LIP_Z + 0.19 }),
+];
+const blockMarker = (x: number): Parts => [
+  box(0.26, 0.24, 0.26, 0xe2473c, { x, y: 1.0, z: LIP_Z }),
+  box(0.24, 0.22, 0.24, 0x3f7de0, { x, y: 1.24, z: LIP_Z, ry: 0.5 }),
+  box(0.2, 0.2, 0.2, 0x54b86a, { x, y: 1.46, z: LIP_Z, ry: -0.3 }),
+];
+const starMarker = (x: number): Parts => [
+  lipPole(x, 0xffffff, 0.55),
+  blob(0.17, 0xffd23f, { x, y: 1.7, z: LIP_Z }),
+  blob(0.13, 0xffffff, { x: x - 0.1, y: 1.02, z: LIP_Z }, 1),
+  blob(0.15, 0xffffff, { x: x + 0.08, y: 1.03, z: LIP_Z - 0.05 }, 1),
+];
 
 /** A snowplough truck. Front (the blade) faces -Z like every other model. */
 const plough = () =>
@@ -1401,7 +1481,32 @@ export const OBJECT_DEFS: ObjectDef[] = [
 
   // ---- Hazards: placed by the world generator (see the "Hazard" sections of config.ts)
   hazard('river', 'river', 'river', 0x2f7fd0, river, 6, true),
-  hazard('bridge', 'bridge', 'bridge', 0xb9833f, bridge, 6, true),
-  hazard('ramp', 'ramp', 'ramp', 0xff7a1a, ramp, 30, false),
+  // A bridge and a ramp for each world, named by `bridge` and `ramp` in worlds.ts.
+  hazard('bridge', 'bridge', 'bridge', 0xb9833f, bridgeOf({ planks: [0x9a6a30, 0xb9833f], rail: 0x5a3d25, cap: SNOW }), 6, true),
+  hazard('bridgeLost', 'log bridge', 'bridge', 0x8a5a3a, bridgeOf({ planks: [0x8a5a3a, 0x6f4526], rail: 0x4a3424, cap: 0x3f9a4a }), 6, true),
+  hazard('bridgeSpace', 'gantry', 'bridge', 0x8a93a3, bridgeOf({ planks: [0x8a93a3, 0x6a7383], rail: 0x3a4150, cap: 0x5ae0ff }), 6, true),
+  hazard('bridgeCandy', 'wafer bridge', 'bridge', 0xe0b070, bridgeOf({ planks: [0xe0b070, 0xd09a54], rail: 0xffffff, post: 0xd81e3a, cap: 0xff7ab8 }), 6, true),
+  hazard('bridgeDesert', 'stone bridge', 'bridge', 0xd8c090, bridgeOf({ planks: [0xd8c090, 0xc4a870], rail: 0xa8864e, cap: 0xf2ead8 }), 6, true),
+  hazard('bridgeSea', 'wreck bridge', 'bridge', 0x6a5a48, bridgeOf({ planks: [0x7a6850, 0x5c4d3c], rail: 0x3fae9a, cap: 0xffd9c0 }), 6, true),
+  hazard('bridgeSpooky', 'rickety bridge', 'bridge', 0x4a3a35, bridgeOf({ planks: [0x5a4640, 0x3a2c28], rail: 0xe8dfc8, cap: 0xff8a1a }), 6, true),
+  hazard('bridgeToys', 'block bridge', 'bridge', 0xe2473c, bridgeOf({ planks: [0xe2473c, 0xf2c230, 0x3f7de0, 0x54b86a], rail: 0xffffff, cap: 0xe2473c }), 6, true),
+  hazard(
+    'bridgeSky',
+    'rainbow bridge',
+    'bridge',
+    0xffd23f,
+    bridgeOf({ planks: [0xe2473c, 0xff8a1a, 0xffd23f, 0x54b86a, 0x3f7de0, 0xb05fd6], along: true, rail: 0xffffff, cap: 0xffffff }),
+    6,
+    true,
+  ),
+  hazard('ramp', 'ramp', 'ramp', 0xff7a1a, rampOf({ body: 0xe9f1fb, stripes: [0xff7a1a, 0xff7a1a, 0xff7a1a], rail: RED, marker: flagMarker }), 30, false),
+  hazard('rampLost', 'ramp', 'ramp', 0x7a5a3c, rampOf({ body: 0x7a5a3c, stripes: [0xe8dfc8, 0xe8dfc8, 0xe8dfc8], rail: 0x4a3424, marker: torchMarker }), 30, false),
+  hazard('rampSpace', 'ramp', 'ramp', 0x8a93a3, rampOf({ body: 0x8a93a3, stripes: [0x5ae0ff, 0x5ae0ff, 0x5ae0ff], rail: 0x3a4150, marker: beaconMarker }), 30, false),
+  hazard('rampCandy', 'ramp', 'ramp', 0xffb3d1, rampOf({ body: 0xffb3d1, stripes: [0xffffff, 0xd81e3a, 0xffffff], rail: 0xd81e3a, marker: lollipopMarker }), 30, false),
+  hazard('rampDesert', 'ramp', 'ramp', 0xd8c090, rampOf({ body: 0xd8c090, stripes: [0x2aa6c8, 0x2aa6c8, 0x2aa6c8], rail: 0xa8864e, marker: obeliskMarker }), 30, false),
+  hazard('rampSea', 'ramp', 'ramp', 0x6a5a48, rampOf({ body: 0x7a6850, stripes: [0xffd9a0, 0xffd9a0, 0xffd9a0], rail: 0x3fae9a, marker: buoyMarker }), 30, false),
+  hazard('rampSpooky', 'ramp', 'ramp', 0x4a3f4f, rampOf({ body: 0x5a4d60, stripes: [0xff8a1a, 0xff8a1a, 0xff8a1a], rail: 0x2a222e, marker: pumpkinMarker }), 30, false),
+  hazard('rampToys', 'ramp', 'ramp', 0xf2c230, rampOf({ body: 0xf2c230, stripes: [0xe2473c, 0x3f7de0, 0x54b86a], rail: 0x3f7de0, marker: blockMarker }), 30, false),
+  hazard('rampSky', 'ramp', 'ramp', 0xffffff, rampOf({ body: 0xffffff, stripes: [0xe2473c, 0xffd23f, 0x3f7de0], rail: 0xff7ab8, marker: starMarker }), 30, false),
   { ...hazard('plough', 'snowplough', 'plough', 0xff8a1a, plough, 24, false), height: 1.25 },
 ];
