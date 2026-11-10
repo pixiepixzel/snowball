@@ -12,6 +12,7 @@ import {
   MISSIONS,
   MISSION_LOOP_FROM,
   NO_TWIST,
+  RARITIES,
   SKINS,
   UPGRADES,
   UPGRADE_LEVELS,
@@ -155,6 +156,9 @@ export class Game {
   private avalancheOn = false;
   private avalancheGap = 0;
   private avalancheD = 0;
+  /** Seconds the ball has been hopelessly small, and whether the avalanche is rushing in because of it. */
+  private hopeless = 0;
+  private surging = false;
   private threat = 0;
   private pixelRatio = 1;
   private shadowsOn = false;
@@ -391,6 +395,8 @@ export class Game {
     this.avalancheOn = false;
     this.avalancheGap = CONFIG.AVALANCHE_MAX_GAP_K;
     this.avalancheD = 0;
+    this.hopeless = 0;
+    this.surging = false;
     this.threat = 0;
     this.audio.stopAvalanche();
     this.rig.snap(this.ball);
@@ -704,6 +710,22 @@ export class Game {
       }
     } else {
       this.avalancheGap += ((ball.speed - C.AVALANCHE_SPEED * cruise) * dt) / ball.r;
+      // Shrunk past the point of no return: don't leave the player stranded among things
+      // far too big to absorb. The avalanche comes for them.
+      if (ball.r < designRadius(ball.d) * C.HOPELESS_BELOW) {
+        this.hopeless += realDt;
+        if (this.hopeless >= C.HOPELESS_TIME) {
+          if (!this.surging) {
+            this.surging = true;
+            this.ui.banner('Too small to recover!', `The ${worldAt(ball.d).chase.label.toLowerCase()} is coming`);
+            this.rig.shake(1);
+          }
+          this.avalancheGap -= C.HOPELESS_SURGE_K * dt;
+        }
+      } else {
+        this.hopeless = 0;
+        this.surging = false;
+      }
       this.avalancheGap = Math.min(this.avalancheGap, C.AVALANCHE_MAX_GAP_K);
       const gap = this.avalancheGap;
       this.threat = clamp(1 - (gap - 1.5) / (C.AVALANCHE_WARN_K - 1.5), 0, 1);
@@ -811,6 +833,13 @@ export class Game {
     this.world.recycle(o);
 
     this.counts.set(def.id, (this.counts.get(def.id) ?? 0) + 1);
+    // A rarer version of something: say so, and pay its bonus.
+    const rarity = RARITIES.find((r) => r.id === def.rarity);
+    if (rarity && rarity.id !== 'uncommon') {
+      this.runCoins += rarity.coins;
+      this.toasts.push(`${rarity.name}: ${def.name}! +${rarity.coins} coins`);
+      this.audio.chime();
+    }
     this.stats.absorbs++;
     this.tally.absorb++;
     this.combo = this.comboTimer > 0 ? this.combo + 1 : 0;
@@ -1280,7 +1309,7 @@ export class Game {
     }
     const done: string[] = [];
     for (const page of BOOK_PAGES) {
-      if (this.save.bookPaid.includes(page.key) || !page.defs.every((def) => this.save.book[def.id])) continue;
+      if (this.save.bookPaid.includes(page.key) || !page.defs.every((def) => def.rarity || this.save.book[def.id])) continue;
       this.save.bookPaid.push(page.key);
       this.save.coins += page.reward;
       done.push(`${page.name} page complete! +${page.reward} coins`);
@@ -1306,6 +1335,8 @@ export class Game {
       name: def.name,
       picture: this.thumbs.peek(def) ?? '',
       count: this.save.book[def.id] ?? 0,
+      rarity: RARITIES.find((r) => r.id === def.rarity)?.name ?? '',
+      rarityColor: RARITIES.find((r) => r.id === def.rarity)?.color ?? '',
     }));
     const turn = ++this.bookTurn;
     let next = 0;

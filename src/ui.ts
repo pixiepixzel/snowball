@@ -47,7 +47,8 @@ export interface BookView {
   hasPrev: boolean;
   hasNext: boolean;
   /** `count` is how many have been absorbed over every run; 0 means not found yet. */
-  items: { name: string; picture: string; count: number }[];
+  /** `rarity` is empty for an ordinary thing, otherwise its rarity ("Rare") and that rarity's colour. */
+  items: { name: string; picture: string; count: number; rarity: string; rarityColor: string }[];
 }
 
 /** One ball skin as the shop shows it. */
@@ -289,18 +290,20 @@ export class UI {
   openBook(view: BookView): void {
     el('book-total').textContent = `${view.found} of ${view.total} found`;
     el('book-name').textContent = view.name;
-    const have = view.items.filter((item) => item.count > 0).length;
+    // The page's reward is for the ordinary things; the rarer versions are a bonus.
+    const ordinary = view.items.filter((item) => !item.rarity);
+    const have = ordinary.filter((item) => item.count > 0).length;
     const note = el('book-note');
     note.textContent = '';
     if (view.paid) {
-      note.textContent = `All ${view.items.length} found!`;
+      note.textContent = `All ${ordinary.length} found!`;
     } else {
       const coin = document.createElement('span');
       coin.className = 'coins';
       const amount = document.createElement('b');
       amount.textContent = view.reward.toLocaleString('en-US');
       coin.append(document.createElement('i'), amount);
-      note.append(document.createTextNode(`${have}/${view.items.length} · find all for `), coin);
+      note.append(document.createTextNode(`${have}/${ordinary.length} · find all for `), coin);
     }
     (el('book-prev') as HTMLButtonElement).disabled = !view.hasPrev;
     (el('book-next') as HTMLButtonElement).disabled = !view.hasNext;
@@ -309,6 +312,13 @@ export class UI {
       const found = item.count > 0;
       const tile = document.createElement('div');
       tile.className = found ? 'thing' : 'thing unknown';
+      if (item.rarity) {
+        const tag = document.createElement('span');
+        tag.className = 'rarity';
+        tag.textContent = item.rarity;
+        tag.style.background = item.rarityColor;
+        tile.appendChild(tag);
+      }
       // The picture may arrive a moment later (setBookPicture); its space is kept meanwhile.
       const picture = document.createElement('img');
       picture.alt = '';

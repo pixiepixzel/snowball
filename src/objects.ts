@@ -12,6 +12,8 @@
  * `&page=2`... for more).
  */
 import type { BufferGeometry } from 'three';
+import type { RarityId } from './config';
+import { VARIANTS } from './objects-variants';
 import * as C from './objects-candy';
 import * as E from './objects-desert';
 import * as D from './objects-dino';
@@ -79,6 +81,12 @@ export interface ObjectDef {
   height?: number;
   /** Max simultaneous instances (world + stuck on the ball). */
   capacity?: number;
+  /**
+   * Set on a rarer version of another object (objects-variants.ts): how rare it is, and
+   * the id of the ordinary object it sometimes replaces. It is never placed in its own right.
+   */
+  rarity?: RarityId;
+  variantOf?: string;
 }
 
 type Parts = BufferGeometry[];
@@ -1513,3 +1521,17 @@ export const OBJECT_DEFS: ObjectDef[] = [
   hazard('rampSky', 'ramp', 'ramp', 0xffffff, rampOf({ body: 0xffffff, stripes: [0xe2473c, 0xffd23f, 0x3f7de0], rail: 0xff7ab8, marker: starMarker }), 30, false),
   { ...hazard('plough', 'snowplough', 'plough', 0xff8a1a, plough, 24, false), height: 1.25 },
 ];
+
+/**
+ * The rarer versions, by the id of the ordinary object each set replaces. Each is a full
+ * object in its own right (own model, name and place in the collection book) that copies
+ * the ordinary one's size and numbers, so it plays the same.
+ */
+export const VARIANTS_OF = new Map<string, ObjectDef[]>();
+for (const [baseId, list] of Object.entries(VARIANTS)) {
+  const base = OBJECT_DEFS.find((def) => def.id === baseId);
+  if (!base) throw new Error(`objects-variants.ts: no object called "${baseId}"`);
+  const made = list.map((variant): ObjectDef => ({ ...base, tints: undefined, capacity: 40, ...variant, variantOf: baseId }));
+  VARIANTS_OF.set(baseId, made);
+  OBJECT_DEFS.push(...made);
+}

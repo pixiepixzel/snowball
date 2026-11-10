@@ -7,8 +7,8 @@
  * -Z and drops the ground by SLOPE per metre.
  */
 import * as THREE from 'three';
-import { CONFIG, ZONES } from './config';
-import { OBJECT_DEFS, type ObjectDef } from './objects';
+import { CONFIG, RARITIES, ZONES } from './config';
+import { OBJECT_DEFS, VARIANTS_OF, type ObjectDef } from './objects';
 import { InstancePool } from './instances';
 import { LAP_GROWTH, LAP_LENGTH, designRadius, gateNeed, groundY, laneHalfWidth, locate, rebaseD, worldAt } from './zones';
 import { objectSource, worldForLap, type Scenery, type SceneLook, type WorldConfig } from './worlds';
@@ -701,6 +701,19 @@ export class World {
   // ---------------------------------------------------------------- objects
 
   private spawn(def: ObjectDef, x: number, d: number, size: number, scenery = false, yOff = 0): WorldObject | null {
+    // Now and then a rarer version turns up in place of the ordinary one (config.ts
+    // RARITIES). Not among the decoration on the banks, where nobody could reach it.
+    const rarer = scenery ? undefined : VARIANTS_OF.get(def.id);
+    if (rarer) {
+      let roll = this.rng() / PERKS.luck;
+      for (const variant of rarer) {
+        roll -= RARITIES.find((r) => r.id === variant.rarity)?.chance ?? 0;
+        if (roll < 0) {
+          def = variant;
+          break;
+        }
+      }
+    }
     const pool = this.poolOf(def);
     const slot = pool.alloc();
     if (slot < 0) return null;
@@ -1058,7 +1071,7 @@ export class World {
     const R = designRadius(mid) / scale;
     const pool: ObjectDef[] = [];
     for (const def of OBJECT_DEFS) {
-      if (def.special || def.motion || !inWorld(def, world)) continue;
+      if (def.special || def.motion || def.variantOf || !inWorld(def, world)) continue;
       if (g < def.zone + def.span[0] || g >= def.zone + def.span[1]) continue;
       const q = def.size / R;
       if (q >= 0.45 && q <= 3.5) pool.push(def);
@@ -1121,7 +1134,7 @@ export class World {
     const edible: ObjectDef[] = [];
     const big: ObjectDef[] = [];
     for (const def of OBJECT_DEFS) {
-      if (def.special || !inWorld(def, world)) continue;
+      if (def.special || def.variantOf || !inWorld(def, world)) continue;
       if (g < def.zone + def.span[0] || g >= def.zone + def.span[1]) continue;
       const q = def.size / R;
       if (q < C.TIER_MIN_Q) continue;

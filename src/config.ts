@@ -257,6 +257,15 @@ export const CONFIG = {
   AVALANCHE_GATE_GAP_K: 24,
   /** Below this gap (radii) the warning overlay, rumble and camera pull-back fade in. */
   AVALANCHE_WARN_K: 16,
+  /**
+   * No way back: if the ball stays smaller than this fraction of the size the slope expects
+   * for this many seconds, nearly everything is too big for it and the run cannot recover.
+   * The avalanche then rushes in (closing this many ball radii per second) to end it
+   * quickly. Growing back above the line calls it off.
+   */
+  HOPELESS_BELOW: 0.38,
+  HOPELESS_TIME: 3.5,
+  HOPELESS_SURGE_K: 9,
 
   // ---------------------------------------------------------------- Hazard: snowploughs
   /**
@@ -510,7 +519,7 @@ export const UPGRADES: UpgradeDef[] = [
   { id: 'sticky', name: 'Sticky snow', blurb: 'Grow more from everything you absorb', baseCost: 30, costGrowth: 1.5, perLevel: 0.03, effect: 'more growth' },
   { id: 'tough', name: 'Packed ice', blurb: 'Lose less size when you hit something', baseCost: 30, costGrowth: 1.5, perLevel: 0.05, effect: 'less size lost' },
   { id: 'grip', name: 'Grip', blurb: 'Steer quicker and tighter', baseCost: 30, costGrowth: 1.5, perLevel: 0.03, effect: 'quicker steering' },
-  { id: 'luck', name: 'Lucky charm', blurb: 'Secret objects turn up more often', baseCost: 30, costGrowth: 1.5, perLevel: 0.12, effect: 'more secrets' },
+  { id: 'luck', name: 'Lucky charm', blurb: 'Secrets and rare things turn up more often', baseCost: 30, costGrowth: 1.5, perLevel: 0.12, effect: 'more secrets' },
 ];
 
 // ---------------------------------------------------------------- Ball skins
@@ -557,10 +566,28 @@ export const SKINS: SkinDef[] = [
   { id: 'gold', name: 'Solid gold', price: 3000, pattern: 'speckle', colors: [0xffc21a, 0xffd75a, 0xe8a200], weights: [0.45, 0.3, 0.25], shine: 0.85, glow: 0x2a1a00 },
 ];
 
+// ---------------------------------------------------------------- Rarities
+/**
+ * Each world's most common tall thing (its tree, or what stands in for one) has rarer
+ * versions that now and then turn up in its place (objects-variants.ts). For each rarity:
+ *   chance  how often one replaces the ordinary object when that object is placed
+ *           (the Lucky charm upgrade multiplies all of these)
+ *   coins   bonus coins for absorbing one
+ *   color   its tag in the collection book
+ * Whatever is left over is the ordinary, common one.
+ */
+export type RarityId = 'uncommon' | 'rare' | 'superRare' | 'mythic';
+export const RARITIES: { id: RarityId; name: string; chance: number; coins: number; color: string }[] = [
+  { id: 'uncommon', name: 'Uncommon', chance: 0.12, coins: 0, color: '#2f9a4a' },
+  { id: 'rare', name: 'Rare', chance: 0.05, coins: 2, color: '#2f6fd0' },
+  { id: 'superRare', name: 'Super rare', chance: 0.018, coins: 6, color: '#9a4fd0' },
+  { id: 'mythic', name: 'Mythic', chance: 0.005, coins: 25, color: '#d98a00' },
+];
+
 // ---------------------------------------------------------------- Collection book
 /**
  * The book lists every object, a page per world, greyed out until one has been absorbed.
- * Finding everything on a world's page pays BOOK_PAGE_REWARD coins, once; the page of
+ * Finding every ordinary thing on a world's page (the rarer versions are a bonus) pays BOOK_PAGE_REWARD coins, once; the page of
  * secret objects pays BOOK_SECRETS_REWARD because they are so much rarer.
  */
 export const BOOK_PAGE_REWARD = 150;
