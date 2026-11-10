@@ -252,6 +252,7 @@ const _pos = new THREE.Vector3();
 const _quat = new THREE.Quaternion();
 const _scale = new THREE.Vector3();
 const _color = new THREE.Color();
+const _wash = new THREE.Color();
 const _a = new THREE.Vector3();
 const _b = new THREE.Vector3();
 const _c = new THREE.Vector3();
@@ -521,7 +522,9 @@ export class World {
         const locked = ballR < o.need;
         if (locked !== o.danger) {
           o.danger = locked;
-          this.poolOf(o.def).setColor(o.slot, locked ? C_GATE_LOCKED : C_WHITE);
+          // Breakable again: back to its own colours (or the world's wash, in a remix world).
+          const wash = worldAt(o.d).tint;
+          this.poolOf(o.def).setColor(o.slot, locked ? C_GATE_LOCKED : wash !== undefined ? _color.setHex(wash) : C_WHITE);
         }
       }
 
@@ -645,7 +648,16 @@ export class World {
     o.fade = 1;
     o.shadow = -1;
     o.ring = -1;
-    pool.setColor(slot, def.tints ? _color.setHex(def.tints[Math.floor(this.rng() * def.tints.length)]) : C_WHITE);
+    // Its own tint if it has a choice of them, washed with the world's colour in a remix
+    // world. Secret objects keep their own colours everywhere, so they stay recognisable.
+    const wash = special === 'secret' ? undefined : worldAt(d).tint;
+    if (def.tints) {
+      _color.setHex(def.tints[Math.floor(this.rng() * def.tints.length)]);
+      if (wash !== undefined) _color.multiply(_wash.setHex(wash));
+      pool.setColor(slot, _color);
+    } else {
+      pool.setColor(slot, wash !== undefined ? _color.setHex(wash) : C_WHITE);
+    }
     if (!scenery && (!special || special === 'plough' || special === 'secret')) {
       o.shadow = this.shadows.alloc();
       if (o.shadow >= 0) {

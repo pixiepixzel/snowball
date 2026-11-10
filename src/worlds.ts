@@ -100,6 +100,8 @@ export interface WorldConfig {
   /** Object ids of this world's ramp and of the bridge over its rivers. */
   ramp: string;
   bridge: string;
+  /** A wash of colour over every object in the world (remix worlds only; none if left out). */
+  tint?: number;
   /**
    * The thing chasing the ball: its name on the meter, its colours, and how it moves.
    *   'tumble'  boulders rolling and bouncing (avalanche)
@@ -414,20 +416,22 @@ interface RemixStyle {
   /** Sunlight colour and brightness. */
   sun: number;
   light: number;
+  /** A wash of colour over every object, so things borrowed from other worlds look like they belong here. */
+  tint: number;
   stars: boolean;
 }
 
 export const REMIX_STYLES: RemixStyle[] = [
-  { adj: 'Neon', sky: [0.74, 0.8, 0.07], horizon: [0.88, 0.85, 0.4], lane: [0.76, 0.55, 0.3], bank: [0.5, 0.9, 0.42], ridge: [0.85, 0.7, 0.25], sun: 0xffd8ff, light: 1.05, stars: true },
-  { adj: 'Frozen', sky: [0.58, 0.75, 0.55], horizon: [0.55, 0.6, 0.88], lane: [0.57, 0.45, 0.9], bank: [0.58, 0.4, 0.75], ridge: [0.6, 0.25, 0.55], sun: 0xeaf6ff, light: 1.02, stars: false },
-  { adj: 'Lava', sky: [0.98, 0.6, 0.1], horizon: [0.05, 0.95, 0.55], lane: [0.03, 0.1, 0.2], bank: [0.04, 0.85, 0.34], ridge: [0.0, 0.25, 0.14], sun: 0xffb890, light: 0.96, stars: false },
-  { adj: 'Bubblegum', sky: [0.55, 0.8, 0.72], horizon: [0.92, 0.9, 0.88], lane: [0.93, 0.75, 0.85], bank: [0.47, 0.6, 0.72], ridge: [0.8, 0.45, 0.6], sun: 0xfff0f6, light: 1.03, stars: false },
-  { adj: 'Midnight', sky: [0.66, 0.7, 0.05], horizon: [0.62, 0.55, 0.22], lane: [0.62, 0.35, 0.38], bank: [0.64, 0.4, 0.28], ridge: [0.66, 0.4, 0.18], sun: 0xc8d8ff, light: 1.0, stars: true },
-  { adj: 'Golden', sky: [0.07, 0.75, 0.55], horizon: [0.11, 0.95, 0.78], lane: [0.12, 0.7, 0.72], bank: [0.09, 0.65, 0.55], ridge: [0.06, 0.5, 0.36], sun: 0xffe2a0, light: 1.03, stars: false },
-  { adj: 'Toxic', sky: [0.78, 0.55, 0.16], horizon: [0.25, 0.75, 0.45], lane: [0.24, 0.6, 0.42], bank: [0.3, 0.7, 0.3], ridge: [0.78, 0.4, 0.22], sun: 0xe8ffb0, light: 1.0, stars: false },
-  { adj: 'Drowned', sky: [0.56, 0.8, 0.2], horizon: [0.5, 0.7, 0.5], lane: [0.48, 0.5, 0.55], bank: [0.45, 0.6, 0.38], ridge: [0.6, 0.5, 0.25], sun: 0xc8fff0, light: 1.0, stars: false },
-  { adj: 'Crystal', sky: [0.72, 0.6, 0.35], horizon: [0.8, 0.7, 0.8], lane: [0.74, 0.5, 0.82], bank: [0.55, 0.6, 0.7], ridge: [0.7, 0.45, 0.5], sun: 0xf0e8ff, light: 1.03, stars: true },
-  { adj: 'Storm', sky: [0.6, 0.15, 0.25], horizon: [0.58, 0.12, 0.6], lane: [0.58, 0.1, 0.62], bank: [0.6, 0.12, 0.45], ridge: [0.6, 0.14, 0.28], sun: 0xdfe6f0, light: 0.94, stars: false },
+  { adj: 'Neon', sky: [0.74, 0.8, 0.07], horizon: [0.88, 0.85, 0.4], lane: [0.76, 0.55, 0.3], bank: [0.5, 0.9, 0.42], ridge: [0.85, 0.7, 0.25], sun: 0xffd8ff, light: 1.05, tint: 0xf0b0ff, stars: true },
+  { adj: 'Frozen', sky: [0.58, 0.75, 0.55], horizon: [0.55, 0.6, 0.88], lane: [0.57, 0.45, 0.9], bank: [0.58, 0.4, 0.75], ridge: [0.6, 0.25, 0.55], sun: 0xeaf6ff, light: 1.02, tint: 0xbfe4ff, stars: false },
+  { adj: 'Lava', sky: [0.98, 0.6, 0.1], horizon: [0.05, 0.95, 0.55], lane: [0.03, 0.1, 0.2], bank: [0.04, 0.85, 0.34], ridge: [0.0, 0.25, 0.14], sun: 0xffb890, light: 0.96, tint: 0xffc8a0, stars: false },
+  { adj: 'Bubblegum', sky: [0.55, 0.8, 0.72], horizon: [0.92, 0.9, 0.88], lane: [0.93, 0.75, 0.85], bank: [0.47, 0.6, 0.72], ridge: [0.8, 0.45, 0.6], sun: 0xfff0f6, light: 1.03, tint: 0xffc4e4, stars: false },
+  { adj: 'Midnight', sky: [0.66, 0.7, 0.05], horizon: [0.62, 0.55, 0.22], lane: [0.62, 0.35, 0.38], bank: [0.64, 0.4, 0.28], ridge: [0.66, 0.4, 0.18], sun: 0xc8d8ff, light: 1.0, tint: 0xb8c4ff, stars: true },
+  { adj: 'Golden', sky: [0.07, 0.75, 0.55], horizon: [0.11, 0.95, 0.78], lane: [0.12, 0.7, 0.72], bank: [0.09, 0.65, 0.55], ridge: [0.06, 0.5, 0.36], sun: 0xffe2a0, light: 1.03, tint: 0xffe08a, stars: false },
+  { adj: 'Toxic', sky: [0.78, 0.55, 0.16], horizon: [0.25, 0.75, 0.45], lane: [0.24, 0.6, 0.42], bank: [0.3, 0.7, 0.3], ridge: [0.78, 0.4, 0.22], sun: 0xe8ffb0, light: 1.0, tint: 0xd0ff9a, stars: false },
+  { adj: 'Drowned', sky: [0.56, 0.8, 0.2], horizon: [0.5, 0.7, 0.5], lane: [0.48, 0.5, 0.55], bank: [0.45, 0.6, 0.38], ridge: [0.6, 0.5, 0.25], sun: 0xc8fff0, light: 1.0, tint: 0xa8f0e0, stars: false },
+  { adj: 'Crystal', sky: [0.72, 0.6, 0.35], horizon: [0.8, 0.7, 0.8], lane: [0.74, 0.5, 0.82], bank: [0.55, 0.6, 0.7], ridge: [0.7, 0.45, 0.5], sun: 0xf0e8ff, light: 1.03, tint: 0xe0ccff, stars: true },
+  { adj: 'Storm', sky: [0.6, 0.15, 0.25], horizon: [0.58, 0.12, 0.6], lane: [0.58, 0.1, 0.62], bank: [0.6, 0.12, 0.45], ridge: [0.6, 0.14, 0.28], sun: 0xdfe6f0, light: 0.94, tint: 0xc8d0dc, stars: false },
 ];
 
 /** The second half of a remix world's name: "Neon Frontier", "Candy Kingdom". */
@@ -578,6 +582,7 @@ function buildRemix(lap: number): WorldConfig {
     // A borrowed tune, a little faster: remix worlds are the late game.
     music: faster(pick(WORLDS).music),
     stars: style.stars,
+    tint: style.tint,
     sources,
     mixSeed: Math.floor(rng() * 100000) + 1,
     twist: nth < TWISTS.length ? TWISTS[nth] : TWISTS[shuffledPick(TWISTS.length, nth, 47)],
