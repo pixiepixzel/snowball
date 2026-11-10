@@ -3,7 +3,8 @@
  * stuck to its surface.
  */
 import * as THREE from 'three';
-import { CONFIG, ZONES } from './config';
+import { CONFIG, SKINS, ZONES, type SkinDef } from './config';
+import { paintSkin, skinSwatch } from './skins';
 import { LAP_GROWTH, designRadius, groundY, laneHalfWidth, locate, rebaseD, twistAt } from './zones';
 import { worldForLap } from './worlds';
 import { PERKS } from './perks';
@@ -31,6 +32,7 @@ const _twist = new THREE.Quaternion();
 const _s = new THREE.Vector3();
 const _m = new THREE.Matrix4();
 const _ballM = new THREE.Matrix4();
+const _color = new THREE.Color();
 
 function buildSnowballGeometry(): THREE.BufferGeometry {
   const g = new THREE.IcosahedronGeometry(1, 2);
@@ -43,21 +45,17 @@ function buildSnowballGeometry(): THREE.BufferGeometry {
     pos.setXYZ(i, _v.x, _v.y, _v.z);
   }
   g.computeVertexNormals();
-  // Each facet gets its own shade so the roll is readable on an all-white ball.
-  const colors = new Float32Array(pos.count * 3);
-  const c = new THREE.Color();
-  for (let f = 0; f < pos.count / 3; f++) {
-    const k = hash2(f * 1.31, 7.7);
-    if (k < 0.1) c.setHex(0xc9d9ee);
-    else if (k < 0.3) c.setHex(0xe2ebf7);
-    else c.setHex(0xffffff);
-    for (let j = 0; j < 3; j++) {
-      colors[(f * 3 + j) * 3] = c.r;
-      colors[(f * 3 + j) * 3 + 1] = c.g;
-      colors[(f * 3 + j) * 3 + 2] = c.b;
-    }
-  }
-  g.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+  // Each facet gets its own shade so the roll is readable; the skin paints them (skins.ts).
+  return g;
+}
+
+/**
+ * A rounder ball with many small facets, for skins with a pattern (stripes, patches): on
+ * the snowball's big facets a pattern comes out too blocky to recognise.
+ */
+function buildPatternGeometry(): THREE.BufferGeometry {
+  const g = new THREE.IcosahedronGeometry(1, 7);
+  g.computeVertexNormals();
   return g;
 }
 
@@ -66,7 +64,13 @@ export class Ball {
   readonly position = new THREE.Vector3();
   readonly mesh: THREE.Mesh;
   private shadow: THREE.Mesh;
-  private material: THREE.MeshLambertMaterial;
+  private material: THREE.MeshPhongMaterial;
+  /** The glow the current skin gives off by itself [r, g, b], and the shop pictures made so far. */
+  private skinGlow: [number, number, number] = [0, 0, 0];
+  private swatches = new Map<string, string>();
+  /** The lumpy snowball shape, and the finer one patterned skins use (made when first needed). */
+  private lumpy = buildSnowballGeometry();
+  private fine: THREE.BufferGeometry | null = null;
   private stuck: Stuck[] = [];
   private freeStuck: Stuck[] = [];
   private blobShadow = true;
@@ -111,9 +115,11 @@ export class Ball {
   readonly glow: [number, number, number] = [0, 0, 0];
 
   constructor(scene: THREE.Scene) {
-    this.material = new THREE.MeshLambertMaterial({ vertexColors: true });
-    this.mesh = new THREE.Mesh(buildSnowballGeometry(), this.material);
+    // With no shine this lights exactly like a matte material; shiny skins turn it up.
+    this.material = new THREE.MeshPhongMaterial({ vertexColors: true, specular: 0x000000 });
+    this.mesh = new THREE.Mesh(this.lumpy, this.material);
     this.mesh.castShadow = true;
+    this.setSkin(SKINS[0]);
     scene.add(this.mesh);
 
     const disc = new THREE.CircleGeometry(1, 20);
@@ -164,8 +170,36 @@ export class Ball {
     this.mesh.quaternion.identity();
     this.mesh.visible = true;
     this.shadow.visible = this.blobShadow;
-    this.material.emissive.setRGB(0, 0, 0);
+    this.material.emissive.setRGB(this.skinGlow[0], this.skinGlow[1], this.skinGlow[2]);
     this.place();
+  }
+
+  /** Change how the ball looks (config.ts SKINS). Purely cosmetic. */
+  setSkin(skin: SkinDef): void {
+    this.mesh.geometry = this.shapeFor(skin);
+    paintSkin(this.mesh.geometry, skin);
+    this.material.specular.setScalar(skin.shine * 0.9);
+    this.material.shininess = 25 + skin.shine * 75;
+    _color.setHex(skin.glow);
+    this.skinGlow = [_color.r, _color.g, _color.b];
+    this.material.emissive.copy(_color);
+  }
+
+  /** A small picture of the ball in a skin, for the shop (an image URL; made once each). */
+  swatch(skin: SkinDef): string {
+    let url = this.swatches.get(skin.id);
+    if (url === undefined) {
+      url = skinSwatch(this.shapeFor(skin), skin);
+      this.swatches.set(skin.id, url);
+    }
+    return url;
+  }
+
+  /** Speckled skins keep the lumpy snowball; anything with a pattern gets the finer ball. */
+  private shapeFor(skin: SkinDef): THREE.BufferGeometry {
+    if (skin.pattern === 'speckle') return this.lumpy;
+    this.fine ??= buildPatternGeometry();
+    return this.fine;
   }
 
   /** Shrink by one lap along with the rest of the world (see REBASE_LAP in zones.ts). */
@@ -314,7 +348,8 @@ export class Ball {
     const flash = this.invuln / C.HIT_INVULN;
     // Red while hurt; icy blue during a yeti rage; green under a tractor beam.
     const g = this.glow;
-    this.material.emissive.setRGB(0.55 * flash + g[0], 0.04 * flash + g[1], 0.04 * flash + g[2]);
+    const own = this.skinGlow;
+    this.material.emissive.setRGB(0.55 * flash + g[0] + own[0], 0.04 * flash + g[1] + own[1], 0.04 * flash + g[2] + own[2]);
 
     this.place();
   }

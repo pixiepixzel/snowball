@@ -491,6 +491,50 @@ export const UPGRADES: UpgradeDef[] = [
   { id: 'luck', name: 'Lucky charm', blurb: 'Secret objects turn up more often', baseCost: 30, costGrowth: 1.5, perLevel: 0.12, effect: 'more secrets' },
 ];
 
+// ---------------------------------------------------------------- Ball skins
+/**
+ * Looks for the ball, bought with coins. They change nothing about how the game plays.
+ * The first one is free and is what a new player has.
+ *
+ * `pattern` is how the ball's facets are coloured (skins.ts):
+ *   speckle  each facet picks one of `colors` at random, in the proportions of `weights`
+ *   wedges   `count` segments round the ball like an orange, with `cap` at the two ends
+ *   bands    `count` stripes from one end to the other
+ *   patches  `count` round spots of colors[1], each `spread` radians across, on colors[0]
+ *   planet   sea (colors 0-1), land (colors 2-3) and ice caps (color 4)
+ *   rainbow  every hue, swirled round the ball
+ * `shine` is 0 for matte up to 1 for a mirror; `glow` is a colour the ball gives off by itself.
+ */
+export interface SkinDef {
+  id: string;
+  name: string;
+  /** Coins to buy it. */
+  price: number;
+  pattern: 'speckle' | 'wedges' | 'bands' | 'patches' | 'planet' | 'rainbow';
+  colors: number[];
+  weights?: number[];
+  count?: number;
+  cap?: number;
+  spread?: number;
+  shine: number;
+  glow: number;
+}
+
+export const SKINS: SkinDef[] = [
+  { id: 'snow', name: 'Snowball', price: 0, pattern: 'speckle', colors: [0xc9d9ee, 0xe2ebf7, 0xffffff], weights: [0.1, 0.2, 0.7], shine: 0, glow: 0x000000 },
+  { id: 'ice', name: 'Ice ball', price: 50, pattern: 'speckle', colors: [0x8fd0f5, 0xb9e6ff, 0xe3f6ff], weights: [0.25, 0.45, 0.3], shine: 0.9, glow: 0x061c2c },
+  { id: 'beach', name: 'Beach ball', price: 100, pattern: 'wedges', colors: [0xff4d4d, 0xffffff, 0x2f8cff, 0xffffff, 0xffd23a, 0xffffff], count: 6, cap: 0xffffff, shine: 0.35, glow: 0x000000 },
+  { id: 'bee', name: 'Bumblebee', price: 150, pattern: 'bands', colors: [0xffc928, 0x2a2118], count: 7, shine: 0.1, glow: 0x000000 },
+  { id: 'melon', name: 'Watermelon', price: 250, pattern: 'wedges', colors: [0x45b356, 0x145a24], count: 12, shine: 0.3, glow: 0x000000 },
+  { id: 'football', name: 'Football', price: 350, pattern: 'patches', colors: [0xffffff, 0x1d2430], count: 12, spread: 0.36, shine: 0.25, glow: 0x000000 },
+  { id: 'pumpkin', name: 'Pumpkin', price: 500, pattern: 'wedges', colors: [0xff8a1a, 0xe2660a], count: 10, cap: 0x3f8a2a, shine: 0.15, glow: 0x000000 },
+  { id: 'lava', name: 'Lava ball', price: 700, pattern: 'speckle', colors: [0x2a1512, 0x4a1f14, 0xff5a1a, 0xffb02e], weights: [0.5, 0.2, 0.2, 0.1], shine: 0.1, glow: 0x2e0d00 },
+  { id: 'planet', name: 'Planet Earth', price: 1000, pattern: 'planet', colors: [0x2a6fdb, 0x3b86ea, 0x3fae4f, 0x8fbf4a, 0xffffff], shine: 0.3, glow: 0x000000 },
+  { id: 'disco', name: 'Disco ball', price: 1500, pattern: 'speckle', colors: [0x9aa8be, 0xdfe6f2, 0x6f7f9a, 0xffffff, 0xff7ad9, 0x6fd3ff], weights: [0.3, 0.25, 0.2, 0.1, 0.075, 0.075], shine: 1, glow: 0x10141c },
+  { id: 'rainbow', name: 'Rainbow', price: 2000, pattern: 'rainbow', colors: [], shine: 0.3, glow: 0x000000 },
+  { id: 'gold', name: 'Solid gold', price: 3000, pattern: 'speckle', colors: [0xffc21a, 0xffd75a, 0xe8a200], weights: [0.45, 0.3, 0.25], shine: 0.85, glow: 0x2a1a00 },
+];
+
 // ---------------------------------------------------------------- Size milestones
 /**
  * Things the ball outgrows. When its diameter passes one, the game says so: "Bigger than

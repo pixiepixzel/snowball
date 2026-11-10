@@ -64,7 +64,7 @@
               <button id="world-next" class="step next" type="button" aria-label="Next world"></button>
             </div>
             <button id="start-btn" class="btn" type="button">Tap to roll</button>
-            <button id="shop-btn" class="btn alt" type="button">Upgrades <span class="coins"><i></i><b id="title-coins">0</b></span></button>
+            <button id="shop-btn" class="btn alt" type="button">Shop <span class="coins"><i></i><b id="title-coins">0</b></span></button>
             <div id="title-best" class="best"></div>
             <div class="switches">
               <button id="title-sound-btn" class="switch" type="button">Sound: on</button>
@@ -87,7 +87,7 @@
             <h3>What's inside</h3>
             <div id="end-list" class="chips"></div>
             <button id="again-btn" class="btn" type="button">Roll again</button>
-            <button id="end-shop-btn" class="btn alt" type="button">Upgrades <span class="coins"><i></i><b id="end-total">0</b></span></button>
+            <button id="end-shop-btn" class="btn alt" type="button">Shop <span class="coins"><i></i><b id="end-total">0</b></span></button>
             <button id="menu-btn" class="link" type="button">Change world</button>
           </div>
         </section>
@@ -108,10 +108,14 @@
 
         <section id="shop" class="screen hidden">
           <div class="card">
-            <h2>Upgrades</h2>
-            <div class="sub">They stay for every run</div>
+            <h2>Shop</h2>
             <div class="wallet"><span class="coins"><i></i><b id="shop-coins">0</b></span> coins</div>
+            <div class="tabs">
+              <button id="tab-upgrades" class="tab on" type="button">Upgrades</button>
+              <button id="tab-skins" class="tab" type="button">Skins</button>
+            </div>
             <div id="shop-list"></div>
+            <div id="skin-list" hidden></div>
             <button id="shop-close" class="btn alt" type="button">Done</button>
           </div>
         </section>

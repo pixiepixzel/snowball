@@ -11,6 +11,7 @@ import {
   MISSIONS,
   MISSION_LOOP_FROM,
   NO_TWIST,
+  SKINS,
   UPGRADES,
   UPGRADE_LEVELS,
   WIND_PERIOD,
@@ -30,7 +31,7 @@ import { Input } from './input';
 import { OBJECT_DEFS } from './objects';
 import { PERKS, applyUpgrades, coinsFor, upgradeCost } from './perks';
 import { loadSave, writeSave, type MissionState, type SaveData } from './save';
-import { UI, type MissionRow, type ShopRow } from './ui';
+import { UI, type MissionRow, type ShopRow, type SkinRow } from './ui';
 import { clamp, lerp, sizeLabel, sizeParts } from './util';
 import { World, type WorldObject } from './world';
 import { HAND_MADE_LAPS, worldForLap } from './worlds';
@@ -216,8 +217,9 @@ export class Game {
 
     this.ui.onStart = () => this.start();
     this.ui.onRestart = () => this.start();
-    this.ui.onShop = () => this.ui.openShop(this.save.coins, this.shopRows());
+    this.ui.onShop = () => this.showShop();
     this.ui.onBuy = (id) => this.buy(id);
+    this.ui.onSkin = (id) => this.pickSkin(id);
     this.ui.onWorldStep = (step) => this.pickWorld(step);
     this.ui.onMenu = () => this.toTitle();
     this.ui.onPause = () => this.pause();
@@ -232,6 +234,7 @@ export class Game {
       else this.pause();
     });
     applyUpgrades(this.save.upgrades);
+    this.ball.setSkin(SKINS.find((s) => s.id === this.save.skin) ?? SKINS[0]);
     this.audio.setMuted(!this.save.sound);
     this.audio.setMusicOn(this.save.music);
     this.ui.setSettings(this.save.sound, this.save.music, this.save.vibration);
@@ -1349,7 +1352,45 @@ export class Game {
       const from = this.startPoint(this.startLap);
       this.reset(from.d, from.base);
     }
-    this.ui.openShop(this.save.coins, this.shopRows());
+    this.showShop();
+    this.ui.setCoins(this.save.coins);
+  }
+
+  /** Open the shop, or redraw it after something was bought. */
+  private showShop(): void {
+    this.ui.openShop(this.save.coins, this.shopRows(), this.skinRows());
+  }
+
+  /** One tile per ball skin for the shop: its picture, price and whether it is owned or in use. */
+  private skinRows(): SkinRow[] {
+    return SKINS.map((def) => {
+      const owned = this.save.skins.includes(def.id);
+      return {
+        id: def.id,
+        name: def.name,
+        picture: this.ball.swatch(def),
+        price: def.price,
+        owned,
+        selected: this.save.skin === def.id,
+        affordable: owned || this.save.coins >= def.price,
+      };
+    });
+  }
+
+  /** A skin was tapped in the shop: buy it if it isn't owned yet, then put it on the ball. */
+  private pickSkin(id: string): void {
+    const def = SKINS.find((s) => s.id === id);
+    if (!def || this.save.skin === id) return;
+    if (!this.save.skins.includes(id)) {
+      if (this.save.coins < def.price) return;
+      this.save.coins -= def.price;
+      this.save.skins.push(id);
+    }
+    this.save.skin = id;
+    writeSave(this.save);
+    this.ball.setSkin(def);
+    this.audio.chime();
+    this.showShop();
     this.ui.setCoins(this.save.coins);
   }
 

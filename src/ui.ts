@@ -31,6 +31,19 @@ export interface ShopRow {
   affordable: boolean;
 }
 
+/** One ball skin as the shop shows it. */
+export interface SkinRow {
+  id: string;
+  name: string;
+  /** A small picture of the ball in this skin, as an image URL. */
+  picture: string;
+  price: number;
+  owned: boolean;
+  /** The one the ball is wearing. */
+  selected: boolean;
+  affordable: boolean;
+}
+
 /** One mission as the title screen, pause menu and end screen list it. */
 export interface MissionRow {
   text: string;
@@ -52,6 +65,8 @@ export class UI {
   /** The player opened the upgrade shop; the game answers with openShop(). */
   onShop: () => void = () => {};
   onBuy: (id: string) => void = () => {};
+  /** A skin was tapped in the shop: buy it, or put it on if it is already owned. */
+  onSkin: (id: string) => void = () => {};
   /** The player pressed an arrow on the world picker: -1 or +1. */
   onWorldStep: (step: number) => void = () => {};
   /** "Change world" on the end screen: back to the title. */
@@ -83,6 +98,7 @@ export class UI {
   private shopScreen = el('shop');
   private pauseScreen = el('pause');
   private shopList = el('shop-list');
+  private skinList = el('skin-list');
   private powerBox = el('power');
   private powerLabel = el('power-label');
   private powerFill = el('power-fill');
@@ -117,6 +133,12 @@ export class UI {
       const button = (e.target as HTMLElement).closest('button[data-id]') as HTMLButtonElement | null;
       if (button && !button.disabled) this.onBuy(button.dataset.id ?? '');
     });
+    this.skinList.addEventListener('click', (e) => {
+      const tile = (e.target as HTMLElement).closest('button[data-skin]') as HTMLButtonElement | null;
+      if (tile && !tile.disabled) this.onSkin(tile.dataset.skin ?? '');
+    });
+    el('tab-upgrades').addEventListener('click', () => this.setShopTab('upgrades'));
+    el('tab-skins').addEventListener('click', () => this.setShopTab('skins'));
     el('world-prev').addEventListener('click', () => this.onWorldStep(-1));
     el('world-next').addEventListener('click', () => this.onWorldStep(1));
     el('menu-btn').addEventListener('click', () => this.onMenu());
@@ -227,9 +249,43 @@ export class UI {
     el('end-total').textContent = text;
   }
 
-  /** Show (or refresh) the upgrade shop on top of whichever screen opened it. */
-  openShop(coins: number, rows: ShopRow[]): void {
+  /** The shop has two pages, upgrades and ball skins; this shows one of them. */
+  private setShopTab(tab: 'upgrades' | 'skins'): void {
+    el('tab-upgrades').classList.toggle('on', tab === 'upgrades');
+    el('tab-skins').classList.toggle('on', tab === 'skins');
+    this.shopList.hidden = tab !== 'upgrades';
+    this.skinList.hidden = tab !== 'skins';
+  }
+
+  /** Fill the skins page of the shop: a tile each, with what a tap on it will do. */
+  private fillSkins(skins: SkinRow[]): void {
+    this.skinList.innerHTML = '';
+    for (const skin of skins) {
+      const tile = document.createElement('button');
+      tile.type = 'button';
+      tile.className = skin.selected ? 'skin on' : skin.owned ? 'skin owned' : 'skin';
+      tile.dataset.skin = skin.id;
+      tile.disabled = skin.selected || !skin.affordable;
+      const picture = document.createElement('img');
+      picture.src = skin.picture;
+      picture.alt = '';
+      const name = document.createElement('span');
+      name.className = 'name';
+      name.textContent = skin.name;
+      const state = document.createElement('span');
+      state.className = 'state';
+      if (skin.selected) state.textContent = 'In use';
+      else if (skin.owned) state.textContent = 'Use';
+      else state.append(document.createElement('i'), document.createTextNode(skin.price.toLocaleString('en-US')));
+      tile.append(picture, name, state);
+      this.skinList.appendChild(tile);
+    }
+  }
+
+  /** Show (or refresh) the shop on top of whichever screen opened it. It stays on the page it was on. */
+  openShop(coins: number, rows: ShopRow[], skins: SkinRow[]): void {
     el('shop-coins').textContent = coins.toLocaleString('en-US');
+    this.fillSkins(skins);
     this.shopList.innerHTML = '';
     for (const row of rows) {
       const item = document.createElement('div');

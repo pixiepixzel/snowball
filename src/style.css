@@ -1308,3 +1308,134 @@ h1 {
     margin-top: 9px;
   }
 }
+
+/* ------------------------------------------------------------------ shop pages and ball skins */
+[hidden] {
+  display: none !important;
+}
+
+/* Upgrades | Skins: two buttons side by side, the current page filled in. */
+.tabs {
+  display: flex;
+  gap: 4px;
+  margin-top: 12px;
+  padding: 4px;
+  border-radius: 999px;
+  background: #e1eaf6;
+}
+
+.tab {
+  appearance: none;
+  border: 0;
+  cursor: pointer;
+  min-height: 38px;
+  padding: 6px 22px;
+  border-radius: 999px;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 900;
+  color: var(--ink-soft);
+  background: none;
+}
+
+.tab.on {
+  color: #fff;
+  background: var(--accent);
+}
+
+/* Skins: three tiles to a row, each a picture of the ball, its name and its price. */
+#skin-list {
+  width: 100%;
+  margin: 14px 0 18px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  overflow-y: auto;
+  touch-action: pan-y;
+}
+
+.skin {
+  appearance: none;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  min-width: 0;
+  padding: 9px 4px 8px;
+  border: 0;
+  border-radius: 16px;
+  font-family: inherit;
+  color: var(--ink);
+  background: #e9f1fb;
+  box-shadow: inset 0 0 0 2px transparent;
+}
+
+.skin img {
+  width: 52px;
+  height: 52px;
+  filter: drop-shadow(0 3px 4px rgba(23, 54, 92, 0.3));
+}
+
+.skin .name {
+  max-width: 100%;
+  font-size: 12px;
+  font-weight: 900;
+  line-height: 1.15;
+  text-align: center;
+}
+
+.skin .state {
+  margin-top: 1px;
+  padding: 2px 9px 3px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+  color: #5a3600;
+  background: linear-gradient(180deg, #ffe07a, #ffc22e);
+}
+
+.skin .state i {
+  display: inline-block;
+  width: 0.85em;
+  height: 0.85em;
+  margin-right: 0.3em;
+  border-radius: 50%;
+  vertical-align: -0.08em;
+  background: radial-gradient(circle at 35% 30%, #fff3b0, #ffc92e 55%, #d9920a);
+  box-shadow: inset 0 0 0 1px rgba(140, 84, 0, 0.55);
+}
+
+.skin.owned .state {
+  color: var(--ink);
+  background: #fff;
+}
+
+.skin.on {
+  cursor: default;
+  box-shadow: inset 0 0 0 2px var(--accent);
+}
+
+.skin.on .state {
+  color: #fff;
+  background: var(--accent);
+}
+
+/* Too dear for now: greyed, but the picture stays clear so there is something to save for. */
+.skin:disabled:not(.on) {
+  cursor: default;
+}
+
+.skin:disabled:not(.on) .state {
+  color: rgba(23, 54, 92, 0.5);
+  background: #d5dfec;
+}
+
+.skin:disabled:not(.on) .state i {
+  opacity: 0.45;
+}
+
+.skin:not(:disabled):active {
+  transform: translateY(2px);
+}

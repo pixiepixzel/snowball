@@ -6,7 +6,7 @@
  * their progress. Anything unreadable falls back to a fresh save rather than breaking
  * the game, and every access is wrapped because storage can be blocked or full.
  */
-import { BASIC_HINTS, CONFIG, MISSIONS, MISSION_SLOTS, UPGRADES, UPGRADE_LEVELS } from './config';
+import { BASIC_HINTS, CONFIG, MISSIONS, MISSION_SLOTS, SKINS, UPGRADES, UPGRADE_LEVELS } from './config';
 import { LAP_GROWTH } from './zones';
 
 const SAVE_KEY = 'snowball.save';
@@ -16,9 +16,9 @@ const OLD_BEST_KEY = 'snowball.best';
 /**
  * Version 2 added the sound and vibration switches, version 3 the furthest world reached,
  * version 4 the music switch, version 5 which first-time hints have been shown,
- * version 6 the missions.
+ * version 6 the missions, version 7 the ball skins.
  */
-export const SAVE_VERSION = 6;
+export const SAVE_VERSION = 7;
 
 /** One of the active missions. */
 export interface MissionState {
@@ -51,6 +51,9 @@ export interface SaveData {
   /** The active missions, and how many have been handed out so far (which picks the next). */
   missions: MissionState[];
   missionNext: number;
+  /** Ids of the ball skins bought (config.ts SKINS; the free one is always here), and the one in use. */
+  skins: string[];
+  skin: string;
 }
 
 const num = (v: unknown, fallback = 0): number => (typeof v === 'number' && Number.isFinite(v) && v >= 0 ? v : fallback);
@@ -61,7 +64,7 @@ const firstMissions = (): MissionState[] => MISSIONS.slice(0, MISSION_SLOTS).map
 function fresh(): SaveData {
   const upgrades: Record<string, number> = {};
   for (const u of UPGRADES) upgrades[u.id] = 0;
-  return { version: SAVE_VERSION, best: 0, coins: 0, upgrades, sound: true, music: true, vibration: true, reached: 0, hints: [], missions: firstMissions(), missionNext: MISSION_SLOTS };
+  return { version: SAVE_VERSION, best: 0, coins: 0, upgrades, sound: true, music: true, vibration: true, reached: 0, hints: [], missions: firstMissions(), missionNext: MISSION_SLOTS, skins: [SKINS[0].id], skin: SKINS[0].id };
 }
 
 /** Turn whatever was stored into a valid save of the current version. */
@@ -96,6 +99,12 @@ function migrate(raw: unknown): SaveData {
     save.missionNext = Math.max(MISSION_SLOTS, Math.floor(num(data.missionNext, MISSION_SLOTS)));
     for (const m of firstMissions()) if (known.length < MISSION_SLOTS && !known.some((k) => k.id === m.id)) known.push(m);
     save.missions = known.slice(0, MISSION_SLOTS);
+  }
+  // Before version 7 there were no skins: `fresh()` has given the free one. Skins that no
+  // longer exist are dropped, and the one in use has to be one that is owned.
+  if (Array.isArray(data.skins)) {
+    for (const def of SKINS) if (data.skins.includes(def.id) && !save.skins.includes(def.id)) save.skins.push(def.id);
+    if (typeof data.skin === 'string' && save.skins.includes(data.skin)) save.skin = data.skin;
   }
   const levels = (typeof data.upgrades === 'object' && data.upgrades !== null ? data.upgrades : {}) as Record<string, unknown>;
   for (const u of UPGRADES) save.upgrades[u.id] = Math.min(UPGRADE_LEVELS, Math.floor(num(levels[u.id])));
