@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"
+    />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="theme-color" content="#cfe6ff" />
+    <title>Snowball</title>
+  </head>
+  <body>
+    <div id="frame">
+      <canvas id="game"></canvas>
+
+      <div id="ui">
+        <div id="hud" class="hidden">
+          <div id="progress">
+            <div id="progress-fill"></div>
+          </div>
+          <div id="size"><b id="size-value">0.50</b><span id="size-unit">m</span></div>
+          <div id="zone">Summit</div>
+          <div id="twist" class="hidden"></div>
+          <div id="gate">
+            <div id="gate-label">ice wall</div>
+            <div id="gate-bar"><div id="gate-fill"></div></div>
+          </div>
+          <div id="power" class="hidden">
+            <div id="power-label"></div>
+            <div id="power-bar"><div id="power-fill"></div></div>
+          </div>
+          <button id="pause-btn" type="button" aria-label="Pause"></button>
+        </div>
+
+        <div id="whiteout"></div>
+        <div id="avalanche" class="hidden">
+          <div id="avalanche-label">Avalanche</div>
+          <div id="avalanche-bar"><div id="avalanche-fill"></div></div>
+        </div>
+
+        <div id="banner"></div>
+        <div id="milestone"><span id="milestone-text"></span></div>
+        <div id="floaters"></div>
+        <div id="flash"></div>
+        <div id="debug" class="hidden"></div>
+
+        <section id="title" class="screen">
+          <div class="title-wrap">
+            <h1>SNOW<br />BALL</h1>
+            <p class="tag">Roll down. Stick everything. Get huge.</p>
+          </div>
+          <div class="bottom">
+            <div id="world-pick">
+              <button id="world-prev" class="step" type="button" aria-label="Previous world"></button>
+              <div class="world">
+                <div id="world-name">Snowy Mountain</div>
+                <div id="world-note">World 1 of 10</div>
+              </div>
+              <button id="world-next" class="step next" type="button" aria-label="Next world"></button>
+            </div>
+            <button id="start-btn" class="btn" type="button">Tap to roll</button>
+            <button id="shop-btn" class="btn alt" type="button">Upgrades <span class="coins"><i></i><b id="title-coins">0</b></span></button>
+            <div id="title-best" class="best"></div>
+            <div class="switches">
+              <button id="title-sound-btn" class="switch" type="button">Sound: on</button>
+              <button id="title-music-btn" class="switch" type="button">Music: on</button>
+              <button id="title-vibration-btn" class="switch" type="button">Vibration: on</button>
+            </div>
+            <div class="hint">Drag to steer · tap to jump</div>
+          </div>
+        </section>
+
+        <section id="end" class="screen hidden">
+          <div class="card">
+            <h2 id="end-title">Shattered!</h2>
+            <div id="end-sub" class="sub"></div>
+            <div class="final"><b id="end-size">0.00</b><span id="end-unit">m</span></div>
+            <div id="end-best" class="best"></div>
+            <div id="end-coins" class="earned"></div>
+            <h3>What's inside</h3>
+            <div id="end-list" class="chips"></div>
+            <button id="again-btn" class="btn" type="button">Roll again</button>
+            <button id="end-shop-btn" class="btn alt" type="button">Upgrades <span class="coins"><i></i><b id="end-total">0</b></span></button>
+            <button id="menu-btn" class="link" type="button">Change world</button>
+          </div>
+        </section>
+
+        <section id="pause" class="screen hidden">
+          <div class="card">
+            <h2>Paused</h2>
+            <button id="resume-btn" class="btn" type="button">Resume</button>
+            <div class="switches">
+              <button id="sound-btn" class="switch" type="button">Sound: on</button>
+              <button id="music-btn" class="switch" type="button">Music: on</button>
+              <button id="vibration-btn" class="switch" type="button">Vibration: on</button>
+            </div>
+            <button id="quit-btn" class="btn alt" type="button">End run</button>
+          </div>
+        </section>
+
+        <section id="shop" class="screen hidden">
+          <div class="card">
+            <h2>Upgrades</h2>
+            <div class="sub">They stay for every run</div>
+            <div class="wallet"><span class="coins"><i></i><b id="shop-coins">0</b></span> coins</div>
+            <div id="shop-list"></div>
+            <button id="shop-close" class="btn alt" type="button">Done</button>
+          </div>
+        </section>
+      </div>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

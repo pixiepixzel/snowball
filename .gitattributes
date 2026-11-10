@@ -1,0 +1,2 @@
+# Keep line endings as they are in the project (LF), on every machine.
+* text=auto eol=lf
