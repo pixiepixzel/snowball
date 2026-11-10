@@ -15,6 +15,7 @@ import type { BufferGeometry } from 'three';
 import * as C from './objects-candy';
 import * as E from './objects-desert';
 import * as D from './objects-dino';
+import * as N from './objects-extra';
 import * as K from './objects-sky';
 import * as U from './objects-sea';
 import * as X from './objects-secret';
@@ -1137,9 +1138,9 @@ const LOST_WORLD: ObjectDef[] = [
   themed(1, 'fishingHut', 'pterodactyl', 'pterodactyl', 'pterodactyls', 0xc87a4a, D.pterodactyl),
   themed(1, 'boat', 'stego', 'stegosaurus', 'stegosauruses', 0x5f9a4a, D.stego),
   themed(1, 'skier', 'gallimimus', 'gallimimus', 'gallimimuses', 0xf08a2a, D.gallimimus, { tints: [0xf08a2a, 0xe2c14e, 0x7fb4e8, 0xd97a9a, 0x9ad06a] }),
-  themed(1, 'signpost', 'treeFern', 'tree fern', 'tree ferns', 0x3f9a4a, D.cycad),
+  themed(1, 'signpost', 'treeFern', 'tree fern', 'tree ferns', 0x3f9a4a, N.treeFern),
   themed(1, 'snowmobile', 'trike', 'triceratops', 'triceratopses', 0xb5764a, D.trike),
-  themed(1, 'liftPole', 'tallPalm', 'giant palm', 'giant palms', 0x6fbf5a, D.palm),
+  themed(1, 'liftPole', 'tallPalm', 'giant palm', 'giant palms', 0x6fbf5a, N.giantPalm),
   themed(1, 'cabin', 'ribcage', 'fossil skeleton', 'fossil skeletons', 0xe8dfc8, D.ribcage),
   themed(1, 'car', 'ankylo', 'ankylosaurus', 'ankylosauruses', 0x8a7a4a, D.ankylo),
   themed(1, 'shed', 'boulders', 'mossy boulder', 'mossy boulders', 0x8a7a6a, D.boulders),
@@ -1168,7 +1169,7 @@ const SPACE: ObjectDef[] = [
   themed(2, 'snowman', 'astronaut', 'astronaut', 'astronauts', 0xe8ecf2, S.astronaut),
   themed(2, 'fishingHut', 'lander', 'lunar lander', 'lunar landers', 0xe2b23c, S.lander),
   themed(2, 'boat', 'ufo', 'UFO', 'UFOs', 0x7fe8ff, S.ufo),
-  themed(2, 'skier', 'scout', 'scout saucer', 'scout saucers', 0x7fe8ff, S.ufo, { tints: [0xff7a5a, 0x7fe8ff, 0xffd23f, 0x9ad06a, 0xd08aff] }),
+  themed(2, 'skier', 'scout', 'scout ship', 'scout ships', 0x7fe8ff, N.scoutShip, { tints: [0xff7a5a, 0x7fe8ff, 0xffd23f, 0x9ad06a, 0xd08aff] }),
   themed(2, 'signpost', 'beacon', 'beacon', 'beacons', RED, S.antenna),
   themed(2, 'snowmobile', 'satellite', 'satellite', 'satellites', 0x2f5fc8, S.satellite),
   themed(2, 'liftPole', 'obelisk', 'alien obelisk', 'alien obelisks', 0x3a4060, S.obelisk),
@@ -1177,7 +1178,7 @@ const SPACE: ObjectDef[] = [
   themed(2, 'shed', 'asteroid', 'asteroid', 'asteroids', 0x7a7068, S.asteroid),
   themed(2, 'house', 'station', 'space station', 'space stations', 0x2f5fc8, S.station),
   themed(2, 'hotel', 'moon', 'moon', 'moons', 0xc8ccd6, S.moon),
-  themed(2, 'bus', 'freighter', 'space freighter', 'space freighters', 0xc9ced6, S.shuttle),
+  themed(2, 'bus', 'freighter', 'space freighter', 'space freighters', 0xc9ced6, N.freighter),
   themed(2, 'building', 'bluePlanet', 'blue planet', 'blue planets', 0x5a8fd0, S.gasGiant),
   themed(2, 'churchTower', 'megaRocket', 'mega rocket', 'mega rockets', RED, S.bigRocket),
   themed(2, 'church', 'ringedPlanet', 'ringed planet', 'ringed planets', 0xe8b070, S.ringedPlanet),
@@ -1203,14 +1204,14 @@ const CANDY: ObjectDef[] = [
   themed(3, 'snowman', 'gingerbreadMan', 'gingerbread man', 'gingerbread men', 0xb8743a, C.gingerbreadMan),
   themed(3, 'fishingHut', 'cupcake', 'cupcake', 'cupcakes', 0xff7ab8, C.cupcake),
   themed(3, 'boat', 'doughnut', 'doughnut', 'doughnuts', 0xff7ab8, C.doughnut),
-  themed(3, 'skier', 'jellyBaby', 'jelly baby', 'jelly babies', 0x7fe0c0, C.gummyBear(0xffffff), { tints: SWEET_TINTS }),
+  themed(3, 'skier', 'jellyBaby', 'jelly baby', 'jelly babies', 0x7fe0c0, N.jellyBaby, { tints: SWEET_TINTS }),
   themed(3, 'signpost', 'candyCane', 'candy cane', 'candy canes', 0xd81e3a, C.candyCane(0xd81e3a, 0xfdfdfd, 1.5)),
   themed(3, 'snowmobile', 'iceCream', 'ice cream', 'ice creams', 0xff7ab8, C.iceCream),
-  themed(3, 'liftPole', 'giantCane', 'giant candy cane', 'giant candy canes', 0x3fb85a, C.candyCane(0x3fb85a, 0xfdfdfd, 1.6)),
+  themed(3, 'liftPole', 'giantCane', 'candy cane heart', 'candy cane hearts', 0x3fb85a, N.caneHeart),
   themed(3, 'cabin', 'gingerbreadHouse', 'gingerbread house', 'gingerbread houses', 0xb8743a, C.gingerbreadHouse(0xfdfdfd)),
   themed(3, 'car', 'swissRoll', 'swiss roll', 'swiss rolls', 0x6a3e22, C.swissRoll),
   themed(3, 'shed', 'jelly', 'jelly', 'jellies', 0xff6a8a, C.jelly),
-  themed(3, 'house', 'cookieCottage', 'cookie cottage', 'cookie cottages', 0xff7ab8, C.gingerbreadHouse(0xff7ab8)),
+  themed(3, 'house', 'cookieCottage', 'cookie cottage', 'cookie cottages', 0xd09a54, N.cookieCottage),
   themed(3, 'hotel', 'birthdayCake', 'birthday cake', 'birthday cakes', 0xff7ab8, C.layerCake(2, 0xf2d6a0, 0xff7ab8, 0xd81e3a)),
   themed(3, 'bus', 'chocBar', 'chocolate bar', 'chocolate bars', 0x6a3e22, C.chocBar),
   themed(3, 'building', 'pancakeStack', 'stack of pancakes', 'stacks of pancakes', 0xe0a858, C.pancakeStack),
@@ -1244,9 +1245,9 @@ const DESERT: ObjectDef[] = [
   themed(4, 'shed', 'ruin', 'ruined columns', 'ruined columns', 0xd2b078, E.ruin),
   themed(4, 'house', 'temple', 'temple', 'temples', 0xe2c388, E.temple),
   themed(4, 'hotel', 'sphinx', 'sphinx', 'sphinxes', 0xd2b078, E.sphinx),
-  themed(4, 'bus', 'royalBarge', 'royal barge', 'royal barges', 0xf2c230, E.reedBoat(0xe0a820, 0x8a3ab0, 0x2a5ac8)),
+  themed(4, 'bus', 'royalBarge', 'royal barge', 'royal barges', 0xf2c230, N.royalBarge),
   themed(4, 'building', 'watchtower', 'watchtower', 'watchtowers', 0xc49a62, E.watchtower),
-  themed(4, 'churchTower', 'greatObelisk', 'great obelisk', 'great obelisks', 0x8a6a5a, E.obelisk(0x8a6a5a, 0xf2c230)),
+  themed(4, 'churchTower', 'greatObelisk', 'great obelisk', 'great obelisks', 0x8a6a5a, N.greatObelisk),
   themed(4, 'church', 'stepPyramid', 'step pyramid', 'step pyramids', 0xd2b078, E.pyramid(5, 0xd2b078, 0xf2c230)),
   themed(4, 'officeTower', 'greatPyramid', 'great pyramid', 'great pyramids', 0xe2c388, E.pyramid(0, 0xe2c388, 0xf2c230)),
 ];
@@ -1273,7 +1274,7 @@ const SEA: ObjectDef[] = [
   themed(5, 'liftPole', 'mast', "ship's mast", "ship's masts", 0x7a5232, U.mast),
   themed(5, 'cabin', 'divingBell', 'diving bell', 'diving bells', 0xc89a3a, U.divingBell),
   themed(5, 'car', 'shark', 'shark', 'sharks', 0x6a7a8a, U.shark),
-  themed(5, 'shed', 'giantClam', 'giant clam', 'giant clams', 0x8a6ad0, U.clam(0x8a6ad0, 0x7ae0e8)),
+  themed(5, 'shed', 'giantClam', 'giant clam', 'giant clams', 0x8a6ad0, N.giantClam),
   themed(5, 'house', 'submarine', 'submarine', 'submarines', 0xf2c230, U.submarine),
   themed(5, 'hotel', 'shipwreck', 'shipwreck', 'shipwrecks', 0x7a5232, U.shipwreck),
   themed(5, 'bus', 'whale', 'whale', 'whales', 0x1e4a8a, U.whale),
@@ -1308,7 +1309,7 @@ const SPOOKY: ObjectDef[] = [
   themed(6, 'shed', 'well', 'wishing well', 'wishing wells', 0x8a8a96, H.well),
   themed(6, 'house', 'hauntedHouse', 'haunted house', 'haunted houses', 0x5a3a8a, H.hauntedHouse(false, 0x9484ac, 0x54407a)),
   themed(6, 'hotel', 'manor', 'haunted manor', 'haunted manors', 0x5a3a8a, H.hauntedHouse(true, 0x8880a0, 0x3e3460)),
-  themed(6, 'bus', 'ghostCoach', 'ghost coach', 'ghost coaches', 0x8ae04a, H.carriage(0x3a5a4a, 0x8ae04a)),
+  themed(6, 'bus', 'ghostCoach', 'ghost coach', 'ghost coaches', 0x8ae04a, N.ghostCoach),
   themed(6, 'building', 'clockTower', 'clock tower', 'clock towers', 0x8a8a96, H.clockTower),
   themed(6, 'churchTower', 'witchTower', "witch's tower", "witch's towers", 0x8a5ad0, H.witchTower),
   themed(6, 'church', 'chapel', 'chapel', 'chapels', 0x8a8a96, H.chapel),
@@ -1343,7 +1344,7 @@ const TOYS: ObjectDef[] = [
   themed(7, 'bus', 'toyTrain', 'toy train', 'toy trains', 0xe8402a, T.toyTrain),
   themed(7, 'building', 'blockTower', 'block tower', 'block towers', 0xffd23f, T.blockTower),
   themed(7, 'churchTower', 'toyRocket', 'toy rocket', 'toy rockets', 0xe8402a, T.toyRocket),
-  themed(7, 'church', 'toyCastle', 'toy castle', 'toy castles', 0xa8b0bc, T.fort(0xb8c0cc, 0x2f7de0, 0xffd23f)),
+  themed(7, 'church', 'toyCastle', 'toy castle', 'toy castles', 0xa8b0bc, N.toyCastle),
   themed(7, 'officeTower', 'giantRobot', 'giant robot', 'giant robots', 0xe8402a, T.giantRobot),
 ];
 
