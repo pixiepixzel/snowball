@@ -50,9 +50,19 @@
         <div id="debug" class="hidden"></div>
 
         <section id="title" class="screen">
-          <div class="pair">
-            <button id="shop-btn" class="btn alt" type="button">Shop <span class="coins"><i></i><b id="title-coins">0</b></span></button>
-            <button id="book-btn" class="btn alt" type="button">Book <span class="coins"><b id="title-book">0/0</b></span></button>
+          <div class="top-stack">
+            <div class="pair">
+              <button id="shop-btn" class="btn alt" type="button">Shop <span class="coins"><i></i><b id="title-coins">0</b></span></button>
+              <button id="book-btn" class="btn alt" type="button">Book <span class="coins"><b id="title-book">0/0</b></span></button>
+            </div>
+            <div id="world-pick">
+              <button id="world-prev" class="step" type="button" aria-label="Previous world"></button>
+              <div class="world">
+                <div id="world-name">Snowy Mountain</div>
+                <div id="world-note">World 1 of 10</div>
+              </div>
+              <button id="world-next" class="step next" type="button" aria-label="Next world"></button>
+            </div>
           </div>
           <aside id="mission-drawer">
             <button id="mission-tab" type="button">Missions</button>
@@ -63,14 +73,6 @@
             <p class="tag">Roll down. Stick everything. Get huge.</p>
           </div>
           <div class="bottom">
-            <div id="world-pick">
-              <button id="world-prev" class="step" type="button" aria-label="Previous world"></button>
-              <div class="world">
-                <div id="world-name">Snowy Mountain</div>
-                <div id="world-note">World 1 of 10</div>
-              </div>
-              <button id="world-next" class="step next" type="button" aria-label="Next world"></button>
-            </div>
             <button id="start-btn" class="btn" type="button">Tap to roll</button>
             <div id="title-best" class="best"></div>
             <div class="switches">
@@ -87,6 +89,7 @@
             <h2 id="end-title">Shattered!</h2>
             <div id="end-sub" class="sub"></div>
             <div class="final"><b id="end-size">0.00</b><span id="end-unit">m</span></div>
+            <div id="end-distance" class="best"></div>
             <div id="end-best" class="best"></div>
             <div id="end-coins" class="earned"></div>
             <div id="end-xp" class="xp" hidden>
@@ -144,10 +147,19 @@
             <h2>Shop</h2>
             <div class="wallet"><span class="coins"><i></i><b id="shop-coins">0</b></span> coins</div>
             <div class="tabs">
-              <button id="tab-upgrades" class="tab on" type="button">Upgrades</button>
+              <button id="tab-crates" class="tab on" type="button">Crates</button>
+              <button id="tab-boosts" class="tab" type="button">Boosts</button>
+              <button id="tab-upgrades" class="tab" type="button">Upgrades</button>
               <button id="tab-skins" class="tab" type="button">Skins</button>
             </div>
-            <div id="shop-list"></div>
+            <div id="crate-page">
+              <div id="crate-box" class="crate"></div>
+              <div id="crate-result" class="crate-result"></div>
+              <button id="crate-open" class="btn" type="button">Open a crate</button>
+              <div class="crate-odds">Boosts, coins, XP, or a skin you can't buy</div>
+            </div>
+            <div id="boost-list" hidden></div>
+            <div id="shop-list" hidden></div>
             <div id="skin-list" hidden></div>
             <button id="shop-close" class="btn alt" type="button">Done</button>
           </div>

@@ -17,9 +17,10 @@ const OLD_BEST_KEY = 'snowball.best';
  * Version 2 added the sound and vibration switches, version 3 the furthest world reached,
  * version 4 the music switch, version 5 which first-time hints have been shown,
  * version 6 the missions, version 7 the ball skins, version 8 the collection book,
- * version 9 the daily reward, version 10 XP and where the best run ended.
+ * version 9 the daily reward, version 10 XP and where the best run ended,
+ * version 11 run boosts.
  */
-export const SAVE_VERSION = 10;
+export const SAVE_VERSION = 11;
 
 /** One of the active missions. */
 export interface MissionState {
@@ -70,6 +71,9 @@ export interface SaveData {
   xp: number;
   /** Where the run that got furthest ended: which world (lap), which scene, and how far through it (0..1). */
   bestAt: { lap: number; zone: number; t: number } | null;
+  /** Run boosts in stock, by boost id, and the ones switched on for the next run. */
+  boosts: Record<string, number>;
+  armed: string[];
 }
 
 const num = (v: unknown, fallback = 0): number => (typeof v === 'number' && Number.isFinite(v) && v >= 0 ? v : fallback);
@@ -80,7 +84,7 @@ const firstMissions = (): MissionState[] => MISSIONS.slice(0, MISSION_SLOTS).map
 function fresh(): SaveData {
   const upgrades: Record<string, number> = {};
   for (const u of UPGRADES) upgrades[u.id] = 0;
-  return { version: SAVE_VERSION, best: 0, coins: 0, upgrades, sound: true, music: true, vibration: true, reached: 0, hints: [], missions: firstMissions(), missionNext: MISSION_SLOTS, skins: [SKINS[0].id], skin: SKINS[0].id, book: {}, bookPaid: [], daily: { day: 0, streak: 0 }, xp: 0, bestAt: null };
+  return { version: SAVE_VERSION, best: 0, coins: 0, upgrades, sound: true, music: true, vibration: true, reached: 0, hints: [], missions: firstMissions(), missionNext: MISSION_SLOTS, skins: [SKINS[0].id], skin: SKINS[0].id, book: {}, bookPaid: [], daily: { day: 0, streak: 0 }, xp: 0, bestAt: null, boosts: {}, armed: [] };
 }
 
 /** Turn whatever was stored into a valid save of the current version. */
@@ -143,6 +147,11 @@ function migrate(raw: unknown): SaveData {
     const at = data.bestAt as Record<string, unknown>;
     save.bestAt = { lap: Math.floor(num(at.lap)), zone: Math.floor(num(at.zone)), t: Math.min(1, num(at.t)) };
   }
+  // Before version 11 there were no boosts.
+  if (typeof data.boosts === 'object' && data.boosts !== null) {
+    for (const [id, n] of Object.entries(data.boosts as Record<string, unknown>)) if (num(n) > 0) save.boosts[id] = Math.floor(num(n));
+  }
+  if (Array.isArray(data.armed)) save.armed = data.armed.filter((id): id is string => typeof id === 'string');
   const levels = (typeof data.upgrades === 'object' && data.upgrades !== null ? data.upgrades : {}) as Record<string, unknown>;
   for (const u of UPGRADES) save.upgrades[u.id] = Math.min(UPGRADE_LEVELS, Math.floor(num(levels[u.id])));
   return save;

@@ -14,6 +14,12 @@ import {
   NO_TWIST,
   RARITIES,
   XP_FOR,
+  BOOSTS,
+  BOOST_HEAD_START,
+  BOOST_MAGNET_TIME,
+  CRATE_DUPLICATE_COINS,
+  CRATE_PRICE,
+  CRATE_REWARDS,
   SKINS,
   UPGRADES,
   UPGRADE_LEVELS,
@@ -37,7 +43,7 @@ import { levelCoins, levelOf, titleFor } from './levels';
 import { PERKS, applyUpgrades, coinsFor, upgradeCost } from './perks';
 import { loadSave, writeSave, type MissionState, type SaveData } from './save';
 import { Thumbs } from './thumbs';
-import { UI, type MissionRow, type PostLabel, type ShopRow, type SkinRow, type XpView } from './ui';
+import { UI, type BoostRow, type CrateResult, type MissionRow, type PostLabel, type ShopRow, type SkinRow, type XpView } from './ui';
 import { clamp, lerp, sizeLabel, sizeParts } from './util';
 import { World, type WorldObject } from './world';
 import { HAND_MADE_LAPS, worldForLap } from './worlds';
@@ -164,6 +170,11 @@ export class Game {
   /** Missions finished in this run (for XP), and whether this run has passed the best run's flag. */
   private runMissions = 0;
   private passedBest = false;
+  /** Boosts working in this run, how far it has rolled (as shown to the player), and what the last crate held. */
+  private shield = false;
+  private doubleXp = false;
+  private distance = 0;
+  private lastCrate: CrateResult | null = null;
   private threat = 0;
   private pixelRatio = 1;
   private shadowsOn = false;
@@ -237,6 +248,9 @@ export class Game {
     this.ui.onShop = () => this.showShop();
     this.ui.onBuy = (id) => this.buy(id);
     this.ui.onSkin = (id) => this.pickSkin(id);
+    this.ui.onCrate = () => this.openCrate();
+    this.ui.onBoostBuy = (id) => this.buyBoost(id);
+    this.ui.onBoostArm = (id) => this.armBoost(id);
     this.thumbs = new Thumbs(this.renderer);
     this.ui.onBook = () => this.openBook();
     this.ui.onBookStep = (step) => this.showBook(step);
@@ -343,6 +357,7 @@ export class Game {
     }
     this.state = 'playing';
     this.ball.rolling = true;
+    const boosted = this.useBoosts();
     // Throw away the tap that pressed the button, so it doesn't count as a jump.
     this.input.consumeJump();
     this.input.consumeDrag();
@@ -353,6 +368,7 @@ export class Game {
     this.ui.setZone(this.stage.name);
     this.ui.banner(this.stage.name, `Reach ${sizeLabel(this.shown(this.stage.need))} to smash the ${this.stage.gateName}`);
     this.stats.zoneLog.push({ zone: this.stage.name, time: 0, radius: this.ball.r, design: ZONES[0].startRadius });
+    if (boosted.length > 0) this.toasts.push(`Boosts: ${boosted.join(' + ')}`);
   }
 
   private reset(startD = 0, lapBase = 0): void {
@@ -378,6 +394,9 @@ export class Game {
     this.runCoins = 0;
     this.runMissions = 0;
     this.passedBest = false;
+    this.shield = false;
+    this.doubleXp = false;
+    this.distance = 0;
     // The flag marking the furthest run only goes up for real runs.
     this.world.bestAt = this.keepScores ? this.save.bestAt : null;
     this.ui.setPower('', 0);
@@ -674,6 +693,7 @@ export class Game {
     // little so there is room to steer out. Guarantees the run can never dead-end.
     const cruise = ball.cruiseSpeed();
     const advanced = ball.d - this.lastD;
+    this.distance += Math.max(0, advanced) * displayScale();
     this.lastD = ball.d;
     if (ball.speed > cruise * 0.5 && advanced < cruise * dt * 0.25) this.pinned += realDt;
     else this.pinned = Math.max(0, this.pinned - realDt * 2);
@@ -966,6 +986,15 @@ export class Game {
 
     const lostFrom = ball.r;
     ball.hit(nx, nd, o.x);
+    // A Shield boost takes the first hit: the ball still bounces off, but loses nothing.
+    if (this.shield) {
+      this.shield = false;
+      ball.r = lostFrom;
+      this.rig.shake(0.5);
+      this.audio.chime();
+      this.floatAtBall('SHIELD!', true);
+      return;
+    }
     this.hurt(lostFrom, CONFIG.HITSTOP_TIME);
     const p = ball.position;
     this.effects.burst(p.x - nx * ball.r * 0.6, p.y, p.z + nd * ball.r * 0.6, ball.r, 26, 1.1, 0);
@@ -1210,7 +1239,7 @@ export class Game {
       quit: { title: 'Run ended', subtitle: `You stopped in the ${where}. ${walls}` },
     }[this.endKind];
     const [size, unit] = sizeParts(r);
-    this.ui.showEnd({ ...text, size, unit, best: sizeLabel(this.save.best), isBest, items, bookNote: book.note, xp, coins: this.keepScores ? coins : null, totalCoins: this.save.coins });
+    this.ui.showEnd({ ...text, size, unit, best: sizeLabel(this.save.best), isBest, items, bookNote: book.note, xp, distance: sizeLabel(this.distance), coins: this.keepScores ? coins : null, totalCoins: this.save.coins });
   }
 
   // ------------------------------------------------------------------ distance posts
@@ -1252,6 +1281,23 @@ export class Game {
     return `Level ${level} ${titleFor(level)}`;
   }
 
+  /** Add XP, paying a coin chest for each level it gains. Says what the level was and is, the coins, and any skins unlocked. */
+  private addXp(amount: number): { before: ReturnType<typeof levelOf>; after: ReturnType<typeof levelOf>; chest: number; unlocked: string[] } {
+    const before = levelOf(this.save.xp);
+    this.save.xp += amount;
+    const after = levelOf(this.save.xp);
+    let chest = 0;
+    const unlocked: string[] = [];
+    for (let level = before.level + 1; level <= after.level; level++) {
+      chest += levelCoins(level);
+      for (const skin of SKINS) if (skin.level === level) unlocked.push(skin.name);
+    }
+    this.save.coins += chest;
+    applyUpgrades(this.save.upgrades, after.level);
+    this.ui.setLevel(this.levelLabel());
+    return { before, after, chest, unlocked };
+  }
+
   /**
    * The run is over: work out its XP (config.ts XP_FOR), add it, and pay a coin chest for
    * each level gained. Returns what the end screen shows, or null for a run that doesn't count.
@@ -1264,7 +1310,7 @@ export class Game {
       if (id.endsWith('_s')) superRare += n;
       else if (id.endsWith('_m')) mythic += n;
     }
-    const gained =
+    let gained =
       XP_FOR.scene * Math.max(0, this.stats.zoneLog.length - 1) +
       XP_FOR.wall * this.stats.walls +
       XP_FOR.world * this.tally.worlds +
@@ -1274,18 +1320,8 @@ export class Game {
       XP_FOR.superRare * superRare +
       XP_FOR.mythic * mythic +
       XP_FOR.mission * this.runMissions;
-    const before = levelOf(this.save.xp);
-    this.save.xp += gained;
-    const after = levelOf(this.save.xp);
-    let chest = 0;
-    const unlocked: string[] = [];
-    for (let level = before.level + 1; level <= after.level; level++) {
-      chest += levelCoins(level);
-      for (const skin of SKINS) if (skin.level === level) unlocked.push(skin.name);
-    }
-    this.save.coins += chest;
-    applyUpgrades(this.save.upgrades, after.level);
-    this.ui.setLevel(this.levelLabel());
+    if (this.doubleXp) gained *= 2;
+    const { before, after, chest, unlocked } = this.addXp(gained);
     return {
       gained,
       level: after.level,
@@ -1627,9 +1663,126 @@ export class Game {
     this.ui.setCoins(this.save.coins);
   }
 
+  // ------------------------------------------------------------------ boosts and crates
+
+  /** The boosts page of the shop: what each does, how many are in stock, whether it is switched on. */
+  private boostRows(): BoostRow[] {
+    return BOOSTS.map((def) => ({
+      id: def.id,
+      name: def.name,
+      blurb: def.blurb,
+      price: def.price,
+      owned: this.save.boosts[def.id] ?? 0,
+      armed: this.save.armed.includes(def.id),
+      affordable: this.save.coins >= def.price,
+    }));
+  }
+
+  /** Buy one more of a boost. */
+  private buyBoost(id: string): void {
+    const def = BOOSTS.find((b) => b.id === id);
+    if (!def || this.save.coins < def.price) return;
+    this.save.coins -= def.price;
+    this.save.boosts[id] = (this.save.boosts[id] ?? 0) + 1;
+    // Buying one usually means wanting to use it.
+    if (!this.save.armed.includes(id)) this.save.armed.push(id);
+    writeSave(this.save);
+    this.audio.chime();
+    this.showShop();
+    this.ui.setCoins(this.save.coins);
+  }
+
+  /** Switch a boost on or off for the next run. */
+  private armBoost(id: string): void {
+    if (this.save.armed.includes(id)) this.save.armed = this.save.armed.filter((b) => b !== id);
+    else if ((this.save.boosts[id] ?? 0) > 0) this.save.armed.push(id);
+    writeSave(this.save);
+    this.showShop();
+  }
+
+  /**
+   * A run is starting: use up one of each boost that is switched on and in stock, and
+   * set it working. Returns their names. Bot runs and demos use none.
+   */
+  private useBoosts(): string[] {
+    const used: string[] = [];
+    if (!this.keepScores || this.autoplay) return used;
+    for (const def of BOOSTS) {
+      if (!this.save.armed.includes(def.id) || (this.save.boosts[def.id] ?? 0) <= 0) continue;
+      this.save.boosts[def.id]--;
+      // Out of stock: it switches itself off.
+      if (this.save.boosts[def.id] <= 0) this.save.armed = this.save.armed.filter((b) => b !== def.id);
+      used.push(def.name);
+      if (def.id === 'headStart') {
+        this.ball.r *= BOOST_HEAD_START;
+        this.ball.syncTransform();
+        // Coins are for growth after the head start, not for the head start itself.
+        this.runStartR = this.shown(this.ball.r);
+      } else if (def.id === 'shield') this.shield = true;
+      else if (def.id === 'magnet') this.beam = BOOST_MAGNET_TIME;
+      else if (def.id === 'doubleXp') this.doubleXp = true;
+    }
+    if (used.length > 0) writeSave(this.save);
+    return used;
+  }
+
+  /** Open a prize crate: pay for it, pick what is inside (config.ts CRATE_REWARDS) and hand it over. */
+  private openCrate(): void {
+    if (this.save.coins < CRATE_PRICE) return;
+    this.save.coins -= CRATE_PRICE;
+    let roll = Math.random();
+    let reward = CRATE_REWARDS[0];
+    for (const r of CRATE_REWARDS) {
+      roll -= r.chance;
+      if (roll < 0) {
+        reward = r;
+        break;
+      }
+    }
+    const result: CrateResult = { text: '', picture: '', tag: '', tagColor: '' };
+    if (reward.kind === 'boosts') {
+      const names: string[] = [];
+      for (let i = 0; i < (reward.count ?? 1); i++) {
+        const def = BOOSTS[Math.floor(Math.random() * BOOSTS.length)];
+        this.save.boosts[def.id] = (this.save.boosts[def.id] ?? 0) + 1;
+        names.push(def.name);
+      }
+      result.text = `Boosts: ${names.join(' + ')}`;
+    } else if (reward.kind === 'coins') {
+      const lo = reward.min ?? 50;
+      const amount = lo + Math.floor(Math.random() * ((reward.max ?? lo) - lo + 1));
+      this.save.coins += amount;
+      result.text = `${amount} coins`;
+    } else if (reward.kind === 'xp') {
+      const { before, after, chest } = this.addXp(reward.amount ?? 50);
+      result.text = `${reward.amount ?? 50} XP${after.level > before.level ? ` · level up! +${chest} coins` : ''}`;
+    } else {
+      const rarity = RARITIES.find((r) => r.id === reward.rarity);
+      const left = SKINS.filter((s) => s.crate === reward.rarity && !this.save.skins.includes(s.id));
+      result.tag = rarity?.name ?? '';
+      result.tagColor = rarity?.color ?? '';
+      if (left.length === 0) {
+        const coins = CRATE_DUPLICATE_COINS[reward.rarity ?? 'rare'] ?? 80;
+        this.save.coins += coins;
+        result.text = `A skin you already have: ${coins} coins instead`;
+      } else {
+        const skin = left[Math.floor(Math.random() * left.length)];
+        this.save.skins.push(skin.id);
+        result.text = `New skin: ${skin.name}!`;
+        result.picture = this.ball.swatch(skin);
+      }
+    }
+    writeSave(this.save);
+    this.lastCrate = result;
+    if (result.picture) this.audio.fanfare();
+    else this.audio.chime();
+    this.showShop();
+    this.ui.setCoins(this.save.coins);
+  }
+
   /** Open the shop, or redraw it after something was bought. */
   private showShop(): void {
-    this.ui.openShop(this.save.coins, this.shopRows(), this.skinRows());
+    this.ui.openShop(this.save.coins, this.shopRows(), this.skinRows(), { price: CRATE_PRICE, affordable: this.save.coins >= CRATE_PRICE, result: this.lastCrate }, this.boostRows());
   }
 
   /** One tile per ball skin for the shop: its picture, price and whether it is owned or in use. */
@@ -1639,14 +1792,14 @@ export class Game {
       // Some skins are bought; others unlock at a level and can't be bought.
       const owned = def.level ? level >= def.level : this.save.skins.includes(def.id);
       return {
-        lock: def.level && !owned ? `Level ${def.level}` : '',
+        lock: owned ? '' : def.level ? `Level ${def.level}` : def.crate ? 'Crate' : '',
         id: def.id,
         name: def.name,
         picture: this.ball.swatch(def),
         price: def.price,
         owned,
         selected: this.save.skin === def.id,
-        affordable: owned || (!def.level && this.save.coins >= def.price),
+        affordable: owned || (!def.level && !def.crate && this.save.coins >= def.price),
       };
     });
   }
@@ -1655,6 +1808,7 @@ export class Game {
   private pickSkin(id: string): void {
     const def = SKINS.find((s) => s.id === id);
     if (!def || this.save.skin === id) return;
+    if (def.crate && !this.save.skins.includes(id)) return;
     if (def.level) {
       if (levelOf(this.save.xp).level < def.level) return;
     } else if (!this.save.skins.includes(id)) {

@@ -58,11 +58,11 @@ export const CONFIG = {
   /** How quickly the ball reaches its target speed (1/s). */
   ACCEL_RATE: 3,
   /** Ball radii moved sideways per full screen-width of drag. */
-  STEER_SENS: 10,
+  STEER_SENS: 14,
   /** Steering smoothing time (s). Higher = heavier, lower = twitchier. */
-  STEER_SMOOTH: 0.12,
+  STEER_SMOOTH: 0.1,
   /** Max sideways speed in radii per second. */
-  STEER_MAX_SPEED: 14,
+  STEER_MAX_SPEED: 19,
   /** How far (radii) the steering target may run ahead of the ball. */
   STEER_MAX_LEAD: 4.5,
   /** Keyboard steering speed in radii per second (desktop testing). */
@@ -543,6 +543,8 @@ export interface SkinDef {
   price: number;
   /** If set, it can't be bought: it unlocks on reaching this level. */
   level?: number;
+  /** If set, it can't be bought either: it only comes out of a prize crate, at this rarity. */
+  crate?: RarityId;
   pattern: 'speckle' | 'wedges' | 'bands' | 'patches' | 'planet' | 'rainbow';
   colors: number[];
   weights?: number[];
@@ -573,7 +575,54 @@ export const SKINS: SkinDef[] = [
   { id: 'tiger', name: 'Tiger', price: 0, level: 15, pattern: 'wedges', colors: [0xff8a1a, 0x22262e], count: 14, shine: 0.15, glow: 0x000000 },
   { id: 'galaxy', name: 'Galaxy', price: 0, level: 22, pattern: 'speckle', colors: [0x1a1040, 0x3a1a70, 0x8a5ad6, 0xffffff], weights: [0.5, 0.3, 0.15, 0.05], shine: 0.5, glow: 0x1a0a30 },
   { id: 'diamond', name: 'Diamond', price: 0, level: 30, pattern: 'speckle', colors: [0xd8f6ff, 0xffffff, 0xa8e0f8], weights: [0.4, 0.3, 0.3], shine: 1, glow: 0x183040 },
+  // Only from prize crates.
+  { id: 'peppermint', name: 'Peppermint', price: 0, crate: 'rare', pattern: 'wedges', colors: [0xe2473c, 0xffffff], count: 12, cap: 0xffffff, shine: 0.5, glow: 0x000000 },
+  { id: 'camo', name: 'Camouflage', price: 0, crate: 'rare', pattern: 'speckle', colors: [0x4a5a32, 0x6a7a44, 0x2f3a22, 0x8a8a5a], weights: [0.35, 0.3, 0.2, 0.15], shine: 0, glow: 0x000000 },
+  { id: 'bubblegum', name: 'Bubblegum', price: 0, crate: 'rare', pattern: 'speckle', colors: [0xff7ab8, 0xffa8d4, 0xffd0e6], weights: [0.4, 0.35, 0.25], shine: 0.7, glow: 0x200810 },
+  { id: 'eightball', name: 'Eight ball', price: 0, crate: 'superRare', pattern: 'patches', colors: [0x16181e, 0xffffff], count: 2, spread: 0.45, shine: 0.9, glow: 0x000000 },
+  { id: 'obsidian', name: 'Obsidian', price: 0, crate: 'superRare', pattern: 'speckle', colors: [0x12101a, 0x2a1a40, 0x6a3ab0], weights: [0.6, 0.3, 0.1], shine: 1, glow: 0x0c0418 },
+  { id: 'sun', name: 'Little sun', price: 0, crate: 'mythic', pattern: 'speckle', colors: [0xffd23f, 0xff8a1a, 0xfff4b8], weights: [0.45, 0.35, 0.2], shine: 0.4, glow: 0x5a2800 },
 ];
+
+// ---------------------------------------------------------------- Run boosts
+/**
+ * One-off helps for a single run. They are bought with coins (or come out of prize
+ * crates), kept in stock, and switched on in the shop; a boost that is switched on is used
+ * up at the start of the next run.
+ */
+export interface BoostDef {
+  id: 'headStart' | 'shield' | 'magnet' | 'doubleXp';
+  name: string;
+  blurb: string;
+  price: number;
+}
+export const BOOSTS: BoostDef[] = [
+  { id: 'headStart', name: 'Head start', blurb: 'Begin the run 60% bigger', price: 40 },
+  { id: 'shield', name: 'Shield', blurb: 'The first hit costs you nothing', price: 50 },
+  { id: 'magnet', name: 'Magnet', blurb: 'Small things fly to you for 20 seconds', price: 40 },
+  { id: 'doubleXp', name: 'Double XP', blurb: 'Twice the XP from the run', price: 60 },
+];
+/** How much bigger a Head start makes the ball, and how long the Magnet lasts (s). */
+export const BOOST_HEAD_START = 1.6;
+export const BOOST_MAGNET_TIME = 20;
+
+// ---------------------------------------------------------------- Prize crates
+/**
+ * A crate costs CRATE_PRICE coins and holds one of these, picked by `chance` (they add up
+ * to 1): a few boosts, a handful of coins, some XP, or a ball skin that can't be bought
+ * (config SKINS with `crate`). A skin you already have every one of at that rarity pays
+ * CRATE_DUPLICATE_COINS instead.
+ */
+export const CRATE_PRICE = 120;
+export const CRATE_REWARDS: { kind: 'boosts' | 'coins' | 'xp' | 'skin'; chance: number; count?: number; min?: number; max?: number; amount?: number; rarity?: RarityId }[] = [
+  { kind: 'boosts', count: 2, chance: 0.42 },
+  { kind: 'coins', min: 60, max: 150, chance: 0.2 },
+  { kind: 'xp', amount: 80, chance: 0.15 },
+  { kind: 'skin', rarity: 'rare', chance: 0.15 },
+  { kind: 'skin', rarity: 'superRare', chance: 0.06 },
+  { kind: 'skin', rarity: 'mythic', chance: 0.02 },
+];
+export const CRATE_DUPLICATE_COINS: Record<string, number> = { rare: 80, superRare: 160, mythic: 320 };
 
 // ---------------------------------------------------------------- XP and levels
 /**

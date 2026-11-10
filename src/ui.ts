@@ -15,6 +15,8 @@ export interface EndData {
   items: { label: string; color: string; fresh: boolean }[];
   /** A line about the collection book ("3 new in your collection"), or empty. */
   bookNote: string;
+  /** How far the run rolled, as a label such as "1.2 km". */
+  distance: string;
   /** XP and level, or null for a run that doesn't count. */
   xp: XpView | null;
   /** Coins this run earned, or null for a run that doesn't count (a demo or the bot). */
@@ -33,6 +35,26 @@ export interface ShopRow {
   effect: string;
   cost: number;
   maxed: boolean;
+  affordable: boolean;
+}
+
+/** What came out of the last prize crate: words, a picture (for a skin), and a rarity tag with its colour. */
+export interface CrateResult {
+  text: string;
+  picture: string;
+  tag: string;
+  tagColor: string;
+}
+
+/** One run boost as the shop shows it. */
+export interface BoostRow {
+  id: string;
+  name: string;
+  blurb: string;
+  price: number;
+  /** How many are in stock, and whether one will be used on the next run. */
+  owned: number;
+  armed: boolean;
   affordable: boolean;
 }
 
@@ -101,6 +123,9 @@ export interface MissionRow {
   done: boolean;
 }
 
+const SHOP_TABS = ['crates', 'boosts', 'upgrades', 'skins'] as const;
+type ShopTab = (typeof SHOP_TABS)[number];
+
 function el<T extends HTMLElement>(id: string): T {
   const node = document.getElementById(id);
   if (!node) throw new Error(`#${id} missing from index.html`);
@@ -115,6 +140,10 @@ export class UI {
   onBuy: (id: string) => void = () => {};
   /** A skin was tapped in the shop: buy it, or put it on if it is already owned. */
   onSkin: (id: string) => void = () => {};
+  /** "Open a crate" was pressed; a boost's price was pressed; a boost's on/off switch was pressed. */
+  onCrate: () => void = () => {};
+  onBoostBuy: (id: string) => void = () => {};
+  onBoostArm: (id: string) => void = () => {};
   /** The player opened the collection book; the game answers with openBook(). */
   onBook: () => void = () => {};
   /** An arrow in the book: -1 or +1 page. */
@@ -197,8 +226,14 @@ export class UI {
     el('book-close').addEventListener('click', () => this.bookScreen.classList.add('hidden'));
     // The missions drawer on the title screen: its tab slides it out and back.
     el('mission-tab').addEventListener('click', () => el('mission-drawer').classList.toggle('open'));
-    el('tab-upgrades').addEventListener('click', () => this.setShopTab('upgrades'));
-    el('tab-skins').addEventListener('click', () => this.setShopTab('skins'));
+    for (const tab of SHOP_TABS) el(`tab-${tab}`).addEventListener('click', () => this.setShopTab(tab));
+    el('crate-open').addEventListener('click', () => this.onCrate());
+    el('boost-list').addEventListener('click', (e) => {
+      const button = (e.target as HTMLElement).closest('button') as HTMLButtonElement | null;
+      if (!button || button.disabled) return;
+      if (button.dataset.buy) this.onBoostBuy(button.dataset.buy);
+      else if (button.dataset.arm) this.onBoostArm(button.dataset.arm);
+    });
     el('world-prev').addEventListener('click', () => this.onWorldStep(-1));
     el('world-next').addEventListener('click', () => this.onWorldStep(1));
     el('menu-btn').addEventListener('click', () => this.onMenu());
@@ -410,12 +445,87 @@ export class UI {
     if (picture && url) picture.src = url;
   }
 
-  /** The shop has two pages, upgrades and ball skins; this shows one of them. */
-  private setShopTab(tab: 'upgrades' | 'skins'): void {
-    el('tab-upgrades').classList.toggle('on', tab === 'upgrades');
-    el('tab-skins').classList.toggle('on', tab === 'skins');
+  /** The shop has four pages: prize crates, run boosts, upgrades and ball skins. This shows one of them. */
+  private setShopTab(tab: ShopTab): void {
+    for (const t of SHOP_TABS) el(`tab-${t}`).classList.toggle('on', t === tab);
+    el('crate-page').hidden = tab !== 'crates';
+    el('boost-list').hidden = tab !== 'boosts';
     this.shopList.hidden = tab !== 'upgrades';
     this.skinList.hidden = tab !== 'skins';
+  }
+
+  /** The crates page: the price, and what the last crate held. */
+  private fillCrate(crate: { price: number; affordable: boolean; result: CrateResult | null }): void {
+    const open = el('crate-open') as HTMLButtonElement;
+    open.disabled = !crate.affordable;
+    open.textContent = '';
+    const coin = document.createElement('span');
+    coin.className = 'coins';
+    const amount = document.createElement('b');
+    amount.textContent = String(crate.price);
+    coin.append(document.createElement('i'), amount);
+    open.append(document.createTextNode('Open a crate '), coin);
+    const box = el('crate-result');
+    box.innerHTML = '';
+    if (crate.result) {
+      const r = crate.result;
+      if (r.tag) {
+        const tag = document.createElement('span');
+        tag.className = 'rarity-tag';
+        tag.textContent = r.tag;
+        tag.style.background = r.tagColor;
+        box.appendChild(tag);
+      }
+      if (r.picture) {
+        const picture = document.createElement('img');
+        picture.src = r.picture;
+        picture.alt = '';
+        box.appendChild(picture);
+      }
+      const text = document.createElement('div');
+      text.textContent = r.text;
+      box.appendChild(text);
+      // Play the pop each time a crate is opened.
+      const crateEl = el('crate-box');
+      crateEl.classList.remove('pop');
+      box.classList.remove('pop');
+      void box.offsetWidth;
+      crateEl.classList.add('pop');
+      box.classList.add('pop');
+    }
+  }
+
+  /** The boosts page: a row each, with a price to buy one more and a switch to use one next run. */
+  private fillBoosts(boosts: BoostRow[]): void {
+    const list = el('boost-list');
+    list.innerHTML = '';
+    for (const boost of boosts) {
+      const item = document.createElement('div');
+      item.className = 'upgrade';
+      const info = document.createElement('div');
+      info.className = 'info';
+      const name = document.createElement('div');
+      name.className = 'name';
+      name.textContent = `${boost.name} ×${boost.owned}`;
+      const blurb = document.createElement('div');
+      blurb.className = 'blurb';
+      blurb.textContent = boost.blurb;
+      info.append(name, blurb);
+      const arm = document.createElement('button');
+      arm.type = 'button';
+      arm.className = boost.armed ? 'arm on' : 'arm';
+      arm.dataset.arm = boost.id;
+      arm.disabled = boost.owned <= 0;
+      arm.textContent = boost.armed ? 'On' : 'Off';
+      const buy = document.createElement('button');
+      buy.type = 'button';
+      buy.className = 'buy';
+      buy.dataset.buy = boost.id;
+      buy.disabled = !boost.affordable;
+      buy.append(document.createElement('i'), document.createTextNode(String(boost.price)));
+      item.append(info, arm, buy);
+      list.appendChild(item);
+    }
   }
 
   /** Fill the skins page of the shop: a tile each, with what a tap on it will do. */
@@ -445,9 +555,11 @@ export class UI {
   }
 
   /** Show (or refresh) the shop on top of whichever screen opened it. It stays on the page it was on. */
-  openShop(coins: number, rows: ShopRow[], skins: SkinRow[]): void {
+  openShop(coins: number, rows: ShopRow[], skins: SkinRow[], crate: { price: number; affordable: boolean; result: CrateResult | null }, boosts: BoostRow[]): void {
     el('shop-coins').textContent = coins.toLocaleString('en-US');
     this.fillSkins(skins);
+    this.fillCrate(crate);
+    this.fillBoosts(boosts);
     this.shopList.innerHTML = '';
     for (const row of rows) {
       const item = document.createElement('div');
@@ -682,6 +794,7 @@ export class UI {
     el('end-title').textContent = data.title;
     el('end-sub').textContent = data.subtitle;
     el('end-size').textContent = data.size;
+    el('end-distance').textContent = `Rolled ${data.distance}`;
     el('end-unit').textContent = data.unit;
     this.setAvalanche(false, 0);
     const best = el('end-best');
