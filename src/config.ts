@@ -387,6 +387,29 @@ export const ZONES: ZoneConfig[] = [
 /** Design radius at the very bottom of the mountain. */
 export const END_RADIUS = 48;
 
+// ---------------------------------------------------------------- First-time hints
+/**
+ * One-line tips, each shown once ever, the first time the thing it explains turns up
+ * (game.ts `checkHints` decides when). Keep them short: they are read at speed.
+ */
+export const HINTS = {
+  steer: 'Drag left or right to steer',
+  absorb: 'Roll over small things to grow',
+  ring: 'Red ring means too big. Go round!',
+  wall: 'Fill the bar to smash the wall',
+  chaser: 'Hitting things lets it catch up',
+  riverSmall: 'Too small! Take the bridge or jump',
+  riverBig: "You're big enough to freeze the river",
+  ramp: 'Ramps launch you. Land to SLAM!',
+  plough: 'Dodge it, or tap to jump over',
+  secret: 'Gold disc: grab it for a power!',
+};
+export type HintId = keyof typeof HINTS;
+/** The basics, which someone who has played before the hints existed already knows. */
+export const BASIC_HINTS: HintId[] = ['steer', 'absorb', 'ring', 'wall'];
+/** Seconds a hint stays up. */
+export const HINT_TIME = 4.5;
+
 // ---------------------------------------------------------------- Upgrades
 /**
  * Permanent upgrades bought with coins between runs. Each has UPGRADE_LEVELS levels; level

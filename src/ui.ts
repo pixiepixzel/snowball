@@ -65,6 +65,8 @@ export class UI {
   private bannerEl = el('banner');
   private milestoneEl = el('milestone');
   private milestoneText = el('milestone-text');
+  private hintEl = el('hint');
+  private hintText = el('hint-text');
   private floaters = el('floaters');
   private flashEl = el('flash');
   private titleScreen = el('title');
@@ -372,6 +374,14 @@ export class UI {
     this.bannerEl.classList.add('go');
   }
 
+  /** A first-time hint: one line in a dark card near the bottom, for a few seconds. */
+  hint(text: string): void {
+    this.hintText.textContent = text;
+    this.hintEl.classList.remove('go');
+    void this.hintEl.offsetWidth;
+    this.hintEl.classList.add('go');
+  }
+
   /** A gold tag that pops up under the banner: "Bigger than a house!". */
   milestone(text: string): void {
     this.milestoneText.textContent = text;
@@ -404,6 +414,7 @@ export class UI {
     for (const d of this.floaterPool) d.className = 'floater';
     this.bannerEl.classList.remove('go');
     this.milestoneEl.classList.remove('go');
+    this.hintEl.classList.remove('go');
     this.flashEl.className = '';
   }
 

@@ -3,7 +3,7 @@
  * collisions and hazards into growth, damage, juice and the end of the run.
  */
 import * as THREE from 'three';
-import { CONFIG, MILESTONES, NO_TWIST, UPGRADES, UPGRADE_LEVELS, WIND_PERIOD, ZONES, type Twist } from './config';
+import { CONFIG, HINTS, HINT_TIME, MILESTONES, NO_TWIST, UPGRADES, UPGRADE_LEVELS, WIND_PERIOD, ZONES, type HintId, type Twist } from './config';
 import { AudioEngine } from './audio';
 import { Ball } from './ball';
 import { botControl, rebaseBot } from './bot';
@@ -146,6 +146,9 @@ export class Game {
   private beam = 0;
   /** Coins picked up during this run (golden snowflakes), on top of the coins for size. */
   private runCoins = 0;
+  /** Seconds until another first-time hint may go up, and until the next look for one. */
+  private hintWait = 0;
+  private hintScan = 0;
   /** Which world the next run starts in (a lap number), picked on the title screen. */
   private startLap = 0;
   /** The ball's size when this run began, as shown to the player. Coins are paid for growth since then. */
@@ -310,6 +313,8 @@ export class Game {
     this.runStartR = this.shown(this.ball.r);
     this.rage = 0;
     this.beam = 0;
+    this.hintWait = 0;
+    this.hintScan = 0;
     this.runCoins = 0;
     this.ui.setPower('', 0);
     this.world.reset(this.seed ?? (Math.random() * 0x7fffffff) | 0, startD);
@@ -572,6 +577,12 @@ export class Game {
     const ball = this.ball;
     this.stats.time += realDt;
     if (this.comboTimer > 0) this.comboTimer -= realDt;
+    if (this.hintWait > 0) this.hintWait -= realDt;
+    this.hintScan -= realDt;
+    if (this.hintScan <= 0) {
+      this.hintScan = 0.2;
+      this.checkHints();
+    }
 
     // Un-stick: if the ball is pushing forward but something keeps shoving it back
     // (wedged between obstacles, or against one near the bank), roll it back uphill a
@@ -1061,6 +1072,58 @@ export class Game {
     }[this.endKind];
     const [size, unit] = sizeParts(r);
     this.ui.showEnd({ ...text, size, unit, best: sizeLabel(this.save.best), isBest, items, coins: this.keepScores ? coins : null, totalCoins: this.save.coins });
+  }
+
+  // ------------------------------------------------------------------ first-time hints
+
+  /**
+   * Show a hint if it has never been shown and no other hint is up. Bot runs and demos
+   * get none, and don't use them up.
+   */
+  private tryHint(id: HintId): boolean {
+    if (!this.keepScores || this.autoplay || this.hintWait > 0 || this.save.hints.includes(id)) return false;
+    this.save.hints.push(id);
+    writeSave(this.save);
+    this.ui.hint(HINTS[id]);
+    this.hintWait = HINT_TIME + 0.6;
+    return true;
+  }
+
+  /**
+   * Look for the first appearance of each thing a hint explains. Called a few times a
+   * second while playing; at most one hint goes up at a time, so the order is a priority.
+   */
+  private checkHints(): void {
+    if (this.hintWait > 0 || this.save.hints.length >= Object.keys(HINTS).length) return;
+    const ball = this.ball;
+    const r = ball.r;
+    const time = this.stats.time;
+    if (time > 0.8 && this.tryHint('steer')) return;
+    if (time > 5 && this.tryHint('absorb')) return;
+    if (this.threat > 0.45 && this.tryHint('chaser')) return;
+
+    const absorbMax = r * CONFIG.ABSORB_RATIO;
+    for (const o of this.world.objects) {
+      if (o.scenery) continue;
+      const ahead = o.d - ball.d;
+      if (ahead <= 0 || ahead > 28 * r) continue;
+      const aside = Math.abs(o.x - ball.x);
+      const special = o.def.special;
+      if (special === 'river') {
+        if (o.state === 0 && this.tryHint(ball.r >= o.need ? 'riverBig' : 'riverSmall')) return;
+      } else if (special === 'ramp') {
+        if (ahead < 18 * r && aside < 7 * r && this.tryHint('ramp')) return;
+      } else if (special === 'plough') {
+        if (o.size >= absorbMax && this.tryHint('plough')) return;
+      } else if (special === 'secret') {
+        if (ahead < 20 * r && this.tryHint('secret')) return;
+      } else if (!special && o.danger && ahead < 12 * r && aside < 3.5 * r) {
+        if (this.tryHint('ring')) return;
+      }
+    }
+    // Part-way down the first scene: what the bar under the size is for.
+    const place = locate(ball.d);
+    if (place.lap === 0 && place.zone === 0 && place.t > 0.35) this.tryHint('wall');
   }
 
   // ------------------------------------------------------------------ world picker

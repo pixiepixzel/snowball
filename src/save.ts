@@ -6,7 +6,7 @@
  * their progress. Anything unreadable falls back to a fresh save rather than breaking
  * the game, and every access is wrapped because storage can be blocked or full.
  */
-import { CONFIG, UPGRADES, UPGRADE_LEVELS } from './config';
+import { BASIC_HINTS, CONFIG, UPGRADES, UPGRADE_LEVELS } from './config';
 import { LAP_GROWTH } from './zones';
 
 const SAVE_KEY = 'snowball.save';
@@ -15,9 +15,9 @@ const OLD_BEST_KEY = 'snowball.best';
 
 /**
  * Version 2 added the sound and vibration switches, version 3 the furthest world reached,
- * version 4 the music switch.
+ * version 4 the music switch, version 5 which first-time hints have been shown.
  */
-export const SAVE_VERSION = 4;
+export const SAVE_VERSION = 5;
 
 export interface SaveData {
   version: number;
@@ -35,6 +35,8 @@ export interface SaveData {
    * A run can start in any world up to this one.
    */
   reached: number;
+  /** Ids of the first-time hints already shown (config.ts HINTS). */
+  hints: string[];
 }
 
 const num = (v: unknown, fallback = 0): number => (typeof v === 'number' && Number.isFinite(v) && v >= 0 ? v : fallback);
@@ -42,7 +44,7 @@ const num = (v: unknown, fallback = 0): number => (typeof v === 'number' && Numb
 function fresh(): SaveData {
   const upgrades: Record<string, number> = {};
   for (const u of UPGRADES) upgrades[u.id] = 0;
-  return { version: SAVE_VERSION, best: 0, coins: 0, upgrades, sound: true, music: true, vibration: true, reached: 0 };
+  return { version: SAVE_VERSION, best: 0, coins: 0, upgrades, sound: true, music: true, vibration: true, reached: 0, hints: [] };
 }
 
 /** Turn whatever was stored into a valid save of the current version. */
@@ -62,8 +64,11 @@ function migrate(raw: unknown): SaveData {
     typeof data.reached === 'number'
       ? Math.floor(num(data.reached))
       : Math.max(0, Math.floor(Math.log(Math.max(1, save.best / CONFIG.START_RADIUS)) / Math.log(LAP_GROWTH) + 1e-9));
-  save.best = num(data.best);
   save.coins = Math.floor(num(data.coins));
+  // Before version 5 there were no hints. Someone who has already played knows the basics,
+  // so those are marked as seen; the tips for rivers, ramps and the rest still appear once.
+  if (Array.isArray(data.hints)) save.hints = data.hints.filter((id): id is string => typeof id === 'string');
+  else if (save.best > 0) save.hints = [...BASIC_HINTS];
   const levels = (typeof data.upgrades === 'object' && data.upgrades !== null ? data.upgrades : {}) as Record<string, unknown>;
   for (const u of UPGRADES) save.upgrades[u.id] = Math.min(UPGRADE_LEVELS, Math.floor(num(levels[u.id])));
   return save;

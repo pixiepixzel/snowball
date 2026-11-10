@@ -336,6 +336,53 @@ body {
   letter-spacing: 0.5px;
 }
 
+/*
+ * A first-time hint: one line in a dark card, low on the screen where it doesn't cover
+ * the slope ahead, above the milestone tag. It fades in, stays a few seconds, fades out.
+ */
+#hint {
+  position: absolute;
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 100px);
+  left: 0;
+  right: 0;
+  text-align: center;
+  opacity: 0;
+}
+
+#hint.go {
+  animation: hint 4.5s ease-out forwards;
+}
+
+#hint-text {
+  display: inline-block;
+  max-width: 88%;
+  padding: 9px 16px 10px;
+  border-radius: 16px;
+  background: rgba(14, 29, 51, 0.82);
+  box-shadow: 0 4px 16px rgba(8, 20, 40, 0.4);
+  color: #fff;
+  font-size: 16px;
+  font-weight: 800;
+  line-height: 1.25;
+}
+
+@keyframes hint {
+  0% {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  8% {
+    opacity: 1;
+    transform: none;
+  }
+  88% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
 .banner-main {
   font-size: 40px;
   font-weight: 900;
