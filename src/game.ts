@@ -1360,6 +1360,7 @@ export class Game {
     const time = this.stats.time;
     if (time > 0.8 && this.tryHint('steer')) return;
     if (time > 5 && this.tryHint('absorb')) return;
+    if (time > 11 && this.tryHint('jump')) return;
     if (this.threat > 0.45 && this.tryHint('chaser')) return;
 
     const absorbMax = r * CONFIG.ABSORB_RATIO;

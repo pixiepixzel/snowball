@@ -52,6 +52,10 @@ export interface WorldObject {
   fade: number;
   /** Decoration on the banks: never collides. */
   scenery: boolean;
+  /** How tall it really stands, in metres (measured from its model). */
+  top: number;
+  /** The ball has jumped over it: it can't hurt the ball on the way down the far side. */
+  cleared: boolean;
 }
 
 interface Chunk {
@@ -281,6 +285,57 @@ const _n = new THREE.Vector3();
 const _e1 = new THREE.Vector3();
 const _e2 = new THREE.Vector3();
 const UP = new THREE.Vector3(0, 1, 0);
+const RIGHT = new THREE.Vector3(1, 0, 0);
+const _tilt = new THREE.Quaternion();
+
+/** How a hopping creature is posed at one moment (see hopPose). */
+const _hop = { lift: 0, tall: 1, wide: 1, pitch: 0, turn: 0 };
+const smooth01 = (x: number): number => x * x * (3 - 2 * x);
+/** Which way a hopper faces after its n-th hop: it looks about, never far from where it started. */
+const hopHeading = (n: number, phase: number): number => Math.sin(n * 1.7 + phase * 5) * 1.1;
+
+/**
+ * Pose a hopping creature (rabbit, baby dinosaur, gummy bear...). One hop is: spring up in
+ * an arc, stretched and nose-up, turning to face a new way; come down nose-first; squash on
+ * landing; sit for a moment; crouch; go again. Each creature keeps its own time, from
+ * `phase`, so a group never hops in step. Fills `_hop`:
+ *   lift   height off the ground, in the creature's own size
+ *   tall   how much taller than normal (below 1 is squashed); `wide` keeps its bulk the same
+ *   pitch  nose up (+) or down (-), radians;  turn  which way it faces, radians
+ */
+function hopPose(time: number, phase: number): void {
+  const period = 1.1 + (phase % 1) * 0.5;
+  const t = time / period + phase;
+  const n = Math.floor(t);
+  const f = t - n;
+  const AIR = 0.44;
+  const LAND = 0.6;
+  const CROUCH = 0.84;
+  let lift = 0;
+  let tall = 1;
+  let pitch = 0;
+  let turn = hopHeading(n + 1, phase);
+  if (f < AIR) {
+    const a = f / AIR;
+    lift = 4 * a * (1 - a) * 0.6;
+    // Fastest, so most stretched, leaving the ground and coming back to it.
+    tall = a < 0.15 ? 0.84 + (a / 0.15) * 0.3 : 1 + 0.14 * Math.abs(1 - 2 * a);
+    pitch = (0.5 - a) * 0.55;
+    turn = hopHeading(n, phase) + (hopHeading(n + 1, phase) - hopHeading(n, phase)) * smooth01(a);
+  } else if (f < LAND) {
+    // Landed: squashed flat, springing back up.
+    const b = (f - AIR) / (LAND - AIR);
+    tall = 0.76 + 0.24 * smooth01(b);
+  } else if (f >= CROUCH) {
+    // Gathering itself for the next hop.
+    tall = 1 - 0.16 * smooth01((f - CROUCH) / (1 - CROUCH));
+  }
+  _hop.lift = lift;
+  _hop.tall = tall;
+  _hop.wide = 1 / Math.sqrt(tall);
+  _hop.pitch = pitch;
+  _hop.turn = turn;
+}
 
 const defById = (id: string): ObjectDef => OBJECT_DEFS.find((def) => def.id === id) as ObjectDef;
 
@@ -320,6 +375,8 @@ export class World {
   private riverSpawned = false;
   /** Walls at or before this distance are not built (see reset: where the run started). */
   private noGateBefore = 0;
+  /** Height of every model in its own units, by object id. */
+  private tops = new Map<string, number>();
 
   constructor(scene: THREE.Scene) {
     this.scene = scene;
@@ -337,6 +394,9 @@ export class World {
     };
     for (const def of OBJECT_DEFS) {
       const geometry = def.build();
+      // How tall the model really is, in its own units: what the ball has to get over.
+      geometry.computeBoundingBox();
+      this.tops.set(def.id, def.height ?? geometry.boundingBox?.max.y ?? 2);
       if (def.flat) layOnSlope(geometry);
       addTintMask(geometry, !!def.tints);
       const pool = new InstancePool(geometry, material, def.capacity ?? 220);
@@ -442,6 +502,7 @@ export class World {
       o.sink *= k;
       o.size *= k;
       o.fp *= k;
+      o.top *= k;
       o.need *= k;
       o.sx *= k;
       o.sz *= k;
@@ -652,6 +713,8 @@ export class World {
     o.d = d;
     o.size = size;
     o.fp = size * def.footprint;
+    o.top = size * (this.tops.get(def.id) ?? 2);
+    o.cleared = false;
     o.rot = special || def.motion === 'ski' ? 0 : this.rng() * Math.PI * 2;
     o.phase = this.rng() * Math.PI * 2;
     o.scenery = scenery;
@@ -693,17 +756,24 @@ export class World {
   private writeMatrix(o: WorldObject, time: number): void {
     let y = groundY(o.d) + o.yOff - o.sink;
     let rot = o.rot;
-    if (!o.scenery) {
-      if (o.def.motion === 'hop') y += Math.abs(Math.sin(time * 5 + o.phase)) * 0.4 * o.size;
-      else if (o.def.motion === 'spin') {
-        rot += time * 1.6;
-        y += (0.25 + 0.12 * Math.sin(time * 2.2 + o.phase)) * o.size;
-      }
+    const hopping = o.def.motion === 'hop' && !o.scenery;
+    if (hopping) {
+      hopPose(time, o.phase);
+      y += _hop.lift * o.size;
+      rot += _hop.turn;
+    } else if (o.def.motion === 'spin' && !o.scenery) {
+      rot += time * 1.6;
+      y += (0.25 + 0.12 * Math.sin(time * 2.2 + o.phase)) * o.size;
     }
     _pos.set(o.x, y, -o.d);
     _quat.setFromAxisAngle(UP, rot);
     if (o.sx > 0) _scale.set(o.sx, o.sz, o.sz);
     else _scale.setScalar(o.size * o.fade);
+    if (hopping) {
+      // Lean into the jump, and squash and stretch from the feet.
+      _quat.multiply(_tilt.setFromAxisAngle(RIGHT, _hop.pitch));
+      _scale.set(_scale.x * _hop.wide, _scale.y * _hop.tall, _scale.z * _hop.wide);
+    }
     // Walls are stretched upwards so they tower over the ball that has to break them.
     if (o.def.special === 'gate') _scale.y *= 1.7;
     this.poolOf(o.def).setMatrix(o.slot, _m.compose(_pos, _quat, _scale));

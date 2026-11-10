@@ -1,7 +1,7 @@
 /**
  * Player input. Touch and mouse both arrive as pointer events:
  *   - press and drag left / right anywhere to steer
- *   - a quick tap (press and release without moving) to jump
+ *   - swipe up to jump (a quick flick upwards; the finger can stay down and keep steering)
  * Drag is reported as a fraction of the screen width, so it behaves the same on every
  * screen size. On desktop, arrow keys / A-D steer and Space / Up / W jumps.
  *
@@ -15,8 +15,15 @@ export class Input {
   private dragged = 0;
   private left = false;
   private right = false;
-  private downAt = 0;
-  private travelled = 0;
+  /** Where and when the upward swipe being watched for began. */
+  private swipeX = 0;
+  private swipeY = 0;
+  private swipeAt = 0;
+  /** Where the finger was at the last move, to tell which way it is going now. */
+  private lastY = 0;
+  private lastSwipeX = 0;
+  /** True once a swipe has made its jump, until the finger stops going up. */
+  private swipeSpent = false;
   private jumpQueued = false;
 
   constructor(private el: HTMLElement) {
@@ -40,23 +47,51 @@ export class Input {
     if (this.pointerId !== null) return;
     this.pointerId = e.pointerId;
     this.lastX = e.clientX;
-    this.downAt = performance.now();
-    this.travelled = 0;
+    this.swipeSpent = false;
+    this.swipeFrom(e);
   };
+
+  /** Start watching for an upward swipe from where the finger is now. */
+  private swipeFrom(e: PointerEvent): void {
+    this.swipeX = e.clientX;
+    this.swipeY = e.clientY;
+    this.swipeAt = performance.now();
+    this.lastY = e.clientY;
+    this.lastSwipeX = e.clientX;
+  }
 
   private onMove = (e: PointerEvent): void => {
     if (e.pointerId !== this.pointerId) return;
     const step = (e.clientX - this.lastX) / Math.max(1, this.el.clientWidth);
     this.dragged += step;
-    this.travelled += Math.abs(step);
     this.lastX = e.clientX;
+
+    // A swipe up is a jump: far enough, fast enough, and more up than sideways. If the
+    // finger dawdles or drops back down, the watch starts again from where it is, so a
+    // slow drift upwards while steering never adds up to one.
+    // The same goes for a stretch of steering: a flick up straight after a sideways drag
+    // is measured from where the flick began, not from where the finger first went down.
+    const up = this.swipeY - e.clientY;
+    const stepUp = this.lastY - e.clientY;
+    const stepAcross = Math.abs(e.clientX - this.lastSwipeX);
+    this.lastY = e.clientY;
+    this.lastSwipeX = e.clientX;
+    const sideways = stepAcross > Math.max(stepUp, 2) * 2;
+    // One swipe is one jump, however long it is: the finger has to stop going up (pause,
+    // come back down, or steer) before another flick counts. It needn't lift.
+    if (stepUp <= 0 || sideways) this.swipeSpent = false;
+    if (up < 0 || stepUp < 0 || sideways || performance.now() - this.swipeAt > CONFIG.SWIPE_MAX_TIME * 1000) {
+      this.swipeFrom(e);
+    } else if (up >= CONFIG.SWIPE_UP_MIN * Math.max(1, this.el.clientHeight) && up > Math.abs(e.clientX - this.swipeX) * CONFIG.SWIPE_UP_RATIO) {
+      if (!this.swipeSpent) this.jumpQueued = true;
+      this.swipeSpent = true;
+      this.swipeFrom(e);
+    }
   };
 
   private onUp = (e: PointerEvent): void => {
     if (e.pointerId !== this.pointerId) return;
     this.pointerId = null;
-    const quick = performance.now() - this.downAt < CONFIG.TAP_MAX_TIME * 1000;
-    if (quick && this.travelled < CONFIG.TAP_MAX_MOVE) this.jumpQueued = true;
   };
 
   private onCancel = (e: PointerEvent): void => {
@@ -76,7 +111,7 @@ export class Input {
     return d;
   }
 
-  /** True once for each tap / jump key press. */
+  /** True once for each swipe up / jump key press. */
   consumeJump(): boolean {
     const j = this.jumpQueued;
     this.jumpQueued = false;

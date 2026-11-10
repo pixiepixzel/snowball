@@ -227,15 +227,23 @@ export const CONFIG = {
   UFO_BEAM_PULL_K: 9,
 
   // ---------------------------------------------------------------- Jump
-  /** Tap to hop. Apex height in ball radii, and gravity in radii per second². */
+  /** Swipe up to hop. Apex height in ball radii, and gravity in radii per second². */
   JUMP_HEIGHT_K: 2.3,
   JUMP_GRAVITY_K: 42,
   /** Seconds before the ball can jump again after landing. */
   JUMP_COOLDOWN: 0.35,
-  /** A press shorter than this (s) that moves less than this (fraction of screen width) is a tap. */
-  TAP_MAX_TIME: 0.25,
-  TAP_MAX_MOVE: 0.035,
-  /** The ball sails over an object while its underside is above this fraction of the object's height. */
+  /**
+   * Swipe up to jump: the finger has to travel up by this fraction of the screen height
+   * within this many seconds, and further up than sideways by this ratio (so steering
+   * diagonally doesn't jump by accident).
+   */
+  SWIPE_UP_MIN: 0.05,
+  SWIPE_MAX_TIME: 0.28,
+  SWIPE_UP_RATIO: 1.15,
+  /**
+   * The ball clears an object if its underside is above this fraction of the object's real
+   * height (measured from its model). Below 1 is forgiving: clipping the very top is let off.
+   */
   JUMP_CLEAR_K: 0.75,
 
   // ---------------------------------------------------------------- Hazard: avalanche
@@ -461,6 +469,7 @@ export const MISSION_LOOP_FROM = 7;
 export const HINTS = {
   steer: 'Drag left or right to steer',
   absorb: 'Roll over small things to grow',
+  jump: 'Swipe up to jump',
   ring: 'Red ring means too big. Go round!',
   wall: 'Fill the bar to smash the wall',
   chaser: 'Hitting things lets it catch up',

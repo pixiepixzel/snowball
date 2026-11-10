@@ -3,7 +3,8 @@
  *   - object smaller than radius × ABSORB_RATIO  → absorbed
  *   - anything else                               → solid: the ball is pushed out and
  *                                                   the game decides if it hurts
- * While the ball is in the air it sails over anything low enough (see JUMP_CLEAR_K).
+ * While the ball is in the air it sails over anything its underside clears, going by how
+ * tall the model really is (see JUMP_CLEAR_K), and what it has jumped over can't hurt it.
  *
  * The special cases are the hazards: walls (smash or stop), rivers (freeze, bridge,
  * jump or sink), ramps (launch) and snowploughs (scrape).
@@ -80,11 +81,30 @@ export function collide(ball: Ball, world: World, h: CollisionHandlers): void {
       h.onSecret(o, i);
       continue;
     }
-    // High enough to clear it?
-    if (ball.h > o.size * (o.def.height ?? 2) * C.JUMP_CLEAR_K) continue;
+    // In the air: does the ball really touch it? The ball is round, so over the top of
+    // something it only touches what its underside reaches. Anything it gets over is
+    // marked cleared, and can't hurt it on the way down the far side.
+    if (ball.airborne) {
+      const top = o.top * C.JUMP_CLEAR_K;
+      const centre = ball.h + ball.r;
+      let over = ball.h >= top;
+      if (!over && centre > top) {
+        // The ball's middle is above it: only the part of the ball below the top counts.
+        const rise = centre - top;
+        const under = Math.sqrt(Math.max(0, ball.r * ball.r - rise * rise)) * C.CONTACT_REACH + o.fp;
+        over = dist2 >= under * under;
+      }
+      if (over) {
+        o.cleared = true;
+        continue;
+      }
+    }
 
     if (o.size < ball.r * C.ABSORB_RATIO) {
       h.onAbsorb(o, i);
+    } else if (o.cleared) {
+      // Jumped over: it rolls off the back of it unharmed.
+      continue;
     } else if (ball.smashing) {
       h.onSmash(o, i);
     } else if (special === 'plough') {

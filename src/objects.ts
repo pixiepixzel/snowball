@@ -1055,7 +1055,8 @@ const MOUNTAIN: ObjectDef[] = [
   // ---- Scene 0: Summit (ball 0.25 → 0.5 m radius)
   { id: 'snowflake', name: 'snowflake', plural: 'snowflakes', zone: 0, span: [0, 1.3], size: 0.06, jitter: 0.15, footprint: 0.9, weight: 3, color: 0x4fbcff, build: snowflake, motion: 'spin' },
   { id: 'mitten', name: 'mitten', plural: 'mittens', zone: 0, span: [0, 1.5], size: 0.1, jitter: 0.15, footprint: 0.6, weight: 2.5, color: RED, build: mitten, tints: BRIGHT_TINTS },
-  { id: 'hat', name: 'bobble hat', plural: 'bobble hats', zone: 0, span: [0, 1.8], size: 0.15, jitter: 0.15, footprint: 0.7, weight: 2, color: 0x3f7de0, build: hat, tints: BRIGHT_TINTS },
+  // (The id is still 'hat': it was a bobble hat, and saves and the other worlds know it by that id.)
+  { id: 'hat', name: 'penguin', plural: 'penguins', zone: 0, span: [0, 1.8], size: 0.15, jitter: 0.15, footprint: 0.7, weight: 2, color: 0x2a3140, build: N.penguin, tints: BRIGHT_TINTS },
   { id: 'snowboard', name: 'snowboard', plural: 'snowboards', zone: 0, span: [0.3, 2.2], size: 0.26, jitter: 0.12, footprint: 0.4, weight: 1.5, color: 0xff8a1a, build: snowboard },
   { id: 'iceSpike', name: 'ice spike', plural: 'ice spikes', zone: 0, span: [0.1, 2.4], size: 0.5, jitter: 0.3, footprint: 0.65, weight: 1, color: 0x38a9f0, build: iceSpike },
 
@@ -1123,7 +1124,7 @@ MOUNTAIN.forEach((def, i) => (def.slot = i));
 
 /** World 1: the Lost World. */
 const LOST_WORLD: ObjectDef[] = [
-  themed(1, 'snowflake', 'dragonfly', 'dragonfly', 'dragonflies', 0x2aa6c8, D.dragonfly),
+  themed(1, 'snowflake', 'dragonfly', 'dragonfly', 'dragonflies', 0x2aa6c8, N.dragonfly),
   themed(1, 'mitten', 'mushroom', 'mushroom', 'mushrooms', 0xd9412e, D.mushroom),
   themed(1, 'hat', 'dinoEgg', 'dinosaur egg', 'dinosaur eggs', 0xf2ead2, D.dinoEgg),
   themed(1, 'snowboard', 'fern', 'fern', 'ferns', 0x3f9a4a, D.fern),
@@ -1135,7 +1136,7 @@ const LOST_WORLD: ObjectDef[] = [
   themed(1, 'smallTree', 'raptor', 'raptor', 'raptors', 0x2f9a9a, D.raptor),
   themed(1, 'bigTree', 'palm', 'palm tree', 'palm trees', 0x6fbf5a, D.palm),
   themed(1, 'snowman', 'giantMushroom', 'giant mushroom', 'giant mushrooms', 0x8a4fd0, D.giantMushroom),
-  themed(1, 'fishingHut', 'pterodactyl', 'pterodactyl', 'pterodactyls', 0xc87a4a, D.pterodactyl),
+  themed(1, 'fishingHut', 'pterodactyl', 'pterodactyl', 'pterodactyls', 0xc87a4a, N.pterodactyl),
   themed(1, 'boat', 'stego', 'stegosaurus', 'stegosauruses', 0x5f9a4a, D.stego),
   themed(1, 'skier', 'gallimimus', 'gallimimus', 'gallimimuses', 0xf08a2a, D.gallimimus, { tints: [0xf08a2a, 0xe2c14e, 0x7fb4e8, 0xd97a9a, 0x9ad06a] }),
   themed(1, 'signpost', 'treeFern', 'tree fern', 'tree ferns', 0x3f9a4a, N.treeFern),
@@ -1170,7 +1171,7 @@ const SPACE: ObjectDef[] = [
   themed(2, 'fishingHut', 'lander', 'lunar lander', 'lunar landers', 0xe2b23c, S.lander),
   themed(2, 'boat', 'ufo', 'UFO', 'UFOs', 0x7fe8ff, S.ufo),
   themed(2, 'skier', 'scout', 'scout ship', 'scout ships', 0x7fe8ff, N.scoutShip, { tints: [0xff7a5a, 0x7fe8ff, 0xffd23f, 0x9ad06a, 0xd08aff] }),
-  themed(2, 'signpost', 'beacon', 'beacon', 'beacons', RED, S.antenna),
+  themed(2, 'signpost', 'beacon', 'beacon', 'beacons', RED, N.beacon),
   themed(2, 'snowmobile', 'satellite', 'satellite', 'satellites', 0x2f5fc8, S.satellite),
   themed(2, 'liftPole', 'obelisk', 'alien obelisk', 'alien obelisks', 0x3a4060, S.obelisk),
   themed(2, 'cabin', 'habitat', 'moon base', 'moon bases', 0xe8ecf2, S.habitat),
@@ -1180,7 +1181,7 @@ const SPACE: ObjectDef[] = [
   themed(2, 'hotel', 'moon', 'moon', 'moons', 0xc8ccd6, S.moon),
   themed(2, 'bus', 'freighter', 'space freighter', 'space freighters', 0xc9ced6, N.freighter),
   themed(2, 'building', 'bluePlanet', 'blue planet', 'blue planets', 0x5a8fd0, S.gasGiant),
-  themed(2, 'churchTower', 'megaRocket', 'mega rocket', 'mega rockets', RED, S.bigRocket),
+  themed(2, 'churchTower', 'megaRocket', 'mega rocket', 'mega rockets', RED, N.megaRocket),
   themed(2, 'church', 'ringedPlanet', 'ringed planet', 'ringed planets', 0xe8b070, S.ringedPlanet),
   themed(2, 'officeTower', 'star', 'star', 'stars', 0xffc23a, S.star),
 ];
@@ -1190,7 +1191,7 @@ const PALE_TINTS = [0xffffff, 0xd8ffe8, 0xe0d8ff, 0xc8f0ff, 0xfff0c8];
 
 /** World 3: Candy World. */
 const CANDY: ObjectDef[] = [
-  themed(3, 'snowflake', 'sugarStar', 'sugar star', 'sugar stars', 0xff7ab8, C.sugarStar),
+  themed(3, 'snowflake', 'sugarStar', 'sugar star', 'sugar stars', 0xff7ab8, N.sugarStar),
   themed(3, 'mitten', 'gumdrop', 'gumdrop', 'gumdrops', 0xd81e3a, C.gumdrop(0xd81e3a)),
   themed(3, 'hat', 'macaron', 'macaron', 'macarons', 0xff7ab8, C.macaron),
   themed(3, 'snowboard', 'candyBar', 'candy bar', 'candy bars', 0xe8408a, C.candyBar),
@@ -1222,14 +1223,14 @@ const CANDY: ObjectDef[] = [
 
 /** World 4: the Ancient Desert. */
 const DESERT: ObjectDef[] = [
-  themed(4, 'snowflake', 'scarab', 'scarab', 'scarabs', 0x2a5ac8, E.scarab),
+  themed(4, 'snowflake', 'scarab', 'scarab', 'scarabs', 0x2a5ac8, N.scarab),
   themed(4, 'mitten', 'coins', 'pile of coins', 'piles of coins', 0xf2c230, E.coins),
   themed(4, 'hat', 'clayPot', 'clay pot', 'clay pots', 0xc87a44, E.clayPot),
   themed(4, 'snowboard', 'rug', 'rug', 'rugs', 0xc8402a, E.rug),
   themed(4, 'iceSpike', 'cactus', 'cactus', 'cacti', 0x4a9a52, E.cactus),
   themed(4, 'rabbit', 'fennec', 'desert fox', 'desert foxes', 0xc89a5a, E.fennec),
   themed(4, 'bush', 'tumbleweed', 'tumbleweed', 'tumbleweeds', 0xa8864a, E.tumbleweed),
-  themed(4, 'sled', 'sarcophagus', 'sarcophagus', 'sarcophagi', 0xf2c230, E.sarcophagus),
+  themed(4, 'sled', 'sarcophagus', 'sarcophagus', 'sarcophagi', 0xf2c230, N.sarcophagus),
   themed(4, 'skis', 'scroll', 'scroll', 'scrolls', 0xf2ead8, E.scroll),
   themed(4, 'smallTree', 'datePalm', 'date palm', 'date palms', 0x4a9a3a, E.datePalm(0.6)),
   themed(4, 'bigTree', 'tallPalmTree', 'tall palm', 'tall palms', 0x4a9a3a, E.datePalm(-1)),
@@ -1262,7 +1263,7 @@ const SEA: ObjectDef[] = [
   themed(5, 'rabbit', 'crab', 'crab', 'crabs', 0xff6a5a, U.crab),
   themed(5, 'bush', 'anemone', 'anemone', 'anemones', 0xff9ab0, U.anemone),
   themed(5, 'sled', 'clam', 'clam', 'clams', 0xd8c8b0, U.clam(0xd8c8b0, 0xff9ab0)),
-  themed(5, 'skis', 'eel', 'eel', 'eels', 0x3f8a6a, U.eel),
+  themed(5, 'skis', 'eel', 'eel', 'eels', 0x3f8a6a, N.eel),
   themed(5, 'smallTree', 'seaweed', 'seaweed', 'clumps of seaweed', 0x2f8a4a, U.seaweed),
   themed(5, 'bigTree', 'coralTree', 'coral', 'corals', 0xff6a5a, U.coralTree(0xff6a5a, 0xff9ab0)),
   themed(5, 'snowman', 'clownfish', 'clownfish', 'clownfish', 0xff8a2a, U.fish(0xff8a2a, 0xf4f0e8)),
@@ -1350,10 +1351,10 @@ const TOYS: ObjectDef[] = [
 
 /** World 8: the Sky Kingdom. */
 const SKY: ObjectDef[] = [
-  themed(8, 'snowflake', 'feather', 'feather', 'feathers', 0x8ac8ff, K.feather),
+  themed(8, 'snowflake', 'feather', 'feather', 'feathers', 0x8ac8ff, N.feather),
   themed(8, 'mitten', 'paperPlane', 'paper plane', 'paper planes', 0xf0f0f6, K.paperPlane),
   themed(8, 'hat', 'cloudPuff', 'little cloud', 'little clouds', 0xdce8f6, K.cloud(1.6, 0.5)),
-  themed(8, 'snowboard', 'kite', 'kite', 'kites', 0xe8402a, K.kite),
+  themed(8, 'snowboard', 'kite', 'kite', 'kites', 0xe8402a, N.kite),
   themed(8, 'iceSpike', 'thunderbolt', 'lightning bolt', 'lightning bolts', 0xffe23a, K.thunderbolt),
   themed(8, 'rabbit', 'bird', 'bluebird', 'bluebirds', 0x4a9ae8, K.bird),
   themed(8, 'bush', 'fluffyCloud', 'fluffy cloud', 'fluffy clouds', 0xdce8f6, K.cloud(1.9, 0.75)),
@@ -1375,7 +1376,7 @@ const SKY: ObjectDef[] = [
   themed(8, 'hotel', 'floatingIsland', 'floating island', 'floating islands', 0x5aa84a, K.floatingIsland),
   themed(8, 'bus', 'airliner', 'airliner', 'airliners', 0xf0f0f6, K.airliner),
   themed(8, 'building', 'skyTower', 'sky tower', 'sky towers', 0x3f8ae8, K.skyTower),
-  themed(8, 'churchTower', 'beanstalk', 'beanstalk', 'beanstalks', 0x4ab85a, K.beanstalk),
+  themed(8, 'churchTower', 'beanstalk', 'beanstalk', 'beanstalks', 0x4ab85a, N.beanstalk),
   themed(8, 'church', 'skyTemple', 'sky temple', 'sky temples', 0xf2c230, K.skyTemple),
   themed(8, 'officeTower', 'cloudPalace', 'cloud palace', 'cloud palaces', 0xff7ab8, K.cloudPalace),
 ];

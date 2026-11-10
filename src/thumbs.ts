@@ -39,18 +39,20 @@ export class Thumbs {
       vertexShader: `
         varying vec3 vColor;
         varying vec3 vNormal;
+        uniform vec3 tint;
         void main() {
-          vColor = color;
+          // As in the game: only the parts painted pure white take an object's tint.
+          float paint = step(0.99, min(color.r, min(color.g, color.b)));
+          vColor = color * mix(vec3(1.0), tint, paint);
           vNormal = normalMatrix * normal;
           gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
         }`,
       fragmentShader: `
-        uniform vec3 tint;
         varying vec3 vColor;
         varying vec3 vNormal;
         void main() {
           float lit = max(dot(normalize(vNormal), normalize(vec3(-0.45, 0.75, 0.5))), 0.0);
-          vec3 c = vColor * tint * (0.5 + 0.62 * lit);
+          vec3 c = vColor * (0.5 + 0.62 * lit);
           gl_FragColor = vec4(pow(clamp(c, 0.0, 1.0), vec3(1.0 / 2.2)), 1.0);
         }`,
     });

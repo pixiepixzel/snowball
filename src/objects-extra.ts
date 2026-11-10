@@ -17,6 +17,30 @@ const WHITE = 0xffffff;
 const DARK = 0x22262e;
 const GOLD = 0xf2c230;
 
+// ------------------------------------------------------------------ Snowy Mountain
+
+/** Penguin: a small round penguin in a scarf. The scarf is the part that takes the tint. */
+export const penguin = () => {
+  const coat = 0x2a3140;
+  const front = 0xeef2f8;
+  const orange = 0xff9a1a;
+  return merge([
+    blob(0.6, coat, { y: 0.78, sy: 1.25 }, 1),
+    blob(0.47, front, { y: 0.72, z: -0.2, sy: 1.25 }, 1),
+    blob(0.42, coat, { y: 1.62 }, 1),
+    blob(0.29, front, { y: 1.58, z: -0.2, sy: 0.9 }, 1),
+    blob(0.055, 0x12141a, { x: -0.13, y: 1.68, z: -0.44 }),
+    blob(0.055, 0x12141a, { x: 0.13, y: 1.68, z: -0.44 }),
+    spike(0.1, 0.24, orange, [0, 1.54, -0.42], [0, -0.15, -1], 5),
+    blob(0.15, coat, { x: -0.62, y: 0.86, sy: 2.3, sz: 0.8, rz: -0.28 }),
+    blob(0.15, coat, { x: 0.62, y: 0.86, sy: 2.3, sz: 0.8, rz: 0.28 }),
+    blob(0.17, orange, { x: -0.22, y: 0.07, z: -0.22, sy: 0.4, sz: 1.5 }),
+    blob(0.17, orange, { x: 0.22, y: 0.07, z: -0.22, sy: 0.4, sz: 1.5 }),
+    torus(0.4, 0.1, WHITE, { y: 1.24 }, 10, 5),
+    box(0.16, 0.42, 0.07, WHITE, { x: 0.28, y: 0.8, z: -0.46 }),
+  ]);
+};
+
 // ------------------------------------------------------------------ Lost World
 
 /** Tree fern: a shaggy trunk with a wide crown of fronds that arch out and droop. */
@@ -285,5 +309,215 @@ export const toyCastle = () => {
       }
     }
   }
+  return merge(parts);
+};
+
+// ------------------------------------------------------------------ Rebuilt models
+// Models that did not read as what they are named, or were a near-copy of another.
+
+/** Dragonfly (Lost World): a long segmented tail, a big-eyed head and four pale wings. It hovers and turns. */
+export const dragonfly = () => {
+  const body = 0x2aa6c8;
+  const dark = 0x1f8aa8;
+  const parts: Parts = [
+    blob(0.2, dark, { y: 0.9, z: -0.62 }, 1),
+    blob(0.09, 0xff7a3a, { x: -0.13, y: 0.97, z: -0.72 }),
+    blob(0.09, 0xff7a3a, { x: 0.13, y: 0.97, z: -0.72 }),
+    blob(0.2, body, { y: 0.9, z: -0.32, sz: 1.4 }, 1),
+  ];
+  for (let i = 0; i < 6; i++) parts.push(blob(0.12 - i * 0.012, i % 2 ? dark : body, { y: 0.9, z: 0.02 + i * 0.19, sz: 1.3 }));
+  for (const side of [-1, 1]) {
+    parts.push(box(0.85, 0.02, 0.26, 0xc8f0ff, { x: side * 0.52, y: 1.0, z: -0.42, rz: side * 0.2 }));
+    parts.push(box(0.74, 0.02, 0.22, 0xa8e0f8, { x: side * 0.46, y: 0.98, z: -0.14, rz: side * 0.14 }));
+  }
+  return merge(parts);
+};
+
+/** Pterodactyl (Lost World): perched on a rock, wings raised, with a long beak and a crest. */
+export const pterodactyl = () => {
+  const skin = 0xc87a4a;
+  const dark = 0x9a5a34;
+  const parts: Parts = [
+    speckle(blob(0.55, 0x8a7a6a, { y: 0.2, sy: 0.42 }, 1), 0.08),
+    blob(0.3, skin, { y: 0.95, sy: 1.3 }, 1),
+    taper(0.13, 0.1, skin, [0, 1.2, -0.1], [0, 1.6, -0.3], 6),
+    blob(0.17, skin, { y: 1.66, z: -0.34 }, 1),
+    spike(0.1, 0.62, 0xf2c14e, [0, 1.64, -0.44], [0, -0.12, -1], 5),
+    spike(0.09, 0.5, dark, [0, 1.72, -0.26], [0, 0.45, 1], 4),
+    blob(0.035, 0x12141a, { x: -0.1, y: 1.73, z: -0.44 }),
+    blob(0.035, 0x12141a, { x: 0.1, y: 1.73, z: -0.44 }),
+    spike(0.07, 0.42, skin, [0, 0.8, 0.2], [0, -0.3, 1], 4),
+  ];
+  for (const side of [-1, 1]) {
+    parts.push(taper(0.06, 0.03, dark, [side * 0.2, 1.2, 0], [side * 1.0, 1.78, 0.05], 5));
+    parts.push(box(0.92, 0.03, 0.5, 0xe0a070, { x: side * 0.58, y: 1.38, z: 0.12, rz: side * 0.6 }));
+    parts.push(cyl(0.04, 0.04, 0.4, dark, { x: side * 0.12, y: 0.34 }, 5));
+  }
+  return merge(parts);
+};
+
+/** Scarab (Ancient Desert): a jewel beetle with a gold rim, rolling a little sun in front of it. */
+export const scarab = () => {
+  const parts: Parts = [
+    blob(0.5, 0x2a5ac8, { y: 0.75, sy: 0.55, sz: 1.3 }, 1),
+    box(0.05, 0.05, 1.15, GOLD, { y: 0.99, z: 0.05 }),
+    blob(0.3, 0x1f3f9a, { y: 0.72, z: -0.62, sy: 0.6 }, 1),
+    blob(0.13, 0x12141a, { y: 0.72, z: -0.9, sy: 0.6 }),
+    torus(0.52, 0.05, GOLD, { y: 0.74, sz: 1.3 }, 12, 4),
+    blob(0.2, 0xff8a1a, { y: 0.86, z: -1.12 }, 1),
+  ];
+  for (const side of [-1, 1]) {
+    for (let i = 0; i < 3; i++) parts.push(beam(0.05, 0x12141a, [side * 0.4, 0.66, -0.4 + i * 0.4], [side * 0.85, 0.42, -0.5 + i * 0.5]));
+  }
+  return merge(parts);
+};
+
+/** Sarcophagus (Ancient Desert): a gold mummy case lying on a stone slab, with a striped headdress, a face and crossed arms. */
+export const sarcophagus = () => {
+  const blue = 0x2a5ac8;
+  const parts: Parts = [
+    frustum(0.9, 2.0, 0.8, 1.9, 0.28, 0x8a6a3a, {}),
+    frustum(0.72, 1.3, 0.56, 1.2, 0.3, GOLD, { y: 0.28, z: 0.3 }),
+    box(0.84, 0.36, 0.56, blue, { y: 0.28, z: -0.62 }),
+    blob(0.2, 0xf2d27a, { y: 0.66, z: -0.62, sy: 0.6 }, 1),
+    blob(0.035, 0x12141a, { x: -0.07, y: 0.75, z: -0.67 }),
+    blob(0.035, 0x12141a, { x: 0.07, y: 0.75, z: -0.67 }),
+    box(0.07, 0.06, 0.2, blue, { y: 0.58, z: -0.38 }),
+    box(0.6, 0.06, 0.1, 0xc8402a, { y: 0.58, z: -0.06, ry: 0.5 }),
+    box(0.6, 0.06, 0.1, 0x2aa6c8, { y: 0.58, z: -0.06, ry: -0.5 }),
+  ];
+  for (let i = 0; i < 4; i++) parts.push(box(0.86, 0.37, 0.05, GOLD, { y: 0.28, z: -0.84 + i * 0.14 }));
+  for (let i = 0; i < 3; i++) parts.push(box(0.6 - i * 0.04, 0.04, 0.08, i % 2 ? blue : 0xc8402a, { y: 0.58, z: 0.3 + i * 0.25 }));
+  return merge(parts);
+};
+
+/** Eel (Under the Sea): a moray rising out of its hole in a rock, mouth open. */
+export const eel = () => {
+  const green = 0x3f8a6a;
+  const light = 0x4a9a76;
+  const parts: Parts = [speckle(blob(0.6, 0x6a7a8a, { y: 0.2, sy: 0.45 }, 1), 0.08), blob(0.26, 0x2a3440, { y: 0.4, sy: 0.3 })];
+  const pts: V3[] = [
+    [0, 0.35, 0.1],
+    [0.12, 0.75, 0.05],
+    [0.05, 1.15, -0.1],
+    [-0.12, 1.5, -0.2],
+    [-0.05, 1.78, -0.42],
+  ];
+  for (let i = 0; i < 4; i++) parts.push(taper(0.2 - i * 0.02, 0.18 - i * 0.02, i % 2 ? green : light, pts[i], pts[i + 1], 7));
+  for (let i = 1; i < 4; i++) parts.push(blob(0.19 - i * 0.02, green, { x: pts[i][0], y: pts[i][1], z: pts[i][2] }));
+  parts.push(
+    blob(0.2, light, { x: -0.05, y: 1.82, z: -0.5, sz: 1.5 }, 1),
+    box(0.2, 0.05, 0.3, 0x2f6a52, { x: -0.05, y: 1.62, z: -0.6, rx: 0.35 }),
+    box(0.14, 0.03, 0.2, 0xff8a9a, { x: -0.05, y: 1.67, z: -0.58, rx: 0.2 }),
+    blob(0.05, GOLD, { x: -0.19, y: 1.92, z: -0.6 }),
+    blob(0.05, GOLD, { x: 0.09, y: 1.92, z: -0.6 }),
+    blob(0.05, GOLD, { x: 0.2, y: 0.95, z: -0.06 }),
+    blob(0.05, GOLD, { x: -0.16, y: 1.32, z: -0.26 }),
+  );
+  return merge(parts);
+};
+
+/** Sugar star (Candy World): a fat five-pointed star standing on edge, so it flashes as it turns. */
+export const sugarStar = () => {
+  const parts: Parts = [blob(0.42, 0xff7ab8, { y: 1.0, sz: 0.55 }, 1)];
+  for (let i = 0; i < 5; i++) {
+    const a = PI / 2 + (i / 5) * TAU;
+    parts.push(spike(0.3, 0.72, i % 2 ? 0xff9ac8 : 0xff7ab8, [Math.cos(a) * 0.22, 1.0 + Math.sin(a) * 0.22, 0], [Math.cos(a), Math.sin(a), 0], 5));
+  }
+  const sprinkles = [0xffffff, 0xffd23f, 0x5ad0ff, 0xfdfdfd];
+  for (let i = 0; i < 6; i++) {
+    const a = i * 1.05;
+    for (const z of [-0.24, 0.24]) parts.push(blob(0.05, sprinkles[i % 4], { x: Math.cos(a) * 0.2, y: 1.0 + Math.sin(a) * 0.2, z }));
+  }
+  return merge(parts);
+};
+
+/** Feather (Sky Kingdom): a curved quill with barbs either side, widest in the middle. */
+export const feather = () => {
+  const parts: Parts = [taper(0.035, 0.015, 0xf4f8ff, [0, 0.15, 0], [0.3, 1.95, 0], 5)];
+  for (let i = 0; i < 9; i++) {
+    const t = 0.22 + i * 0.085;
+    const px = 0.3 * t;
+    const py = 0.15 + 1.8 * t;
+    const len = 0.5 * Math.sin(PI * (0.15 + 0.8 * (i / 8))) + 0.12;
+    const blue = i % 2 ? 0x8ac8ff : 0xb8e0ff;
+    parts.push(beam(0.17, blue, [px, py, 0], [px - len, py + len * 0.55, 0], 0.03));
+    parts.push(beam(0.17, blue, [px, py, 0], [px + len * 0.9, py + len * 0.3, 0], 0.03));
+  }
+  return merge(parts);
+};
+
+/** Kite (Sky Kingdom): a diamond kite standing on its point, with a tail of bows. */
+export const kite = () => {
+  const parts: Parts = [
+    cone(0.55, 0.6, 0xe8402a, { y: 1.25, sz: 0.06 }, 4),
+    cone(0.55, 1.05, 0xffc23a, { y: 0.2, sz: 0.06, rx: PI }, 4),
+    box(0.04, 1.65, 0.05, 0x8a5a2a, { y: 0.2, z: 0.03 }),
+    box(1.1, 0.04, 0.05, 0x8a5a2a, { y: 1.23, z: 0.03 }),
+    taper(0.015, 0.015, 0xf4f8ff, [0, 0.2, 0], [0.3, 0.03, 0.7], 4),
+  ];
+  const bows = [0x3f7de0, 0xff7ab8, 0x54b86a];
+  for (let i = 0; i < 3; i++) parts.push(blob(0.07, bows[i], { x: 0.08 + i * 0.09, y: 0.16 - i * 0.045, z: 0.18 + i * 0.2, sx: 1.8 }));
+  return merge(parts);
+};
+
+/** Beanstalk (Sky Kingdom): a thick stalk winding up to a cloud, with a big leaf at every turn. */
+export const beanstalk = () => {
+  const parts: Parts = [];
+  const turns = 9;
+  const at = (i: number): V3 => {
+    const a = i * 0.9;
+    const r = 0.17 * (1 - i / (turns * 1.6));
+    return [Math.cos(a) * r, (i / turns) * 1.8, Math.sin(a) * r];
+  };
+  for (let i = 0; i < turns; i++) parts.push(taper(0.13 - i * 0.008, 0.122 - i * 0.008, i % 2 ? 0x4ab85a : 0x3f9a4a, at(i), at(i + 1), 6));
+  for (let i = 1; i < turns; i++) {
+    const [x, y, z] = at(i);
+    const a = i * 0.9 + 1.2;
+    parts.push(beam(0.22, i % 2 ? 0x6fd06a : 0x58b85a, [x, y, z], [x + Math.cos(a) * 0.5, y + 0.14, z + Math.sin(a) * 0.5], 0.03));
+  }
+  parts.push(blob(0.32, 0xfdfdff, { y: 1.9, sy: 0.7 }, 1), blob(0.22, 0xf4f8ff, { x: 0.3, y: 1.84, sy: 0.7 }, 1), blob(0.2, 0xf4f8ff, { x: -0.28, y: 1.86, z: 0.1, sy: 0.7 }, 1));
+  return merge(parts);
+};
+
+/** Beacon (Space): a striped mast on a tripod with a red lamp on top and a small solar panel. */
+export const beacon = () => {
+  const steel = 0x6a7383;
+  const parts: Parts = [
+    beam(0.05, steel, [0, 0.5, 0], [0.42, 0, 0.25]),
+    beam(0.05, steel, [0, 0.5, 0], [-0.42, 0, 0.25]),
+    beam(0.05, steel, [0, 0.5, 0], [0, 0, -0.48]),
+    cyl(0.16, 0.16, 0.08, 0x3a4150, { y: 1.6 }, 8),
+    blob(0.17, 0xff3b30, { y: 1.83 }, 1),
+    cyl(0.12, 0.18, 0.05, 0x3a4150, { y: 1.97 }, 8),
+    box(0.5, 0.03, 0.3, 0x2a5ac8, { x: 0.3, y: 1.08, rz: 0.4 }),
+  ];
+  for (let i = 0; i < 4; i++) parts.push(cyl(0.075, 0.075, 0.3, i % 2 ? 0xf0f2f6 : 0xe2473c, { y: 0.4 + i * 0.3 }, 7));
+  return merge(parts);
+};
+
+/** Mega rocket (Space): a tall moon rocket in stages, standing on its pad beside a red gantry. */
+export const megaRocket = () => {
+  const white = 0xf0f2f6;
+  const black = 0x22262e;
+  const red = 0xc8402a;
+  const parts: Parts = [
+    box(1.3, 0.1, 1.3, 0x5a6270, {}),
+    cyl(0.3, 0.3, 0.75, white, { y: 0.22 }, 10),
+    cyl(0.305, 0.305, 0.1, black, { y: 0.5 }, 10),
+    cyl(0.24, 0.3, 0.12, black, { y: 0.97 }, 10),
+    cyl(0.24, 0.24, 0.4, white, { y: 1.09 }, 10),
+    cyl(0.16, 0.24, 0.12, white, { y: 1.49 }, 10),
+    cyl(0.16, 0.16, 0.16, 0xe2473c, { y: 1.61 }, 10),
+    cone(0.16, 0.2, white, { y: 1.77 }, 10),
+    cyl(0.015, 0.015, 0.16, 0x9aa3ad, { y: 1.95 }, 4),
+    box(0.16, 1.5, 0.16, red, { x: -0.54, y: 0.1 }),
+  ];
+  for (const x of [-0.14, 0.14]) for (const z of [-0.14, 0.14]) parts.push(cone(0.1, 0.14, black, { x, y: 0.09, z }, 6));
+  for (let i = 0; i < 4; i++) {
+    const a = (i / 4) * TAU + PI / 4;
+    parts.push(box(0.05, 0.28, 0.2, 0xe2473c, { x: Math.cos(a) * 0.36, y: 0.22, z: Math.sin(a) * 0.36, ry: -a + PI / 2 }));
+  }
+  for (const y of [0.55, 1.0, 1.45]) parts.push(box(0.3, 0.04, 0.06, red, { x: -0.36, y }));
   return merge(parts);
 };
