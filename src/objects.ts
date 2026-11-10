@@ -13,6 +13,7 @@
  */
 import type { BufferGeometry } from 'three';
 import type { RarityId } from './config';
+import { themedVariants } from './objects-themed';
 import { VARIANTS } from './objects-variants';
 import * as C from './objects-candy';
 import * as E from './objects-desert';
@@ -1528,10 +1529,13 @@ export const OBJECT_DEFS: ObjectDef[] = [
  * the ordinary one's size and numbers, so it plays the same.
  */
 export const VARIANTS_OF = new Map<string, ObjectDef[]>();
-for (const [baseId, list] of Object.entries(VARIANTS)) {
-  const base = OBJECT_DEFS.find((def) => def.id === baseId);
-  if (!base) throw new Error(`objects-variants.ts: no object called "${baseId}"`);
-  const made = list.map((variant): ObjectDef => ({ ...base, tints: undefined, capacity: 40, ...variant, variantOf: baseId }));
-  VARIANTS_OF.set(baseId, made);
+for (const base of OBJECT_DEFS.filter((def) => !def.special)) {
+  // A few objects have rarer versions modelled by hand; every other one gets its own
+  // model dressed up in its world's theme (snowy, frozen, Christmas, golden...).
+  const hand = VARIANTS[base.id];
+  const made = hand
+    ? hand.map((variant): ObjectDef => ({ ...base, tints: undefined, capacity: 40, ...variant, variantOf: base.id }))
+    : themedVariants(base, base.world ?? 0).map((variant): ObjectDef => ({ ...base, capacity: 40, ...variant, variantOf: base.id }));
+  VARIANTS_OF.set(base.id, made);
   OBJECT_DEFS.push(...made);
 }

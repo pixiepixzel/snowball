@@ -375,6 +375,8 @@ export class World {
   private riverSpawned = false;
   /** Walls at or before this distance are not built (see reset: where the run started). */
   private noGateBefore = 0;
+  /** The one material every object is drawn with. */
+  private material!: THREE.Material;
   /** Height of every model in its own units, by object id. */
   private tops = new Map<string, number>();
 
@@ -392,20 +394,10 @@ export class World {
           '#include <color_vertex>\n#ifdef USE_INSTANCING_COLOR\n\tvColor.xyz = color.rgb * mix( vec3( 1.0 ), instanceColor.xyz, tintMask );\n#endif',
         );
     };
-    for (const def of OBJECT_DEFS) {
-      const geometry = def.build();
-      // How tall the model really is, in its own units: what the ball has to get over.
-      geometry.computeBoundingBox();
-      this.tops.set(def.id, def.height ?? geometry.boundingBox?.max.y ?? 2);
-      if (def.flat) layOnSlope(geometry);
-      addTintMask(geometry, !!def.tints);
-      const pool = new InstancePool(geometry, material, def.capacity ?? 220);
-      pool.mesh.castShadow = !def.flat;
-      pool.mesh.receiveShadow = !!def.flat;
-      this.pools.set(def.id, pool);
-      this.poolList.push(pool);
-      scene.add(pool.mesh);
-    }
+    this.material = material;
+    // The ordinary objects are built now. The rarer versions (there are about a thousand)
+    // are only built the first time one turns up: see poolOf.
+    for (const def of OBJECT_DEFS) if (!def.variantOf) this.makePool(def);
 
     // Ground discs, one draw call for all: the pale drift marks and (only when real
     // shadows are off) simple blob shadows.
@@ -456,7 +448,24 @@ export class World {
   }
 
   poolOf(def: ObjectDef): InstancePool {
-    return this.pools.get(def.id) as InstancePool;
+    return this.pools.get(def.id) ?? this.makePool(def);
+  }
+
+  /** Build an object's model and the pool that draws every copy of it. */
+  private makePool(def: ObjectDef): InstancePool {
+    const geometry = def.build();
+    // How tall the model really is, in its own units: what the ball has to get over.
+    geometry.computeBoundingBox();
+    this.tops.set(def.id, def.height ?? geometry.boundingBox?.max.y ?? 2);
+    if (def.flat) layOnSlope(geometry);
+    addTintMask(geometry, !!def.tints);
+    const pool = new InstancePool(geometry, this.material, def.capacity ?? 220);
+    pool.mesh.castShadow = !def.flat;
+    pool.mesh.receiveShadow = !!def.flat;
+    this.pools.set(def.id, pool);
+    this.poolList.push(pool);
+    this.scene.add(pool.mesh);
+    return pool;
   }
 
   /** @param startD where the run begins (0 normally; further down for demos that skip ahead) */

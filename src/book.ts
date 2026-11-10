@@ -17,6 +17,12 @@ export interface BookPage {
   defs: ObjectDef[];
 }
 
+/** Smallest first, and each ordinary thing followed straight away by its rarer versions. */
+function inOrder(defs: ObjectDef[]): ObjectDef[] {
+  const ordinary = defs.filter((d) => !d.variantOf).sort((a, b) => a.size - b.size);
+  return ordinary.flatMap((d) => [d, ...defs.filter((v) => v.variantOf === d.id)]);
+}
+
 export const BOOK_PAGES: BookPage[] = [
   ...WORLD_ORDER.map((key): BookPage => {
     // An object's `world` number is the world's place in WORLDS.
@@ -25,7 +31,7 @@ export const BOOK_PAGES: BookPage[] = [
       key,
       name: WORLDS[index].name,
       reward: BOOK_PAGE_REWARD,
-      defs: OBJECT_DEFS.filter((d) => !d.special && (d.world ?? 0) === index).sort((a, b) => a.size - b.size),
+      defs: inOrder(OBJECT_DEFS.filter((d) => !d.special && (d.world ?? 0) === index)),
     };
   }),
   { key: 'secrets', name: 'Secrets', reward: BOOK_SECRETS_REWARD, defs: OBJECT_DEFS.filter((d) => d.special === 'secret') },

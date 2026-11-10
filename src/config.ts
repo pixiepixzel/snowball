@@ -568,8 +568,9 @@ export const SKINS: SkinDef[] = [
 
 // ---------------------------------------------------------------- Rarities
 /**
- * Each world's most common tall thing (its tree, or what stands in for one) has rarer
- * versions that now and then turn up in its place (objects-variants.ts). For each rarity:
+ * Every ordinary object has rarer versions that now and then turn up in its place: its own
+ * model dressed in its world's theme (objects-themed.ts), or for a few a model of their
+ * own (objects-variants.ts). For each rarity:
  *   chance  how often one replaces the ordinary object when that object is placed
  *           (the Lucky charm upgrade multiplies all of these)
  *   coins   bonus coins for absorbing one
@@ -579,9 +580,9 @@ export const SKINS: SkinDef[] = [
 export type RarityId = 'uncommon' | 'rare' | 'superRare' | 'mythic';
 export const RARITIES: { id: RarityId; name: string; chance: number; coins: number; color: string }[] = [
   { id: 'uncommon', name: 'Uncommon', chance: 0.12, coins: 0, color: '#2f9a4a' },
-  { id: 'rare', name: 'Rare', chance: 0.05, coins: 2, color: '#2f6fd0' },
-  { id: 'superRare', name: 'Super rare', chance: 0.018, coins: 6, color: '#9a4fd0' },
-  { id: 'mythic', name: 'Mythic', chance: 0.005, coins: 25, color: '#d98a00' },
+  { id: 'rare', name: 'Rare', chance: 0.05, coins: 0, color: '#2f6fd0' },
+  { id: 'superRare', name: 'Super rare', chance: 0.018, coins: 2, color: '#9a4fd0' },
+  { id: 'mythic', name: 'Mythic', chance: 0.005, coins: 10, color: '#d98a00' },
 ];
 
 // ---------------------------------------------------------------- Collection book

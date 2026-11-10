@@ -835,10 +835,13 @@ export class Game {
     this.counts.set(def.id, (this.counts.get(def.id) ?? 0) + 1);
     // A rarer version of something: say so, and pay its bonus.
     const rarity = RARITIES.find((r) => r.id === def.rarity);
-    if (rarity && rarity.id !== 'uncommon') {
+    if (rarity) {
       this.runCoins += rarity.coins;
-      this.toasts.push(`${rarity.name}: ${def.name}! +${rarity.coins} coins`);
-      this.audio.chime();
+      // Rare ones turn up several times a run: only the really scarce get a pop-up.
+      if (rarity.id === 'superRare' || rarity.id === 'mythic') {
+        this.toasts.push(`${rarity.name}: ${def.name}! +${rarity.coins} coins`);
+        this.audio.chime();
+      }
     }
     this.stats.absorbs++;
     this.tally.absorb++;

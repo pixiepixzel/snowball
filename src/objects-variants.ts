@@ -80,34 +80,6 @@ const palmTrunk = (h: number, lean: number, a: number, b: number, x0 = 0, r = 0.
   return parts;
 };
 
-// ------------------------------------------------------------------ Snowy Mountain (small tree)
-
-const birch = () => {
-  const parts: Parts = [cyl(0.09, 0.12, 1.0, 0xeef0f2, {}, 6), ...canopy(0x9ad06a, 0xc8e07a, 1.35, 0.55)];
-  for (let i = 0; i < 4; i++) parts.push(box(0.1, 0.035, 0.03, 0x2a2f3a, { x: i % 2 ? 0.04 : -0.04, y: 0.2 + i * 0.2, z: -0.1 }));
-  return merge(parts);
-};
-const maple = () => merge([trunk(0x6b4a2e, 0.85, 0.14), ...canopy(0xe2473c, 0xff8a1a, 1.3, 0.66), blob(0.3, 0xffc23a, { x: 0.2, y: 1.75, z: -0.3 }, 1)]);
-const frostTree = () => {
-  const parts: Parts = [trunk(0x8fb4d8, 0.5, 0.1)];
-  [0xa8dcff, 0xc8ecff, 0xe6f8ff].forEach((c, i) => parts.push(grade(cone(0.66 - i * 0.16, 0.8, 0xffffff, { y: 0.4 + i * 0.42 }, 5), 0x6ab8f0, c)));
-  for (let i = 0; i < 6; i++) {
-    const a = (i / 6) * TAU;
-    parts.push(spike(0.07, 0.34, 0xe6f8ff, [Math.cos(a) * 0.45, 0.7 + (i % 3) * 0.3, Math.sin(a) * 0.45], [Math.cos(a), 0.5, Math.sin(a)], 4));
-  }
-  return merge(parts);
-};
-const goldenTree = () => {
-  const parts: Parts = [trunk(GOLD_DARK, 0.5, 0.11), ...tiers([GOLD, GOLD_PALE, GOLD]), ...star(1.98)];
-  for (let i = 0; i < 7; i++) {
-    const a = i * 2.4;
-    const y = 0.62 + (i % 4) * 0.3;
-    const r = 0.56 - (i % 4) * 0.12;
-    parts.push(blob(0.07, i % 2 ? 0xe2473c : 0xffffff, { x: Math.cos(a) * r, y, z: Math.sin(a) * r }));
-  }
-  return merge(parts);
-};
-
 // ------------------------------------------------------------------ Candy World (lollipop)
 
 /** A lollipop: a stick with a sweet on top, round, heart, star or ball. */
@@ -381,12 +353,6 @@ const v = (rarity: RarityId, id: string, name: string, color: number, build: () 
 
 /** Keyed by the id of the ordinary object each set stands in for. */
 export const VARIANTS: Record<string, Variant[]> = {
-  smallTree: [
-    v('uncommon', 'birch', 'birch tree', 0x9ad06a, birch),
-    v('rare', 'maple', 'red maple', 0xe2473c, maple),
-    v('superRare', 'frostTree', 'frost tree', 0xa8dcff, frostTree),
-    v('mythic', 'goldenTree', 'golden tree', GOLD, goldenTree),
-  ],
   lollipop: [
     v('uncommon', 'swirlPop', 'mint swirl lollipop', 0x3fb85a, () => lolly(disc(0x3fb85a, 0xfdfdfd))),
     v('rare', 'heartPop', 'heart lollipop', 0xff5a9a, heartPop),
