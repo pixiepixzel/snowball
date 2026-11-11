@@ -546,3 +546,337 @@ export const bestFlag = () => {
   }
   return merge(parts);
 };
+
+// ------------------------------------------------------------------ Second round of rebuilt models
+// Models that were hard to recognise: four different things that were all "a ball with
+// spikes", some shapeless lumps, and a few that just didn't read as what they are called.
+
+const DARK_EYE = 0x12141a;
+
+/** Thorn bush (Lost World): a clump of dark leaves bristling with long pale thorns, with red berries. */
+export const thornBush = () => {
+  const parts: Parts = [
+    speckle(blob(0.62, 0x2f6a3a, { y: 0.6, sy: 0.85 }, 1), 0.1, 1),
+    speckle(blob(0.5, 0x3f8a4a, { x: 0.45, y: 0.5, z: 0.15, sy: 0.8 }, 1), 0.1, 2),
+    speckle(blob(0.48, 0x357a40, { x: -0.45, y: 0.52, z: -0.1, sy: 0.8 }, 1), 0.1, 3),
+    speckle(blob(0.42, 0x3f8a4a, { y: 1.05, z: 0.05 }, 1), 0.1, 4),
+  ];
+  for (let i = 0; i < 12; i++) {
+    const a = i * 2.4;
+    const up = 0.2 + (i % 4) * 0.25;
+    const dir: V3 = [Math.cos(a), up, Math.sin(a)];
+    parts.push(spike(0.075, 0.62, 0xf2ead2, [Math.cos(a) * 0.6, 0.45 + up * 0.6, Math.sin(a) * 0.6], dir, 4));
+  }
+  for (let i = 0; i < 5; i++) parts.push(blob(0.08, 0xe2473c, { x: Math.cos(i * 1.9) * 0.55, y: 0.5 + (i % 3) * 0.25, z: Math.sin(i * 1.9) * 0.55 }));
+  return merge(parts);
+};
+
+/** Sea urchin (Under the Sea): a small dome on the sand with a great many long, thin spines. */
+export const urchin = () => {
+  const parts: Parts = [speckle(blob(0.6, 0xd8c8a8, { y: 0.06, sy: 0.25 }, 1), 0.06), blob(0.42, 0x4a2a80, { y: 0.45, sy: 0.85 }, 1)];
+  for (let i = 0; i < 22; i++) {
+    const a = i * 2.4;
+    const up = 0.15 + (i % 6) * 0.3;
+    const dir: V3 = [Math.cos(a), up, Math.sin(a)];
+    const len = Math.hypot(dir[0], dir[1], dir[2]);
+    const base: V3 = [(dir[0] / len) * 0.36, 0.45 + (dir[1] / len) * 0.32, (dir[2] / len) * 0.36];
+    parts.push(spike(0.035, 0.95, i % 3 ? 0x6a4aa8 : 0xc8a0ff, base, dir, 4));
+  }
+  return merge(parts);
+};
+
+/** Space mine (Space): a metal sphere with stubby red-tipped horns and a blinking light, hanging on a tether. */
+export const spaceMine = () => {
+  const parts: Parts = [
+    cyl(0.3, 0.36, 0.1, 0x3a4150, {}, 8),
+    cyl(0.03, 0.03, 0.5, 0x9aa3ad, { y: 0.1 }, 4),
+    blob(0.58, 0x4a5262, { y: 1.1 }, 1),
+    torus(0.59, 0.05, 0xffc23a, { y: 1.1 }, 14, 4),
+    cyl(0.06, 0.06, 0.14, 0x22262e, { y: 1.66 }, 6),
+    blob(0.09, 0xff3b30, { y: 1.86 }),
+  ];
+  for (let i = 0; i < 8; i++) {
+    const a = (i / 8) * TAU;
+    const up = i % 2 ? 0.45 : -0.25;
+    const dir: V3 = [Math.cos(a), up, Math.sin(a)];
+    const len = Math.hypot(dir[0], dir[1], dir[2]);
+    const at = (k: number): V3 => [(dir[0] / len) * k, 1.1 + (dir[1] / len) * k, (dir[2] / len) * k];
+    parts.push(taper(0.09, 0.07, 0x6a7383, at(0.52), at(0.74), 6), blob(0.08, 0xff3b30, { x: at(0.78)[0], y: at(0.78)[1], z: at(0.78)[2] }));
+  }
+  return merge(parts);
+};
+
+/** Tumbleweed (Ancient Desert): an airy ball of dry twigs, hoops of them crossing every way. */
+export const tumbleweed = () => {
+  const parts: Parts = [];
+  const twig = [0xa8864a, 0xc8a460, 0x8a6a3a];
+  for (let i = 0; i < 7; i++) {
+    parts.push(torus(0.62 - (i % 3) * 0.06, 0.035, twig[i % 3], { y: 0.72, rx: i * 0.9, rz: i * 1.3, ry: i * 0.5 }, 9, 3));
+  }
+  for (let i = 0; i < 8; i++) {
+    const a = i * 2.4;
+    const dir: V3 = [Math.cos(a), 0.3 + (i % 3) * 0.4 - 0.4, Math.sin(a)];
+    parts.push(spike(0.025, 0.3, twig[(i + 1) % 3], [Math.cos(a) * 0.55, 0.72 + dir[1] * 0.4, Math.sin(a) * 0.55], dir, 3));
+  }
+  return merge(parts);
+};
+
+/** Mossy boulder (Lost World): three sharp-cut rocks, thick moss over their tops, a fern and a toadstool. */
+export const mossyBoulder = () => {
+  const parts: Parts = [
+    speckle(blob(0.85, 0x8a8478, { y: 0.62, sy: 0.85 }, 0), 0.12, 1),
+    speckle(blob(0.55, 0x7a7468, { x: 0.75, y: 0.38, z: 0.25, sy: 0.8 }, 0), 0.12, 2),
+    speckle(blob(0.45, 0x9a9488, { x: -0.7, y: 0.3, z: 0.3, sy: 0.75 }, 0), 0.12, 3),
+    blob(0.62, 0x4a9a3a, { y: 1.2, sy: 0.35 }, 1),
+    blob(0.4, 0x5ab04a, { x: 0.75, y: 0.72, z: 0.25, sy: 0.35 }, 1),
+    blob(0.32, 0x4a9a3a, { x: -0.7, y: 0.56, z: 0.3, sy: 0.35 }, 1),
+    cyl(0.05, 0.06, 0.2, 0xf2ead2, { x: 0.25, y: 1.3, z: -0.2 }, 5),
+    blob(0.14, 0xd9412e, { x: 0.25, y: 1.52, z: -0.2, sy: 0.6 }),
+  ];
+  for (let i = 0; i < 5; i++) {
+    const a = -0.9 + i * 0.45;
+    parts.push(beam(0.08, 0x6fbf5a, [-0.3, 1.25, 0.1], [-0.3 + Math.sin(a) * 0.45, 1.6 - Math.abs(a) * 0.15, 0.1 + Math.cos(a) * 0.15], 0.02));
+  }
+  return merge(parts);
+};
+
+/** Rock spire (Lost World): a tall column of banded red rock worn thin in the middle, with a boulder balanced on top. */
+export const rockSpire = () => {
+  const parts: Parts = [];
+  const layers = [0x9a5a3a, 0xb8714a, 0xc88a5a, 0xa8603a, 0xd09a6a, 0xb8714a, 0x9a5a3a];
+  const widths = [0.62, 0.5, 0.4, 0.32, 0.3, 0.36, 0.44];
+  layers.forEach((c, i) => parts.push(speckle(cyl(widths[i] * 0.92, widths[i], 0.24, c, { y: i * 0.22, ry: i * 0.5 }, 7), 0.08, i + 1)));
+  parts.push(speckle(blob(0.5, 0x8a4a2e, { y: 1.78, sy: 0.6, sx: 1.15 }, 0), 0.1, 9));
+  return merge(parts);
+};
+
+/** Moon rock (Space): a pale chunk of moon, pitted with craters, with a tiny flag stuck in it. */
+export const moonRock = () => {
+  const parts: Parts = [speckle(blob(0.75, 0xc8ccd6, { y: 0.6, sy: 0.75 }, 1), 0.07)];
+  const pits: V3[] = [
+    [0.1, 1.1, -0.3],
+    [-0.45, 0.85, -0.4],
+    [0.5, 0.75, -0.42],
+    [-0.1, 0.55, -0.72],
+    [0.35, 1.0, 0.25],
+  ];
+  for (const [x, y, z] of pits) parts.push(blob(0.16, 0x7a7e8a, { x, y, z, sy: 0.5 }), torus(0.17, 0.03, 0xe6e8ee, { x, y: y + 0.02, z }, 8, 3));
+  parts.push(cyl(0.02, 0.02, 0.6, 0xe8eef8, { x: -0.2, y: 1.1 }, 4), box(0.3, 0.2, 0.02, 0xe2473c, { x: -0.04, y: 1.5 }));
+  return merge(parts);
+};
+
+/** Asteroid (Space): a dark, knobbly lump of rock with veins of glowing ore and crystals breaking out of it. */
+export const asteroid = () => {
+  const parts: Parts = [
+    speckle(blob(0.8, 0x5a5048, { y: 0.9, sx: 1.15, sy: 0.9 }, 0), 0.14, 1),
+    speckle(blob(0.5, 0x6a5e54, { x: 0.6, y: 1.25, z: 0.2 }, 0), 0.14, 2),
+    speckle(blob(0.45, 0x4a423c, { x: -0.6, y: 0.6, z: -0.2 }, 0), 0.14, 3),
+    beam(0.06, 0x5ae0ff, [-0.5, 0.5, -0.62], [0.1, 1.0, -0.74], 0.03),
+    beam(0.05, 0x5ae0ff, [0.1, 1.0, -0.74], [0.6, 0.85, -0.6], 0.03),
+  ];
+  const shards: [V3, V3][] = [
+    [[0.4, 1.55, 0], [0.4, 1, 0.1]],
+    [[-0.3, 1.5, -0.2], [-0.4, 1, -0.2]],
+    [[0.85, 0.8, -0.3], [1, 0.3, -0.3]],
+    [[-0.9, 0.9, 0.1], [-1, 0.5, 0.2]],
+  ];
+  for (const [base, dir] of shards) parts.push(spike(0.11, 0.42, 0x8ff0ff, base, dir, 4));
+  return merge(parts);
+};
+
+/** Bubble (Under the Sea): a big round bubble with a bright glint and a ring of light, and two little ones beside it. */
+export const bubble = () =>
+  merge([
+    blob(0.7, 0xbfeaff, { y: 1.0 }, 2),
+    torus(0.71, 0.03, 0xffffff, { y: 1.0, rx: PI / 2 }, 16, 3),
+    blob(0.2, 0xffffff, { x: -0.3, y: 1.32, z: -0.5, sx: 1.3, sz: 0.4 }),
+    blob(0.08, 0xffffff, { x: -0.05, y: 1.5, z: -0.5, sz: 0.4 }),
+    blob(0.24, 0xd8f4ff, { x: 0.75, y: 0.45, z: 0.1 }, 1),
+    blob(0.15, 0xd8f4ff, { x: -0.7, y: 0.3, z: -0.2 }, 1),
+    blob(0.06, 0xffffff, { x: 0.68, y: 0.55, z: -0.1 }),
+  ]);
+
+/** Triceratops (Lost World): four sturdy legs, a big bony frill, three horns and a beak. Faces -Z. */
+export const triceratops = () => {
+  const hide = 0xb5764a;
+  const dark = 0x8a5632;
+  const parts: Parts = [
+    blob(0.6, hide, { y: 0.85, z: 0.25, sz: 1.5, sy: 0.85 }, 1),
+    taper(0.3, 0.08, hide, [0, 0.85, 0.95], [0, 0.55, 1.6], 6),
+    blob(0.4, hide, { y: 0.9, z: -0.75, sz: 1.2 }, 1),
+    // The frill: a wide fan standing up behind the head.
+    cyl(0.56, 0.56, 0.1, dark, { y: 1.05, z: -0.45, rx: PI / 2 - 0.35 }, 9),
+    cyl(0.42, 0.42, 0.12, 0xd8a070, { y: 1.06, z: -0.49, rx: PI / 2 - 0.35 }, 9),
+    spike(0.07, 0.6, 0xf2ead2, [-0.2, 1.12, -0.9], [-0.15, 0.6, -1], 5),
+    spike(0.07, 0.6, 0xf2ead2, [0.2, 1.12, -0.9], [0.15, 0.6, -1], 5),
+    spike(0.06, 0.3, 0xf2ead2, [0, 0.95, -1.18], [0, 0.6, -1], 5),
+    spike(0.14, 0.26, 0xe8c070, [0, 0.72, -1.15], [0, -0.3, -1], 4),
+    blob(0.045, DARK_EYE, { x: -0.3, y: 0.98, z: -0.95 }),
+    blob(0.045, DARK_EYE, { x: 0.3, y: 0.98, z: -0.95 }),
+  ];
+  for (const x of [-0.36, 0.36]) for (const z of [-0.3, 0.75]) parts.push(cyl(0.15, 0.17, 0.55, dark, { x, z }, 6));
+  return merge(parts);
+};
+
+/** Candy bar (Candy World): a bar of chocolate half out of its bright wrapper, standing on end. */
+export const candyBar = () => {
+  const parts: Parts = [box(0.9, 1.0, 0.3, 0xe8408a, {}), box(0.92, 0.2, 0.32, 0xffd23f, { y: 0.4 }), box(0.94, 0.07, 0.34, 0xc9ced6, { y: 0.98 })];
+  for (let row = 0; row < 2; row++) {
+    for (const x of [-0.21, 0.21]) parts.push(box(0.38, 0.4, 0.24, 0x6a3e22, { x, y: 1.05 + row * 0.44 }), box(0.26, 0.26, 0.28, 0x8a5a36, { x, y: 1.12 + row * 0.44 }));
+  }
+  return merge(parts);
+};
+
+/** Rock candy (Candy World): a wooden stick crusted with chunky sugar crystals in pink and blue. */
+export const rockCandy = () => {
+  const parts: Parts = [cyl(0.05, 0.05, 1.0, 0xe0b070, {}, 5), blob(0.09, 0xe0b070, { y: 0.02 })];
+  const sugar = [0xff9ac8, 0x8ad0ff, 0xffc0dc, 0xb8e4ff, 0xd8a0ff];
+  for (let i = 0; i < 16; i++) {
+    const a = i * 2.4;
+    const y = 0.75 + (i / 16) * 1.05;
+    const out = 0.26 - Math.abs(i - 8) * 0.012;
+    const s = 0.2 + (i % 3) * 0.05;
+    parts.push(box(s, s, s, sugar[i % 5], { x: Math.cos(a) * out, y, z: Math.sin(a) * out, rx: i * 0.7, ry: i * 1.1 }));
+  }
+  parts.push(box(0.22, 0.22, 0.22, 0xffffff, { y: 1.85, ry: 0.6, rx: 0.5 }));
+  return merge(parts);
+};
+
+/** Thorn tangle (Spooky Hollow): bramble canes arching over, studded with thorns, with a few dark berries. */
+export const thornTangle = () => {
+  const parts: Parts = [];
+  const cane = [0x4a3a32, 0x5a4638, 0x3a2c28];
+  for (let i = 0; i < 5; i++) {
+    const turn = i * 1.26;
+    const reach = 0.75 - (i % 2) * 0.15;
+    const high = 1.5 - (i % 3) * 0.3;
+    const at = (t: number): V3 => {
+      const r = -reach + 2 * reach * t;
+      return [Math.cos(turn) * r, Math.sin(PI * t) * high + 0.02, Math.sin(turn) * r];
+    };
+    for (let k = 0; k < 6; k++) {
+      parts.push(taper(0.055, 0.05, cane[i % 3], at(k / 6), at((k + 1) / 6), 5));
+      const p = at((k + 0.5) / 6);
+      const side = k % 2 ? 1 : -1;
+      parts.push(spike(0.06, 0.34, 0xe8dfc8, p, [Math.cos(turn + 1.6) * side, 0.5, Math.sin(turn + 1.6) * side], 4));
+    }
+    const top = at(0.5);
+    if (i % 2 === 0) parts.push(blob(0.09, 0x6a3ab0, { x: top[0] + 0.1, y: top[1] - 0.12, z: top[2] }));
+  }
+  return merge(parts);
+};
+
+/** Desert runner (Ancient Desert): a traveller in a long robe and headscarf with a staff. Robe and scarf take the tint. */
+export const desertRunner = () =>
+  merge([
+    frustum(0.75, 0.6, 0.44, 0.34, 1.15, WHITE, {}),
+    box(0.5, 0.1, 0.38, 0x8a5a2a, { y: 0.78 }),
+    blob(0.24, 0xc8905a, { y: 1.42 }, 1),
+    blob(0.27, WHITE, { y: 1.5, z: 0.05, sy: 0.9 }, 1),
+    box(0.34, 0.5, 0.08, WHITE, { y: 0.98, z: 0.22 }),
+    blob(0.035, DARK_EYE, { x: -0.09, y: 1.44, z: -0.22 }),
+    blob(0.035, DARK_EYE, { x: 0.09, y: 1.44, z: -0.22 }),
+    taper(0.08, 0.06, WHITE, [-0.24, 1.1, 0], [-0.46, 0.7, -0.15], 5),
+    taper(0.08, 0.06, WHITE, [0.24, 1.1, 0], [0.5, 0.95, -0.25], 5),
+    blob(0.07, 0xc8905a, { x: 0.52, y: 0.95, z: -0.28 }),
+    cyl(0.03, 0.03, 1.75, 0x6b4a2e, { x: 0.55, z: -0.28 }, 5),
+    box(0.16, 0.06, 0.26, 0x6b4a2e, { x: -0.15, z: -0.1 }),
+    box(0.16, 0.06, 0.26, 0x6b4a2e, { x: 0.15, z: -0.1 }),
+  ]);
+
+/** Hang glider (Sky Kingdom): a wide striped wing on a triangular frame, with its pilot hanging underneath. */
+export const hangGlider = () => {
+  const parts: Parts = [];
+  const stripes = [0xffd23f, 0xe8402a, 0xffd23f, 0x3f8ae8, 0xffd23f];
+  // The wing: five panels fanning back from the nose, swept like an arrowhead.
+  stripes.forEach((c, i) => {
+    const x = (i - 2) * 0.4;
+    parts.push(box(0.4, 0.04, 1.4 - Math.abs(i - 2) * 0.45, c, { x, y: 1.25, z: Math.abs(i - 2) * 0.34, rx: -0.12 }));
+  });
+  parts.push(
+    beam(0.03, 0x9aa3ad, [0, 1.25, -0.5], [-0.35, 0.45, 0.1]),
+    beam(0.03, 0x9aa3ad, [0, 1.25, -0.5], [0.35, 0.45, 0.1]),
+    beam(0.03, 0x9aa3ad, [-0.35, 0.45, 0.1], [0.35, 0.45, 0.1]),
+    // The pilot, lying along under the wing.
+    blob(0.2, 0x3f7de0, { y: 0.8, z: 0.3, sz: 2.2 }, 1),
+    blob(0.15, 0xf2c8a0, { y: 0.84, z: -0.2 }, 1),
+    blob(0.16, 0xe8402a, { y: 0.9, z: -0.16, sy: 0.7 }),
+    cyl(0.012, 0.012, 0.4, 0x9aa3ad, { y: 0.85, z: 0.2 }, 3),
+  );
+  return merge(parts);
+};
+
+/** Alien obelisk (Space): a dark slab covered in glowing signs, a crystal burning on top and two rings turning round it. */
+export const alienObelisk = () => {
+  const parts: Parts = [
+    box(0.7, 0.08, 0.7, 0x22283a, {}),
+    frustum(0.42, 0.42, 0.26, 0.26, 1.55, 0x2a3048, { y: 0.08 }),
+    spike(0.16, 0.34, 0x5ae0ff, [0, 1.63, 0], [0, 1, 0], 4),
+    torus(0.5, 0.03, 0x5ae0ff, { y: 0.75, rx: 0.3 }, 14, 3),
+    torus(0.42, 0.025, 0xb06aff, { y: 1.2, rx: -0.35, rz: 0.2 }, 14, 3),
+  ];
+  // Signs down the front and back: bars, dots and angles.
+  for (let i = 0; i < 5; i++) {
+    const y = 0.3 + i * 0.26;
+    const w = 0.2 - i * 0.02;
+    for (const z of [-1, 1]) {
+      parts.push(box(i % 2 ? w : 0.05, 0.05, 0.03, 0x5ae0ff, { x: i % 2 ? 0 : -0.07, y, z: z * (0.21 - i * 0.016) }));
+      if (i % 2 === 0) parts.push(box(0.05, 0.05, 0.03, 0xb06aff, { x: 0.07, y, z: z * (0.21 - i * 0.016) }));
+    }
+  }
+  return merge(parts);
+};
+
+/** Eel (Under the Sea): a moray lunging out of a hole in the rock, jaws wide open showing its teeth. */
+export const morayEel = () => {
+  const green = 0x3f8a6a;
+  const light = 0x58b08a;
+  const parts: Parts = [speckle(blob(0.75, 0x6a7a8a, { y: 0.28, sy: 0.6 }, 0), 0.1, 1), blob(0.3, 0x1a2430, { y: 0.55, z: -0.35, sz: 0.5 })];
+  const spine: V3[] = [
+    [0, 0.5, -0.2],
+    [0.18, 0.9, -0.35],
+    [0.1, 1.3, -0.5],
+    [-0.1, 1.55, -0.75],
+  ];
+  for (let i = 0; i < 3; i++) parts.push(taper(0.22 - i * 0.015, 0.2 - i * 0.015, i % 2 ? light : green, spine[i], spine[i + 1], 7));
+  for (let i = 1; i < 3; i++) parts.push(blob(0.21 - i * 0.015, green, { x: spine[i][0], y: spine[i][1], z: spine[i][2] }));
+  parts.push(
+    // Upper and lower jaw, hinged open.
+    box(0.36, 0.14, 0.5, light, { x: -0.1, y: 1.62, z: -1.0, rx: -0.25 }),
+    box(0.32, 0.1, 0.46, green, { x: -0.1, y: 1.3, z: -0.95, rx: 0.4 }),
+    box(0.26, 0.04, 0.36, 0xff8a9a, { x: -0.1, y: 1.4, z: -0.95, rx: 0.4 }),
+    blob(0.2, light, { x: -0.1, y: 1.62, z: -0.72 }, 1),
+    blob(0.06, GOLD, { x: -0.27, y: 1.78, z: -0.86 }),
+    blob(0.06, GOLD, { x: 0.07, y: 1.78, z: -0.86 }),
+    blob(0.03, DARK_EYE, { x: -0.28, y: 1.78, z: -0.91 }),
+    blob(0.03, DARK_EYE, { x: 0.08, y: 1.78, z: -0.91 }),
+    box(0.03, 0.5, 0.2, 0x2f6a52, { x: 0.14, y: 0.75, z: -0.22 }),
+  );
+  for (const x of [-0.22, -0.1, 0.02]) parts.push(cone(0.03, 0.09, 0xffffff, { x, y: 1.5, z: -1.18, rx: PI }, 4), cone(0.03, 0.08, 0xffffff, { x, y: 1.4, z: -1.12 }, 4));
+  const whole = merge(parts);
+  whole.rotateY(-1.15);
+  whole.translate(-0.3, 0, 0);
+  return whole;
+};
+
+/** Sarcophagus (Ancient Desert): a golden mummy case standing upright, striped headdress, painted face, arms crossed. */
+export const mummyCase = () => {
+  const blue = 0x2a5ac8;
+  const parts: Parts = [
+    box(0.7, 0.1, 0.5, 0x8a6a3a, {}),
+    frustum(0.5, 0.36, 0.66, 0.42, 1.25, GOLD, { y: 0.1 }),
+    // The headdress: a striped hood falling to the shoulders either side of the face.
+    box(0.78, 0.5, 0.42, blue, { y: 1.35 }),
+    blob(0.25, 0xf2d27a, { y: 1.62, z: -0.16, sy: 1.1, sz: 0.6 }, 1),
+    blob(0.04, DARK_EYE, { x: -0.09, y: 1.68, z: -0.3 }),
+    blob(0.04, DARK_EYE, { x: 0.09, y: 1.68, z: -0.3 }),
+    box(0.07, 0.2, 0.07, blue, { y: 1.3, z: -0.26 }),
+    spike(0.05, 0.14, GOLD, [0, 1.86, -0.2], [0, 1, -0.4], 4),
+    // Crossed bands over the chest.
+    box(0.56, 0.08, 0.06, 0xc8402a, { y: 1.02, z: -0.22, rz: 0.5 }),
+    box(0.56, 0.08, 0.06, 0x2aa6c8, { y: 1.02, z: -0.22, rz: -0.5 }),
+  ];
+  for (let i = 0; i < 5; i++) parts.push(box(0.8, 0.045, 0.44, GOLD, { y: 1.38 + i * 0.095 }));
+  for (let i = 0; i < 4; i++) parts.push(box(0.5 - i * 0.03, 0.05, 0.06, i % 2 ? blue : 0xc8402a, { y: 0.3 + i * 0.16, z: -0.2 + i * 0.012 }));
+  return merge(parts);
+};

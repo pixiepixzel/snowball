@@ -11,7 +11,9 @@ export function runGallery(canvas: HTMLCanvasElement, frame: HTMLElement): void 
   const page = parseInt(params.get('page') ?? '0', 10) || 0;
   const fixedTurn = params.has('turn') ? (parseFloat(params.get('turn') ?? '0') * Math.PI) / 180 : null;
   const perPage = 9;
-  const defs = OBJECT_DEFS.slice(page * perPage, page * perPage + perPage);
+  // `&ids=a,b,c` picks models by id instead of by page.
+  const ids = (params.get('ids') ?? '').split(',').filter(Boolean);
+  const defs = ids.length > 0 ? OBJECT_DEFS.filter((d) => ids.includes(d.id)).slice(0, perPage) : OBJECT_DEFS.slice(page * perPage, page * perPage + perPage);
 
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
   renderer.toneMapping = THREE.NeutralToneMapping;
