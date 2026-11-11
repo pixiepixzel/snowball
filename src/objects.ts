@@ -1205,7 +1205,7 @@ const CANDY: ObjectDef[] = [
   themed(3, 'mitten', 'gumdrop', 'gumdrop', 'gumdrops', 0xd81e3a, C.gumdrop(0xd81e3a)),
   themed(3, 'hat', 'macaron', 'macaron', 'macarons', 0xff7ab8, C.macaron),
   themed(3, 'snowboard', 'candyBar', 'candy bar', 'candy bars', 0xe8408a, N.candyBar),
-  themed(3, 'iceSpike', 'rockCandy', 'rock candy', 'rock candies', 0xff9ac8, N.rockCandyBig),
+  themed(3, 'iceSpike', 'rockCandy', 'wrapped sweet', 'wrapped sweets', 0xd81e3a, N.wrappedSweet),
   themed(3, 'rabbit', 'gummyBear', 'gummy bear', 'gummy bears', 0xff5a7a, C.gummyBear(0xff5a7a)),
   themed(3, 'bush', 'cottonCandy', 'candy floss', 'candy flosses', 0xff7ab8, N.candyFloss),
   themed(3, 'sled', 'cookie', 'cookie', 'cookies', 0xe0b070, C.cookie),

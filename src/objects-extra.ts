@@ -7,7 +7,7 @@
  * front facing -Z. Parts painted white take the per-object tint where a def has `tints`.
  */
 import type { BufferGeometry } from 'three';
-import { beam, blob, box, cone, cyl, frustum, merge, rodX, rodZ, speckle, spike, taper, torus } from './shapes';
+import { bands, beam, blob, box, cone, cyl, frustum, merge, rodX, rodZ, speckle, spike, taper, torus } from './shapes';
 
 type Parts = BufferGeometry[];
 type V3 = [number, number, number];
@@ -992,5 +992,27 @@ export const rockCandyBig = () => {
     parts.push(box(s, s, s, sugar[i % 5], { x: Math.cos(a) * out, y: 0.5 + k * 1.2, z: Math.sin(a) * out, rx: i * 0.7, ry: i * 1.1 }));
   }
   parts.push(box(0.3, 0.3, 0.3, 0xffffff, { y: 1.75, ry: 0.6, rx: 0.5 }));
+  return merge(parts);
+};
+
+/** Wrapped sweet (Candy World): a big striped boiled sweet stood on end, its wrapper twisted into a fan top and bottom. */
+export const wrappedSweet = () => {
+  const paper = 0xffe07a;
+  const fold = 0xf2b83a;
+  const parts: Parts = [
+    bands(blob(0.66, 0xffffff, { y: 1.05, sy: 1.02 }, 2), [0xd81e3a, 0xfdfdfd, 0xd81e3a, 0xfdfdfd, 0xd81e3a, 0xfdfdfd, 0xd81e3a]),
+    // The twists: pinched tight at the sweet, fanning out wide.
+    taper(0.56, 0.12, paper, [0, 0, 0], [0, 0.46, 0], 10),
+    taper(0.12, 0.56, paper, [0, 1.64, 0], [0, 2.1, 0], 10),
+    torus(0.14, 0.05, fold, { y: 0.44 }, 8, 4),
+    torus(0.14, 0.05, fold, { y: 1.66 }, 8, 4),
+  ];
+  // Pleats in the paper.
+  for (let i = 0; i < 6; i++) {
+    const a = (i / 6) * TAU;
+    const x = Math.cos(a);
+    const z = Math.sin(a);
+    parts.push(beam(0.05, fold, [x * 0.14, 0.44, z * 0.14], [x * 0.56, 0.02, z * 0.56]), beam(0.05, fold, [x * 0.14, 1.66, z * 0.14], [x * 0.56, 2.08, z * 0.56]));
+  }
   return merge(parts);
 };

@@ -155,7 +155,7 @@ export class UI {
   onBookStep: (step: number) => void = () => {};
   /** The player pressed an arrow on the world picker: -1 or +1. */
   onWorldStep: (step: number) => void = () => {};
-  /** "Change world" on the end screen: back to the title. */
+  /** "Main menu" on the end screen: back to the title. */
   onMenu: () => void = () => {};
   onPause: () => void = () => {};
   onResume: () => void = () => {};
@@ -225,7 +225,7 @@ export class UI {
       const tile = (e.target as HTMLElement).closest('button[data-skin]') as HTMLButtonElement | null;
       if (tile && !tile.disabled) this.onSkin(tile.dataset.skin ?? '');
     });
-    for (const id of ['book-btn', 'end-book-btn']) el(id).addEventListener('click', () => this.onBook());
+    el('book-btn').addEventListener('click', () => this.onBook());
     el('book-prev').addEventListener('click', () => this.onBookStep(-1));
     el('book-next').addEventListener('click', () => this.onBookStep(1));
     el('book-close').addEventListener('click', () => this.bookScreen.classList.add('hidden'));
