@@ -44,8 +44,9 @@ import { OBJECT_DEFS } from './objects';
 import { levelCoins, levelOf, rankFor, titleFor } from './levels';
 import { PERKS, applyUpgrades, coinsFor, upgradeCost } from './perks';
 import { loadSave, writeSave, type MissionState, type SaveData } from './save';
+import { PostLabels, type PostSign } from './postlabels';
 import { Thumbs } from './thumbs';
-import { UI, type BoostRow, type CrateResult, type MissionRow, type PostLabel, type ShopRow, type SkinRow, type XpView } from './ui';
+import { UI, type BoostRow, type CrateResult, type MissionRow, type ShopRow, type SkinRow, type XpView } from './ui';
 import { clamp, lerp, sizeLabel, sizeParts } from './util';
 import { World, type WorldObject } from './world';
 import { HAND_MADE_LAPS, worldForLap } from './worlds';
@@ -209,6 +210,7 @@ export class Game {
   private streak = 0;
   /** Draws the collection book's pictures, and the page of the book last looked at. */
   private thumbs: Thumbs;
+  private postLabels: PostLabels;
   private bookPage = 0;
   /** Goes up each time a page is shown, so pictures still being drawn for an earlier page stop. */
   private bookTurn = 0;
@@ -263,6 +265,7 @@ export class Game {
     this.ui.onBoostBuy = (id) => this.buyBoost(id);
     this.ui.onBoostArm = (id) => this.armBoost(id);
     this.thumbs = new Thumbs(this.renderer);
+    this.postLabels = new PostLabels(this.scene);
     this.ui.onBook = () => this.openBook();
     this.ui.onBookStep = (step) => this.showBook(step);
     this.ui.onWorldStep = (step) => this.pickWorld(step);
@@ -1299,37 +1302,38 @@ export class Game {
 
   /**
    * Write the distance on each distance post's board (and BEST on the best-run flag).
-   * The words are ordinary text laid over the game where the board is on screen, sized to
-   * fit it, so they stay sharp however far away the post is.
+   * The words are painted on small panels standing in the scene itself (postlabels.ts), so
+   * whatever is in front of a post hides its writing too.
    */
   private updatePostLabels(): void {
-    const labels: PostLabel[] = [];
+    const signs: PostSign[] = [];
     if (this.state === 'playing' || this.state === 'title') {
-      const w = this.frameEl.clientWidth;
-      const h = this.frameEl.clientHeight;
-      const camera = this.rig.camera;
-      // The camera has moved this frame but only works out where it is looking from when the
-      // picture is drawn. Do that now, or the writing trails a frame behind its board.
-      camera.updateMatrixWorld();
+      const ballD = this.ball.d;
       for (const o of this.world.objects) {
         if (o.def.special !== 'marker') continue;
-        const flag = o.def.id === 'bestFlag';
-        const foot = groundY(o.d) + o.yOff - o.sink;
         // A post that is growing in or shrinking away is drawn smaller: the writing goes with it.
-        const size = o.size * o.fade;
         if (o.fade < 0.5) continue;
-        // The middle of the board (or the flag's pennant), and a point a board's height above it.
-        _v.set(o.x + (flag ? size * 0.3 : 0), foot + size * (flag ? 1.3 : 1.7), -o.d).project(camera);
-        if (_v.z > 1 || Math.abs(_v.x) > 1.4) continue;
-        const x = (_v.x * 0.5 + 0.5) * w;
-        const y = (-_v.y * 0.5 + 0.5) * h;
-        _v.set(o.x, foot + size * (flag ? 1.3 : 1.7) + size * 0.4, -o.d).project(camera);
-        const tall = Math.abs((-_v.y * 0.5 + 0.5) * h - y);
-        if (tall < 6) continue; // too far off to read
-        labels.push({ x, y, size: Math.min(26, tall * 0.62), text: flag ? 'BEST' : sizeLabel(this.shown(o.d)), gold: flag });
+        const flag = o.def.id === 'bestFlag';
+        const size = o.size * o.fade;
+        const foot = groundY(o.d) + o.yOff - o.sink;
+        // The middle of the board (or of the flag's pennant), turned with the post.
+        const side = flag ? size * 0.3 : 0;
+        signs.push({
+          x: o.x + side * Math.cos(o.rot),
+          y: foot + size * (flag ? 1.3 : 1.7),
+          z: -o.d - side * Math.sin(o.rot),
+          rot: o.rot,
+          w: size * (flag ? 0.5 : 1.14),
+          h: size * (flag ? 0.2 : 0.43),
+          depth: size * (flag ? 0.05 : 0.075),
+          text: flag ? 'BEST' : sizeLabel(this.shown(o.d)),
+          gold: flag,
+        });
       }
+      // Nearest first: only so many can be shown at once.
+      signs.sort((p, q) => Math.abs(-p.z - ballD) - Math.abs(-q.z - ballD));
     }
-    this.ui.setPostLabels(labels);
+    this.postLabels.update(signs, this.rig.camera);
   }
 
   // ------------------------------------------------------------------ XP and levels
