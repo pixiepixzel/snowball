@@ -1273,16 +1273,22 @@ export class Game {
       const w = this.frameEl.clientWidth;
       const h = this.frameEl.clientHeight;
       const camera = this.rig.camera;
+      // The camera has moved this frame but only works out where it is looking from when the
+      // picture is drawn. Do that now, or the writing trails a frame behind its board.
+      camera.updateMatrixWorld();
       for (const o of this.world.objects) {
         if (o.def.special !== 'marker') continue;
         const flag = o.def.id === 'bestFlag';
         const foot = groundY(o.d) + o.yOff - o.sink;
+        // A post that is growing in or shrinking away is drawn smaller: the writing goes with it.
+        const size = o.size * o.fade;
+        if (o.fade < 0.5) continue;
         // The middle of the board (or the flag's pennant), and a point a board's height above it.
-        _v.set(o.x + (flag ? o.size * 0.3 : 0), foot + o.size * (flag ? 1.3 : 1.7), -o.d).project(camera);
-        if (_v.z > 1 || Math.abs(_v.x) > 1.15) continue;
+        _v.set(o.x + (flag ? size * 0.3 : 0), foot + size * (flag ? 1.3 : 1.7), -o.d).project(camera);
+        if (_v.z > 1 || Math.abs(_v.x) > 1.4) continue;
         const x = (_v.x * 0.5 + 0.5) * w;
         const y = (-_v.y * 0.5 + 0.5) * h;
-        _v.set(o.x, foot + o.size * (flag ? 1.3 : 1.7) + o.size * 0.4, -o.d).project(camera);
+        _v.set(o.x, foot + size * (flag ? 1.3 : 1.7) + size * 0.4, -o.d).project(camera);
         const tall = Math.abs((-_v.y * 0.5 + 0.5) * h - y);
         if (tall < 6) continue; // too far off to read
         labels.push({ x, y, size: Math.min(26, tall * 0.62), text: flag ? 'BEST' : sizeLabel(this.shown(o.d)), gold: flag });

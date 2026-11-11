@@ -369,8 +369,9 @@ export class UI {
         return;
       }
       d.style.display = '';
-      d.style.transform = `translate(${label.x.toFixed(1)}px, ${label.y.toFixed(1)}px) translate(-50%, -50%)`;
-      d.style.fontSize = `${label.size.toFixed(1)}px`;
+      // The writing is always set at one size and scaled to fit: changing the type size
+      // every frame makes the letters shiver.
+      d.style.transform = `translate(${label.x.toFixed(2)}px, ${label.y.toFixed(2)}px) translate(-50%, -50%) scale(${(label.size / 26).toFixed(3)})`;
       if (d.textContent !== label.text) d.textContent = label.text;
       d.classList.toggle('gold', label.gold);
     });
