@@ -199,6 +199,9 @@ export class Game {
   private save: SaveData = loadSave();
   /** Seconds left of the yeti's rage and of the saucer's tractor beam. */
   private rage = 0;
+  /** How long the running beam or magnet started with (s), and what its bar is called. */
+  private beamFull = 1;
+  private beamName = 'Tractor beam';
   private beam = 0;
   /** Coins picked up during this run (golden snowflakes), on top of the coins for size. */
   private runCoins = 0;
@@ -859,7 +862,8 @@ export class Game {
       this.ui.setPower('Yeti rage', this.rage / C.YETI_RAGE_TIME);
     } else if (this.beam > 0) {
       this.beam = Math.max(0, this.beam - dt);
-      this.ui.setPower('Tractor beam', this.beam / C.UFO_BEAM_TIME);
+      // The bar is measured against however long this one started with (the Magnet boost lasts longer).
+      this.ui.setPower(this.beamName, this.beam / this.beamFull);
     } else {
       this.ui.setPower('', 0);
     }
@@ -993,6 +997,8 @@ export class Game {
       this.ui.banner('Yeti rage!', 'Smash through everything');
     } else {
       this.beam = C.UFO_BEAM_TIME;
+      this.beamFull = C.UFO_BEAM_TIME;
+      this.beamName = 'Tractor beam';
       this.rage = 0;
       this.ui.banner('Tractor beam!', 'Everything small flies to you');
     }
@@ -1826,7 +1832,11 @@ export class Game {
         // Coins are for growth after the head start, not for the head start itself.
         this.runStartR = this.shown(this.ball.r);
       } else if (def.id === 'shield') this.shield = true;
-      else if (def.id === 'magnet') this.beam = BOOST_MAGNET_TIME;
+      else if (def.id === 'magnet') {
+        this.beam = BOOST_MAGNET_TIME;
+        this.beamFull = BOOST_MAGNET_TIME;
+        this.beamName = 'Magnet';
+      }
     }
     if (used.length > 0) writeSave(this.save);
     return used;
