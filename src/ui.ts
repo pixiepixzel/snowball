@@ -377,14 +377,13 @@ export class UI {
   }
 
   /**
-   * The level badge on the title screen: the level in a medal coloured by rank, the title
-   * beside it, and a bar showing how far it is to the next level (`progress`, 0 to 1).
+   * The level chip at the top of the title screen: the level in a small circle coloured
+   * by rank, with the title beside it.
    */
   setLevel(view: { level: number; title: string; colour: string; progress: number; toGo: number }): void {
     el('rank-level').textContent = String(view.level);
     el('rank-title').textContent = view.title;
-    el('rank-fill').style.width = `${Math.round(view.progress * 100)}%`;
-    el('rank-next').textContent = `${view.toGo.toLocaleString('en-US')} XP to level ${view.level + 1}`;
+    el('rank').title = `${view.toGo.toLocaleString('en-US')} XP to level ${view.level + 1}`;
     // Dark writing on the pale badges, white on the rest.
     const n = parseInt(view.colour.slice(1), 16);
     const bright = ((n >> 16) & 255) * 0.3 + ((n >> 8) & 255) * 0.59 + (n & 255) * 0.11;
