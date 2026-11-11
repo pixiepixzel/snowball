@@ -722,6 +722,12 @@ export const TITLES: [number, string][] = [
   [50, 'Legend of the Slope'],
 ];
 
+/**
+ * The colour of the level badge on the title screen, one for each title above, in the
+ * same order: it changes every time a new title is earned.
+ */
+export const RANK_COLOURS = ['#dfeaf7', '#6ec1ff', '#3f7de0', '#2fb8a0', '#4fbf4a', '#ff9a3a', '#e8483a', '#ff5aa8', '#9a5ae8', '#3a2a8a', '#ffc83a'];
+
 // ---------------------------------------------------------------- Rarities
 /**
  * Every ordinary object has rarer versions that now and then turn up in its place: its own

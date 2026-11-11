@@ -18,6 +18,7 @@ import {
   BOOST_HEAD_START,
   BOOST_MAGNET_TIME,
   DOUBLE_XP_PRICE,
+  RANK_COLOURS,
   CRATE_DUPLICATE_COINS,
   CRATE_PRICE,
   CRATE_REWARDS,
@@ -40,7 +41,7 @@ import { Effects } from './effects';
 import { Environment } from './environment';
 import { Input } from './input';
 import { OBJECT_DEFS } from './objects';
-import { levelCoins, levelOf, titleFor } from './levels';
+import { levelCoins, levelOf, rankFor, titleFor } from './levels';
 import { PERKS, applyUpgrades, coinsFor, upgradeCost } from './perks';
 import { loadSave, writeSave, type MissionState, type SaveData } from './save';
 import { Thumbs } from './thumbs';
@@ -1293,9 +1294,15 @@ export class Game {
   // ------------------------------------------------------------------ XP and levels
 
   /** "Level 7 Slope Rider", for the title screen. */
-  private levelLabel(): string {
-    const level = levelOf(this.save.xp).level;
-    return `Level ${level} ${titleFor(level)}`;
+  private levelLabel(): { level: number; title: string; colour: string; progress: number; toGo: number } {
+    const at = levelOf(this.save.xp);
+    return {
+      level: at.level,
+      title: titleFor(at.level),
+      colour: RANK_COLOURS[Math.min(rankFor(at.level), RANK_COLOURS.length - 1)],
+      progress: at.into / at.need,
+      toGo: Math.max(0, Math.ceil(at.need - at.into)),
+    };
   }
 
   /**

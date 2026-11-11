@@ -22,6 +22,15 @@ export function levelOf(xp: number): { level: number; into: number; need: number
 }
 
 /** The title that goes with a level: the last one in TITLES it has reached. */
+/** Which title a level has earned, as a position in TITLES (and so in RANK_COLOURS). */
+export function rankFor(level: number): number {
+  let rank = 0;
+  TITLES.forEach(([from], i) => {
+    if (level >= from) rank = i;
+  });
+  return rank;
+}
+
 export function titleFor(level: number): string {
   let title = TITLES[0][1];
   for (const [from, name] of TITLES) if (level >= from) title = name;

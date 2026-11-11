@@ -274,7 +274,7 @@ export class UI {
     this.bookScreen.classList.add('hidden');
     this.hud.classList.add('hidden');
     this.setAvalanche(false, 0);
-    el('title-best').textContent = [this.levelText, best ? `Best ${best}` : ''].filter(Boolean).join(' · ');
+    el('title-best').textContent = best ? `Best ${best}` : '';
     this.setCoins(coins);
   }
 
@@ -376,11 +376,21 @@ export class UI {
     });
   }
 
-  private levelText = '';
-
-  /** The player's level and title ("Level 7 Slope Rider"), shown on the title screen beside the best size. */
-  setLevel(text: string): void {
-    this.levelText = text;
+  /**
+   * The level badge on the title screen: the level in a medal coloured by rank, the title
+   * beside it, and a bar showing how far it is to the next level (`progress`, 0 to 1).
+   */
+  setLevel(view: { level: number; title: string; colour: string; progress: number; toGo: number }): void {
+    el('rank-level').textContent = String(view.level);
+    el('rank-title').textContent = view.title;
+    el('rank-fill').style.width = `${Math.round(view.progress * 100)}%`;
+    el('rank-next').textContent = `${view.toGo.toLocaleString('en-US')} XP to level ${view.level + 1}`;
+    // Dark writing on the pale badges, white on the rest.
+    const n = parseInt(view.colour.slice(1), 16);
+    const bright = ((n >> 16) & 255) * 0.3 + ((n >> 8) & 255) * 0.59 + (n & 255) * 0.11;
+    const rank = el('rank');
+    rank.style.setProperty('--rank', view.colour);
+    rank.style.setProperty('--rank-ink', bright > 165 ? '#17365c' : '#ffffff');
   }
 
   /** How much of the collection book is filled in, on the buttons that open it. */
