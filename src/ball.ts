@@ -335,7 +335,7 @@ export class Ball {
     // --- plain snow slowly packs on; faster if the run is going badly.
     if (this.rolling && this.speed > 0 && !this.airborne) {
       const behind = this.r < designRadius(this.d) * C.CATCHUP_BELOW;
-      const rate = C.SNOW_GROWTH * PERKS.pack * (behind ? C.CATCHUP_MULT : 1);
+      const rate = C.SNOW_GROWTH * PERKS.pack * (behind ? C.CATCHUP_MULT : 1) * this.aheadDamp();
       this.r *= Math.exp(rate * dt * Math.min(1, this.speed / cruise));
     }
 
@@ -387,9 +387,19 @@ export class Ball {
     this.shadow.scale.setScalar(this.r * 0.95);
   }
 
+  /**
+   * How much the ball still grows, 1 (fully) to 0 (not at all): it fades out as the ball
+   * gets ahead of the size the slope expects here (AHEAD_SOFT and AHEAD_HARD in config.ts).
+   */
+  aheadDamp(): number {
+    const ratio = this.r / designRadius(this.d);
+    const t = (CONFIG.AHEAD_HARD - ratio) / (CONFIG.AHEAD_HARD - CONFIG.AHEAD_SOFT);
+    return t < 0 ? 0 : t > 1 ? 1 : t;
+  }
+
   /** Add an object's volume to the ball. */
   grow(size: number): void {
-    const v = this.r * this.r * this.r + size * size * size * CONFIG.VOLUME_GAIN * PERKS.growth;
+    const v = this.r * this.r * this.r + size * size * size * CONFIG.VOLUME_GAIN * PERKS.growth * this.aheadDamp();
     this.r = Math.cbrt(v);
   }
 

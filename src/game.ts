@@ -1095,7 +1095,7 @@ export class Game {
       this.tally.streak = Math.max(this.tally.streak, ++this.streak);
       if (dam) this.tally.worlds++;
       this.checkMissions();
-      ball.r *= 1 + C.GATE_BONUS * PERKS.gate;
+      ball.r *= 1 + C.GATE_BONUS * PERKS.gate * ball.aheadDamp();
       ball.popVel += 6;
       this.slowmo = dam ? 1.0 : 0.45;
       this.lastSlowmo = this.stats.time;

@@ -23,6 +23,15 @@ export const CONFIG = {
   CATCHUP_BELOW: 0.6,
   /** ...by this factor. 1 = no help at all; 3 gives a run that has fallen behind a fighting chance. */
   CATCHUP_MULT: 3,
+  /**
+   * Too far ahead: the slope is built for a ball of a certain size at each point. A ball
+   * much bigger than that finds nothing left that can hurt it, smashes every wall on
+   * arrival, and each wall makes it bigger still, so the run never ends. So growth of
+   * every kind fades out as the ball gets ahead: full up to AHEAD_SOFT times the expected
+   * size, none at all at AHEAD_HARD times. Upgrades still put you ahead, but only so far.
+   */
+  AHEAD_SOFT: 1.25,
+  AHEAD_HARD: 1.7,
   /** Bonus growth (fraction of radius) for smashing through a wall. */
   GATE_BONUS: 0.04,
   /** Max objects drawn stuck to the ball. Oldest are dropped first. */
@@ -262,7 +271,7 @@ export const CONFIG = {
   AVALANCHE_RAMP_PUSH: 3,
   /** Absorbing things one after another: from this many in a row, each one pushes it back this many radii. */
   AVALANCHE_COMBO_FROM: 6,
-  AVALANCHE_COMBO_PUSH: 0.12,
+  AVALANCHE_COMBO_PUSH: 0.03,
   /**
    * A close call: the danger (0 to 1) rose to CLOSE_CALL_AT and then fell back to
    * CLOSE_CALL_CLEAR. It pays these coins (and XP_FOR.closeCall).
