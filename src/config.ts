@@ -651,7 +651,7 @@ export const SKINS: SkinDef[] = [
  * up at the start of the next run.
  */
 export interface BoostDef {
-  id: 'headStart' | 'shield' | 'magnet' | 'doubleXp';
+  id: 'headStart' | 'shield' | 'magnet';
   name: string;
   blurb: string;
   price: number;
@@ -660,8 +660,13 @@ export const BOOSTS: BoostDef[] = [
   { id: 'headStart', name: 'Head start', blurb: 'Begin the run 60% bigger', price: 100 },
   { id: 'shield', name: 'Shield', blurb: 'The first hit costs you nothing', price: 120 },
   { id: 'magnet', name: 'Magnet', blurb: 'Small things fly to you for 20 seconds', price: 100 },
-  { id: 'doubleXp', name: 'Double XP', blurb: 'Twice the XP from the run', price: 150 },
 ];
+/**
+ * Doubling a run's XP is offered on the end screen, once the run's score is known (it used
+ * to be a boost bought beforehand). It is free once a day; after that it costs this.
+ * (This is also where a "watch an ad to double" could go one day: game.ts doubleXpNow.)
+ */
+export const DOUBLE_XP_PRICE = 200;
 /** How much bigger a Head start makes the ball, and how long the Magnet lasts (s). */
 export const BOOST_HEAD_START = 1.6;
 export const BOOST_MAGNET_TIME = 20;

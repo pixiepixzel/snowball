@@ -80,6 +80,9 @@ export interface XpView {
   /** Coins from level-up chests, and the names of any skins unlocked. */
   chest: number;
   unlocked: string[];
+  /** The offer to double this run's XP: what it costs (0 = free today), or null once taken or not on offer. */
+  double: { cost: number; affordable: boolean } | null;
+  doubled: boolean;
 }
 
 /** One page of the collection book. */
@@ -142,6 +145,8 @@ export class UI {
   onSkin: (id: string) => void = () => {};
   /** "Open a crate" was pressed; a boost's price was pressed; a boost's on/off switch was pressed. */
   onCrate: () => void = () => {};
+  /** "Double XP" on the end screen. */
+  onDoubleXp: () => void = () => {};
   onBoostBuy: (id: string) => void = () => {};
   onBoostArm: (id: string) => void = () => {};
   /** The player opened the collection book; the game answers with openBook(). */
@@ -228,6 +233,7 @@ export class UI {
     el('mission-tab').addEventListener('click', () => el('mission-drawer').classList.toggle('open'));
     for (const tab of SHOP_TABS) el(`tab-${tab}`).addEventListener('click', () => this.setShopTab(tab));
     el('crate-open').addEventListener('click', () => this.onCrate());
+    el('xp-double').addEventListener('click', () => this.onDoubleXp());
     el('boost-list').addEventListener('click', (e) => {
       const button = (e.target as HTMLElement).closest('button') as HTMLButtonElement | null;
       if (!button || button.disabled) return;
@@ -806,6 +812,39 @@ export class UI {
     this.flashEl.className = '';
   }
 
+  /** The XP block on the end screen: the bar fills from where it was to where it is now. */
+  setEndXp(xp: XpView | null): void {
+    el('end-xp').hidden = xp === null;
+    if (!xp) return;
+    el('end-level').textContent = `Level ${xp.level} · ${xp.title}`;
+    el('end-xp-gain').textContent = `+${xp.gained.toLocaleString('en-US')} XP${xp.doubled ? ' (doubled)' : ''}`;
+    const fill = el('end-xp-fill');
+    fill.style.transition = 'none';
+    fill.style.width = `${Math.round(xp.from * 100)}%`;
+    void fill.offsetWidth;
+    fill.style.transition = '';
+    fill.style.width = `${Math.round(xp.to * 100)}%`;
+    const up = el('end-levelup');
+    up.hidden = xp.levelsUp === 0;
+    up.textContent = xp.levelsUp === 0 ? '' : `Level up! +${xp.chest} coins${xp.unlocked.length > 0 ? ` · new skin: ${xp.unlocked.join(', ')}` : ''}`;
+    // The offer to double it: free once a day, then for coins.
+    const offer = el('xp-double') as HTMLButtonElement;
+    offer.hidden = xp.double === null;
+    if (xp.double) {
+      offer.disabled = !xp.double.affordable;
+      offer.textContent = '';
+      if (xp.double.cost === 0) offer.textContent = 'Double this XP · free today';
+      else {
+        const coin = document.createElement('span');
+        coin.className = 'coins';
+        const amount = document.createElement('b');
+        amount.textContent = String(xp.double.cost);
+        coin.append(document.createElement('i'), amount);
+        offer.append(document.createTextNode('Double this XP '), coin);
+      }
+    }
+  }
+
   showEnd(data: EndData): void {
     this.clearTransient();
     el('end-title').textContent = data.title;
@@ -819,23 +858,7 @@ export class UI {
     best.classList.toggle('new', data.isBest);
     el('end-coins').textContent = data.coins === null ? 'Practice run: no coins' : `+${data.coins.toLocaleString('en-US')} coins`;
     this.setCoins(data.totalCoins);
-    // XP: the bar fills from where it was to where it is now.
-    const xpBox = el('end-xp');
-    xpBox.hidden = data.xp === null;
-    if (data.xp) {
-      const xp = data.xp;
-      el('end-level').textContent = `Level ${xp.level} · ${xp.title}`;
-      el('end-xp-gain').textContent = `+${xp.gained.toLocaleString('en-US')} XP`;
-      const fill = el('end-xp-fill');
-      fill.style.transition = 'none';
-      fill.style.width = `${Math.round(xp.from * 100)}%`;
-      void fill.offsetWidth;
-      fill.style.transition = '';
-      fill.style.width = `${Math.round(xp.to * 100)}%`;
-      const up = el('end-levelup');
-      up.hidden = xp.levelsUp === 0;
-      up.textContent = xp.levelsUp === 0 ? '' : `Level up! +${xp.chest} coins${xp.unlocked.length > 0 ? ` · new skin: ${xp.unlocked.join(', ')}` : ''}`;
-    }
+    this.setEndXp(data.xp);
     const bookNote = el('end-book');
     bookNote.textContent = data.bookNote;
     bookNote.hidden = data.bookNote === '';

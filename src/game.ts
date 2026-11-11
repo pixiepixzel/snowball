@@ -17,6 +17,7 @@ import {
   BOOSTS,
   BOOST_HEAD_START,
   BOOST_MAGNET_TIME,
+  DOUBLE_XP_PRICE,
   CRATE_DUPLICATE_COINS,
   CRATE_PRICE,
   CRATE_REWARDS,
@@ -173,7 +174,9 @@ export class Game {
   /** Boosts working in this run, how far it has rolled (as shown to the player), and what the last crate held. */
   private shield = false;
   private shieldClock = 0;
-  private doubleXp = false;
+  /** XP the last run earned, and whether it has been doubled yet. */
+  private lastGained = 0;
+  private xpDoubled = false;
   private distance = 0;
   private lastCrate: CrateResult | null = null;
   private cratesOpened = 0;
@@ -251,6 +254,7 @@ export class Game {
     this.ui.onBuy = (id) => this.buy(id);
     this.ui.onSkin = (id) => this.pickSkin(id);
     this.ui.onCrate = () => this.openCrate();
+    this.ui.onDoubleXp = () => this.doubleXpNow();
     this.ui.onBoostBuy = (id) => this.buyBoost(id);
     this.ui.onBoostArm = (id) => this.armBoost(id);
     this.thumbs = new Thumbs(this.renderer);
@@ -398,7 +402,6 @@ export class Game {
     this.passedBest = false;
     this.shield = false;
     this.shieldClock = 0;
-    this.doubleXp = false;
     this.distance = 0;
     // The flag marking the furthest run only goes up for real runs.
     this.world.bestAt = this.keepScores ? this.save.bestAt : null;
@@ -1295,6 +1298,36 @@ export class Game {
     return `Level ${level} ${titleFor(level)}`;
   }
 
+  /**
+   * "Double this XP" on the end screen: add the run's XP a second time. Free once a day,
+   * then DOUBLE_XP_PRICE coins. (To make it "watch an ad" one day, show the ad here and
+   * carry on only when it has been watched.)
+   */
+  private doubleXpNow(): void {
+    if (this.state !== 'ended' || this.xpDoubled || this.lastGained <= 0 || !this.keepScores) return;
+    const today = this.daily().today;
+    if (this.save.doubleDay < today) this.save.doubleDay = today;
+    else if (this.save.coins >= DOUBLE_XP_PRICE) this.save.coins -= DOUBLE_XP_PRICE;
+    else return;
+    const { before, after, chest, unlocked } = this.addXp(this.lastGained);
+    this.xpDoubled = true;
+    writeSave(this.save);
+    this.audio.fanfare();
+    this.ui.setEndXp({
+      gained: this.lastGained * 2,
+      level: after.level,
+      title: titleFor(after.level),
+      from: after.level > before.level ? 0 : before.into / before.need,
+      to: after.into / after.need,
+      levelsUp: after.level - before.level,
+      chest,
+      unlocked,
+      double: null,
+      doubled: true,
+    });
+    this.ui.setCoins(this.save.coins);
+  }
+
   /** Add XP, paying a coin chest for each level it gains. Says what the level was and is, the coins, and any skins unlocked. */
   private addXp(amount: number): { before: ReturnType<typeof levelOf>; after: ReturnType<typeof levelOf>; chest: number; unlocked: string[] } {
     const before = levelOf(this.save.xp);
@@ -1324,7 +1357,7 @@ export class Game {
       if (id.endsWith('_s')) superRare += n;
       else if (id.endsWith('_m')) mythic += n;
     }
-    let gained =
+    const gained =
       XP_FOR.scene * Math.max(0, this.stats.zoneLog.length - 1) +
       XP_FOR.wall * this.stats.walls +
       XP_FOR.world * this.tally.worlds +
@@ -1334,9 +1367,13 @@ export class Game {
       XP_FOR.superRare * superRare +
       XP_FOR.mythic * mythic +
       XP_FOR.mission * this.runMissions;
-    if (this.doubleXp) gained *= 2;
     const { before, after, chest, unlocked } = this.addXp(gained);
+    this.lastGained = gained;
+    this.xpDoubled = false;
+    const cost = this.save.doubleDay < this.daily().today ? 0 : DOUBLE_XP_PRICE;
     return {
+      double: gained > 0 ? { cost, affordable: this.save.coins >= cost } : null,
+      doubled: false,
       gained,
       level: after.level,
       title: titleFor(after.level),
@@ -1737,7 +1774,6 @@ export class Game {
         this.runStartR = this.shown(this.ball.r);
       } else if (def.id === 'shield') this.shield = true;
       else if (def.id === 'magnet') this.beam = BOOST_MAGNET_TIME;
-      else if (def.id === 'doubleXp') this.doubleXp = true;
     }
     if (used.length > 0) writeSave(this.save);
     return used;

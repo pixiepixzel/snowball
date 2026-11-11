@@ -19,9 +19,10 @@ const OLD_BEST_KEY = 'snowball.best';
  * version 6 the missions, version 7 the ball skins, version 8 the collection book,
  * version 9 the daily reward, version 10 XP and where the best run ended,
  * version 11 run boosts,
- * version 12 the three new upgrade tracks (the five old upgrades are refunded).
+ * version 12 the three new upgrade tracks (the five old upgrades are refunded),
+ * version 13 Double XP moved from a boost to the end screen (any in stock are refunded).
  */
-export const SAVE_VERSION = 12;
+export const SAVE_VERSION = 13;
 
 /** One of the active missions. */
 export interface MissionState {
@@ -75,6 +76,8 @@ export interface SaveData {
   /** Run boosts in stock, by boost id, and the ones switched on for the next run. */
   boosts: Record<string, number>;
   armed: string[];
+  /** The day the free Double XP was last used (a count of days, like `daily.day`). */
+  doubleDay: number;
 }
 
 const num = (v: unknown, fallback = 0): number => (typeof v === 'number' && Number.isFinite(v) && v >= 0 ? v : fallback);
@@ -85,7 +88,7 @@ const firstMissions = (): MissionState[] => MISSIONS.slice(0, MISSION_SLOTS).map
 function fresh(): SaveData {
   const upgrades: Record<string, number> = {};
   for (const u of UPGRADES) upgrades[u.id] = 0;
-  return { version: SAVE_VERSION, best: 0, coins: 0, upgrades, sound: true, music: true, vibration: true, reached: 0, hints: [], missions: firstMissions(), missionNext: MISSION_SLOTS, skins: [SKINS[0].id], skin: SKINS[0].id, book: {}, bookPaid: [], daily: { day: 0, streak: 0 }, xp: 0, bestAt: null, boosts: {}, armed: [] };
+  return { version: SAVE_VERSION, best: 0, coins: 0, upgrades, sound: true, music: true, vibration: true, reached: 0, hints: [], missions: firstMissions(), missionNext: MISSION_SLOTS, skins: [SKINS[0].id], skin: SKINS[0].id, book: {}, bookPaid: [], daily: { day: 0, streak: 0 }, xp: 0, bestAt: null, boosts: {}, armed: [], doubleDay: 0 };
 }
 
 /** Turn whatever was stored into a valid save of the current version. */
@@ -152,7 +155,13 @@ function migrate(raw: unknown): SaveData {
   if (typeof data.boosts === 'object' && data.boosts !== null) {
     for (const [id, n] of Object.entries(data.boosts as Record<string, unknown>)) if (num(n) > 0) save.boosts[id] = Math.floor(num(n));
   }
-  if (Array.isArray(data.armed)) save.armed = data.armed.filter((id): id is string => typeof id === 'string');
+  if (Array.isArray(data.armed)) save.armed = data.armed.filter((id): id is string => typeof id === 'string' && id !== 'doubleXp');
+  // Before version 13 Double XP was a boost. Any still in stock are bought back at what they cost then.
+  if (save.boosts.doubleXp) {
+    save.coins += save.boosts.doubleXp * 150;
+    delete save.boosts.doubleXp;
+  }
+  save.doubleDay = Math.floor(num(data.doubleDay));
   const levels = (typeof data.upgrades === 'object' && data.upgrades !== null ? data.upgrades : {}) as Record<string, unknown>;
   // Before version 12 there were five different upgrades. They are gone: give back every
   // coin that was spent on them, at the prices they cost then (30, 45, 68... per level).

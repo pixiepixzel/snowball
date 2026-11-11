@@ -1983,3 +1983,24 @@ h1 {
 #game {
   touch-action: none;
 }
+
+/* The offer to double a run's XP, under the XP bar on the end screen. */
+.xp-double {
+  appearance: none;
+  width: 100%;
+  margin-top: 6px;
+  padding: 7px 10px;
+  border: 0;
+  border-radius: 999px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 900;
+  color: #fff;
+  background: linear-gradient(90deg, #8a5ad6, #4aa8f0);
+}
+
+.xp-double:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
