@@ -880,3 +880,117 @@ export const mummyCase = () => {
   for (let i = 0; i < 4; i++) parts.push(box(0.5 - i * 0.03, 0.05, 0.06, i % 2 ? blue : 0xc8402a, { y: 0.3 + i * 0.16, z: -0.2 + i * 0.012 }));
   return merge(parts);
 };
+
+// ------------------------------------------------------------------ Candy World, third round
+// Sweets on thin sticks looked far smaller than the game counts them, so these are built
+// to fill their space; and a few that didn't read as what they are.
+
+/** Candy floss (Candy World): a big spun-sugar cloud on a striped paper cone. */
+export const candyFloss = () => {
+  const parts: Parts = [
+    taper(0.05, 0.3, 0xfdfdfd, [0, 0, 0], [0, 0.85, 0], 8),
+    torus(0.12, 0.03, 0x6aa8ff, { y: 0.3 }, 8, 3),
+    torus(0.2, 0.03, 0x6aa8ff, { y: 0.55 }, 8, 3),
+    torus(0.28, 0.03, 0x6aa8ff, { y: 0.8 }, 8, 3),
+    speckle(blob(0.78, 0xff9ac8, { y: 1.45, sy: 0.95 }, 2), 0.05, 1),
+    speckle(blob(0.5, 0xffb0d6, { y: 2.0 }, 1), 0.05, 2),
+    blob(0.2, 0xffc8e2, { y: 2.42 }, 1),
+  ];
+  // Wisps wound round it, the way it comes off the machine.
+  for (let i = 0; i < 4; i++) parts.push(torus(0.74 - i * 0.12, 0.07, i % 2 ? 0xffc8e2 : 0xff7ab8, { y: 1.15 + i * 0.3, rx: 0.25, ry: i * 1.3 }, 12, 4));
+  return merge(parts);
+};
+
+/** One wafer biscuit: three sheets with cream between and a waffle grid pressed into both faces. Stands up, face to -Z. */
+function waferBiscuit(w: number, h: number, cream: number): Parts {
+  const sheet = 0xe0b070;
+  const groove = 0xb8863e;
+  const parts: Parts = [
+    box(w, h, 0.1, sheet, { z: -0.16 }),
+    box(w * 0.96, h * 0.97, 0.07, cream, { y: h * 0.015, z: -0.08 }),
+    box(w, h, 0.1, sheet, {}),
+    box(w * 0.96, h * 0.97, 0.07, cream, { y: h * 0.015, z: 0.08 }),
+    box(w, h, 0.1, sheet, { z: 0.16 }),
+  ];
+  for (const z of [-0.215, 0.215]) {
+    for (let i = 1; i < 4; i++) parts.push(box(0.04, h * 0.94, 0.02, groove, { x: -w / 2 + (w * i) / 4, y: h * 0.03, z }));
+    for (let i = 1; i < 6; i++) parts.push(box(w * 0.94, 0.04, 0.02, groove, { y: (h * i) / 6, z }));
+  }
+  return parts;
+}
+
+/** Wafer (Candy World): two wafer biscuits stood up together, pink cream in one and white in the other. */
+export const waferStack = () => {
+  const back = merge(waferBiscuit(1.0, 1.9, 0xfff4e0));
+  back.rotateY(0.25);
+  back.translate(0.3, 0, 0.25);
+  const front = merge(waferBiscuit(0.95, 1.5, 0xff9ac8));
+  front.rotateY(-0.2);
+  front.translate(-0.3, 0, -0.2);
+  return merge([back, front]);
+};
+
+/** Giant lollipop (Candy World): a thick round lolly with a rainbow spiral, a fat stick and a bow. */
+export const swirlLolly = () => {
+  const parts: Parts = [
+    cyl(0.1, 0.1, 0.9, 0xfdfdfd, {}, 6),
+    rodZ(0.8, 0.5, 0xfdfdfd, 0, 1.5, 0, 16),
+    rodZ(0.84, 0.3, 0xff7ab8, 0, 1.5, 0, 16),
+    // The bow where the stick meets the sweet.
+    blob(0.2, 0xd81e3a, { x: -0.2, y: 0.72, z: -0.14, sy: 0.7 }),
+    blob(0.2, 0xd81e3a, { x: 0.2, y: 0.72, z: -0.14, sy: 0.7 }),
+    blob(0.1, 0xff5a7a, { y: 0.72, z: -0.16 }),
+  ];
+  const rainbow = [0xd81e3a, 0xff8a2a, 0xffd84a, 0x3fb85a, 0x6aa8ff, 0xb06aff];
+  const steps = 30;
+  const at = (i: number, z: number): V3 => {
+    const t = i / steps;
+    const a = t * TAU * 2.5;
+    const rad = 0.06 + t * 0.64;
+    return [Math.cos(a) * rad, 1.5 + Math.sin(a) * rad, z];
+  };
+  for (const z of [-0.25, 0.25]) for (let i = 0; i < steps; i++) parts.push(taper(0.075, 0.075, rainbow[Math.floor(i / 2) % 6], at(i, z), at(i + 1, z), 5));
+  return merge(parts);
+};
+
+/** Candy cane heart (Candy World): two fat striped canes crossed at the foot, their hooks curling in to make a heart, tied with a bow. */
+export const candyHeart = () => {
+  const parts: Parts = [];
+  const tube = 0.12;
+  for (const side of [-1, 1]) {
+    // Up and out from the foot...
+    const foot: V3 = [-side * 0.12, 0.05, 0];
+    const shoulder: V3 = [side * 0.66, 1.5, 0];
+    for (let i = 0; i < 7; i++) {
+      const p = (k: number): V3 => [foot[0] + ((shoulder[0] - foot[0]) * k) / 7, foot[1] + ((shoulder[1] - foot[1]) * k) / 7, side * 0.06];
+      parts.push(taper(tube, tube, i % 2 ? 0xfdfdfd : 0xd81e3a, p(i), p(i + 1), 7));
+    }
+    // ...then the hook curls over and back in to the middle.
+    for (let i = 0; i < 6; i++) {
+      const p = (k: number): V3 => {
+        const a = (k / 6) * PI;
+        return [side * (0.33 + Math.cos(a) * 0.33), 1.5 + Math.sin(a) * 0.36, side * 0.06];
+      };
+      parts.push(taper(tube, tube, i % 2 ? 0xd81e3a : 0xfdfdfd, p(i), p(i + 1), 7));
+    }
+    parts.push(blob(tube, 0xd81e3a, { x: 0, y: 1.5, z: side * 0.06 }));
+    parts.push(blob(0.2, 0x3fb85a, { x: side * 0.24, y: 0.42, z: -0.2, sy: 0.7 }));
+  }
+  parts.push(blob(0.11, 0x2f9a48, { y: 0.42, z: -0.24 }));
+  return merge(parts);
+};
+
+/** Rock candy (Candy World): a thick stick with a big lump of chunky sugar crystals, as wide as a small tree. */
+export const rockCandyBig = () => {
+  const parts: Parts = [cyl(0.1, 0.1, 0.7, 0xe0b070, {}, 6), blob(0.5, 0xffc0dc, { y: 1.25, sy: 1.35 }, 1)];
+  const sugar = [0xff9ac8, 0x8ad0ff, 0xffc0dc, 0xb8e4ff, 0xd8a0ff];
+  for (let i = 0; i < 20; i++) {
+    const a = i * 2.4;
+    const k = i / 19;
+    const out = 0.2 + Math.sin(PI * k) * 0.32;
+    const s = 0.36 + (i % 3) * 0.08;
+    parts.push(box(s, s, s, sugar[i % 5], { x: Math.cos(a) * out, y: 0.5 + k * 1.2, z: Math.sin(a) * out, rx: i * 0.7, ry: i * 1.1 }));
+  }
+  parts.push(box(0.3, 0.3, 0.3, 0xffffff, { y: 1.75, ry: 0.6, rx: 0.5 }));
+  return merge(parts);
+};
