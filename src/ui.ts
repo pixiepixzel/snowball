@@ -215,7 +215,6 @@ export class UI {
     el('start-btn').addEventListener('click', () => this.onStart());
     el('again-btn').addEventListener('click', () => this.onRestart());
     el('shop-btn').addEventListener('click', () => this.onShop());
-    el('end-shop-btn').addEventListener('click', () => this.onShop());
     el('shop-close').addEventListener('click', () => this.shopScreen.classList.add('hidden'));
     this.shopList.addEventListener('click', (e) => {
       const button = (e.target as HTMLElement).closest('button[data-id]') as HTMLButtonElement | null;
