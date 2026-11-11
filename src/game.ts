@@ -1644,12 +1644,13 @@ export class Game {
       const next = def.milestones.find(([at]) => at > level);
       return {
         id: def.id,
-        name: def.name,
+        // The level you hold is in the name, so the bonus line can't be mistaken for it.
+        name: `${def.name} · level ${level}`,
         blurb: def.blurb,
         level,
         levels: UPGRADE_LEVELS,
         // What it adds up to so far, and the next new thing it will bring.
-        effect: `${level > 0 ? `${percent}% ${def.effect} · ` : ''}${next ? `Level ${next[0]}: ${next[1]}` : 'everything unlocked'}`,
+        effect: `${level > 0 ? `${percent}% ${def.effect} · ` : ''}${next ? `Bonus at level ${next[0]}: ${next[1]}` : 'every bonus unlocked'}`,
         cost,
         maxed,
         affordable: !maxed && this.save.coins >= cost,
