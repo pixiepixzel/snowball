@@ -1717,13 +1717,11 @@ h1 {
   position: absolute;
   left: 0;
   top: 0;
-  font-size: 26px;
   font-weight: 900;
   line-height: 1;
   white-space: nowrap;
   color: #17365c;
   text-shadow: none;
-  will-change: transform;
 }
 
 .post-label.gold {

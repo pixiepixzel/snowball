@@ -369,9 +369,13 @@ export class UI {
         return;
       }
       d.style.display = '';
-      // The writing is always set at one size and scaled to fit: changing the type size
-      // every frame makes the letters shiver.
-      d.style.transform = `translate(${label.x.toFixed(2)}px, ${label.y.toFixed(2)}px) translate(-50%, -50%) scale(${(label.size / 26).toFixed(3)})`;
+      // The type is set at the nearest whole size, so it is drawn sharp, and the last
+      // fraction is made up by scaling: changing the type size by fractions every frame
+      // makes the letters shiver, and scaling it a long way makes them fuzzy.
+      const type = Math.max(4, Math.round(label.size));
+      const typeText = `${type}px`;
+      if (d.style.fontSize !== typeText) d.style.fontSize = typeText;
+      d.style.transform = `translate(${label.x.toFixed(2)}px, ${label.y.toFixed(2)}px) translate(-50%, -50%) scale(${(label.size / type).toFixed(3)})`;
       if (d.textContent !== label.text) d.textContent = label.text;
       d.classList.toggle('gold', label.gold);
     });
