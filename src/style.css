@@ -1745,7 +1745,7 @@ h1 {
   margin-top: 0;
 }
 
-#mission-drawer {
+.mission-drawer {
   position: absolute;
   right: 0;
   top: 44%;
@@ -1757,11 +1757,11 @@ h1 {
   transition: transform 0.28s ease;
 }
 
-#mission-drawer.open {
+.mission-drawer.open {
   transform: none;
 }
 
-#mission-tab {
+.mission-tab {
   appearance: none;
   flex: none;
   width: 36px;
@@ -1779,7 +1779,7 @@ h1 {
   background: rgba(14, 29, 51, 0.72);
 }
 
-#mission-drawer .missions {
+.mission-drawer .missions {
   width: min(76vw, 290px);
   border-radius: 0 0 0 16px;
   background: rgba(14, 29, 51, 0.82);
@@ -2054,4 +2054,14 @@ h1 {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+/* The same missions drawer on the end screen, on the right-hand edge of the card. */
+#end .mission-drawer .missions {
+  background: rgba(14, 29, 51, 0.94);
+}
+
+/* The closed drawer sits off the right-hand edge: it must not make the screen scroll sideways. */
+#end {
+  overflow: hidden;
 }

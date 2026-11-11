@@ -66,8 +66,8 @@
             </div>
             <div id="rank" class="rank"><i>Level:</i><b id="rank-level">1</b><span id="rank-title"></span></div>
           </div>
-          <aside id="mission-drawer">
-            <button id="mission-tab" type="button">Missions</button>
+          <aside id="mission-drawer" class="mission-drawer">
+            <button id="mission-tab" class="mission-tab" type="button">Missions</button>
             <div class="missions" aria-label="Missions"></div>
           </aside>
           <div class="title-wrap">
@@ -100,8 +100,6 @@
               <div id="end-levelup" class="levelup" hidden></div>
               <button id="xp-double" class="xp-double" type="button" hidden></button>
             </div>
-            <h3>Missions</h3>
-            <div class="missions"></div>
             <h3>What's inside</h3>
             <div id="end-list" class="chips"></div>
             <div id="end-book" class="book-note" hidden></div>
@@ -111,6 +109,10 @@
               <span class="coins"><i></i><b id="end-total">0</b></span>
             </div>
           </div>
+          <aside id="end-mission-drawer" class="mission-drawer">
+            <button id="end-mission-tab" class="mission-tab" type="button">Missions</button>
+            <div class="missions" aria-label="Missions"></div>
+          </aside>
         </section>
 
         <section id="pause" class="screen hidden">

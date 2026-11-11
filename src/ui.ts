@@ -230,7 +230,7 @@ export class UI {
     el('book-next').addEventListener('click', () => this.onBookStep(1));
     el('book-close').addEventListener('click', () => this.bookScreen.classList.add('hidden'));
     // The missions drawer on the title screen: its tab slides it out and back.
-    el('mission-tab').addEventListener('click', () => el('mission-drawer').classList.toggle('open'));
+    for (const id of ['mission', 'end-mission']) el(`${id}-tab`).addEventListener('click', () => el(`${id}-drawer`).classList.toggle('open'));
     for (const tab of SHOP_TABS) el(`tab-${tab}`).addEventListener('click', () => this.setShopTab(tab));
     el('crate-open').addEventListener('click', () => this.onCrate());
     el('xp-double').addEventListener('click', () => this.onDoubleXp());
@@ -849,6 +849,7 @@ export class UI {
 
   showEnd(data: EndData): void {
     this.clearTransient();
+    el('end-mission-drawer').classList.remove('open');
     el('end-title').textContent = data.title;
     el('end-sub').textContent = data.subtitle;
     el('end-size').textContent = data.size;
