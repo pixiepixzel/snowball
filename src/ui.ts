@@ -393,23 +393,8 @@ export class UI {
   openBook(view: BookView): void {
     el('book-total').textContent = `${view.found} of ${view.total} found`;
     el('book-name').textContent = view.name;
-    // The page's reward is for the ordinary things; the rarer versions are a bonus.
-    const ordinary = view.items.filter((item) => !item.rarity);
-    const have = ordinary.filter((item) => item.count > 0).length;
-    const rarer = view.items.filter((item) => item.rarity);
-    const rareHave = rarer.filter((item) => item.count > 0).length;
-    const note = el('book-note');
-    note.textContent = '';
-    if (view.paid) {
-      note.textContent = `All ${ordinary.length} found! · ${rareHave}/${rarer.length} rarer`;
-    } else {
-      const coin = document.createElement('span');
-      coin.className = 'coins';
-      const amount = document.createElement('b');
-      amount.textContent = view.reward.toLocaleString('en-US');
-      coin.append(document.createElement('i'), amount);
-      note.append(document.createTextNode(`${have}/${ordinary.length} found · ${rareHave}/${rarer.length} rarer · all ${ordinary.length} pays `), coin);
-    }
+    // Under the page's name: how many of everything on it have been found, rarer versions included.
+    el('book-note').textContent = `${view.items.filter((item) => item.count > 0).length}/${view.items.length} found`;
     (el('book-prev') as HTMLButtonElement).disabled = !view.hasPrev;
     (el('book-next') as HTMLButtonElement).disabled = !view.hasNext;
     this.bookList.innerHTML = '';
