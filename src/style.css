@@ -2013,7 +2013,7 @@ h1 {
   align-items: center;
   gap: 7px;
   max-width: 100%;
-  padding: 3px 12px 3px 3px;
+  padding: 3px 12px 3px 11px;
   border-radius: 999px;
   background: rgba(16, 36, 64, 0.42);
   color: #fff;
@@ -2035,6 +2035,10 @@ h1 {
   font-weight: 900;
   color: var(--rank-ink);
   background: var(--rank);
+}
+
+.rank i {
+  font-style: normal;
 }
 
 .rank span {
