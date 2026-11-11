@@ -59,6 +59,17 @@ export interface BoostRow {
 }
 
 /** Words to lay over a distance post's board: where on screen, how big, and what. */
+/**
+ * Shrink a one-line readout's type so that it fits in `room` pixels. `wide` is how wide
+ * it is now, at its normal size.
+ */
+function fitLine(box: HTMLElement, room: number, wide: number): void {
+  box.style.fontSize = '';
+  if (room <= 0 || wide <= room) return;
+  const normal = parseFloat(getComputedStyle(box).fontSize);
+  box.style.fontSize = `${Math.max(14, Math.floor((normal * room) / wide))}px`;
+}
+
 export interface PostLabel {
   x: number;
   y: number;
@@ -654,7 +665,16 @@ export class UI {
     this.lastSize = both;
     this.sizeValue.textContent = text;
     this.sizeUnit.textContent = unit;
+    // A long unit ("million light years") would run off the screen: shrink the line to fit,
+    // leaving room for the pause button. Only worked out when the line's length changes.
+    const shape = `${text.length} ${unit}`;
+    if (shape !== this.lastSizeShape) {
+      this.lastSizeShape = shape;
+      fitLine(this.sizeBox, (this.sizeBox.parentElement?.clientWidth ?? 0) - 120, this.sizeBox.offsetWidth);
+    }
   }
+
+  private lastSizeShape = '';
 
   /** Name and colour of the thing chasing the ball in this world (avalanche, lava flow, black hole). */
   setChase(label: string, color: number): void {
@@ -855,6 +875,10 @@ export class UI {
     el('end-size').textContent = data.size;
     el('end-distance').textContent = `Rolled ${data.distance}`;
     el('end-unit').textContent = data.unit;
+    // Once the card is on screen, shrink the size line if it is too long for it.
+    const final = el('end-size').parentElement as HTMLElement;
+    final.style.fontSize = '';
+    requestAnimationFrame(() => fitLine(final, (final.parentElement?.clientWidth ?? 0) - 40, final.scrollWidth));
     this.setAvalanche(false, 0);
     const best = el('end-best');
     best.textContent = data.isBest ? 'New best!' : `Best ${data.best}`;

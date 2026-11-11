@@ -121,7 +121,7 @@ body {
 
 #size span {
   margin-left: 4px;
-  font-size: 24px;
+  font-size: 0.6em;
   letter-spacing: 0;
   opacity: 0.92;
 }
@@ -692,7 +692,7 @@ h1 {
 
 .final span {
   margin-left: 5px;
-  font-size: 28px;
+  font-size: 0.56em;
   letter-spacing: 0;
 }
 
