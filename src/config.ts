@@ -249,12 +249,36 @@ export const CONFIG = {
   // ---------------------------------------------------------------- Hazard: avalanche
   /** The avalanche starts this many seconds into the run... */
   AVALANCHE_DELAY: 8,
-  /** ...and rolls at this fraction of the ball's own cruising speed. Above ~0.9 is brutal. */
+  /**
+   * ...and rolls at this fraction of the ball's own cruising speed to begin with. It then
+   * gets faster by AVALANCHE_SPEED_GROWTH every second, up to AVALANCHE_SPEED_MAX: above 1
+   * it is faster than the ball can roll, so sooner or later it wins and the only way to
+   * hold it off is to keep pushing it back (walls, ramps and runs of absorbing, below).
+   */
   AVALANCHE_SPEED: 0.87,
+  AVALANCHE_SPEED_GROWTH: 0.001,
+  AVALANCHE_SPEED_MAX: 1.35,
+  /** Taking off from a ramp pushes it back this many ball radii. */
+  AVALANCHE_RAMP_PUSH: 3,
+  /** Absorbing things one after another: from this many in a row, each one pushes it back this many radii. */
+  AVALANCHE_COMBO_FROM: 6,
+  AVALANCHE_COMBO_PUSH: 0.12,
+  /**
+   * A close call: the danger (0 to 1) rose to CLOSE_CALL_AT and then fell back to
+   * CLOSE_CALL_CLEAR. It pays these coins (and XP_FOR.closeCall).
+   */
+  CLOSE_CALL_AT: 0.8,
+  CLOSE_CALL_CLEAR: 0.3,
+  CLOSE_CALL_COINS: 5,
+  /** Lumps of snow thrown past the ball from behind each second when the avalanche is right on it. */
+  AVALANCHE_DEBRIS_RATE: 45,
+  /** Above this danger the phone buzzes every this many seconds. */
+  AVALANCHE_BUZZ_AT: 0.7,
+  AVALANCHE_BUZZ_EVERY: 0.45,
   /** It never falls further behind than this many ball radii, so it is always a threat. */
   AVALANCHE_MAX_GAP_K: 27,
-  /** Smashing a wall pushes it back to at least this gap (radii). */
-  AVALANCHE_GATE_GAP_K: 24,
+  /** Smashing a wall pushes it back by this many ball radii. */
+  AVALANCHE_GATE_PUSH: 8,
   /** Below this gap (radii) the warning overlay, rumble and camera pull-back fade in. */
   AVALANCHE_WARN_K: 16,
   /**
@@ -697,7 +721,7 @@ export const CRATE_DUPLICATE_COINS: Record<string, number> = { rare: 200, superR
  *   slam      each ramp slam                secret    each secret object found
  *   superRare / mythic  each of those absorbed        mission   each mission completed
  */
-export const XP_FOR = { scene: 20, wall: 15, world: 100, doubling: 6, slam: 4, secret: 15, superRare: 5, mythic: 20, mission: 25 };
+export const XP_FOR = { scene: 20, wall: 15, world: 100, doubling: 6, slam: 4, secret: 15, superRare: 5, mythic: 20, mission: 25, closeCall: 15 };
 /** XP to reach level 2, and how much more each level needs than the one before. */
 export const LEVEL_XP_BASE = 350;
 export const LEVEL_XP_GROWTH = 1.14;

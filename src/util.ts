@@ -56,7 +56,8 @@ export function sizeParts(radius: number): [string, string] {
     d = metres / size;
   }
   // Past the last unit the number just keeps growing; show it as a power of ten.
-  const text = d < 10 ? d.toFixed(2) : d < 100 ? d.toFixed(1) : d < 1e7 ? Math.round(d).toLocaleString('en-US') : `10^${Math.floor(Math.log10(d))}`;
+  // Decimals only while they mean something: two under 1, one under 10, none from 10 up.
+  const text = d < 1 ? d.toFixed(2) : d < 10 ? d.toFixed(1) : d < 1e7 ? Math.round(d).toLocaleString('en-US') : `10^${Math.floor(Math.log10(d))}`;
   return [text, unit];
 }
 

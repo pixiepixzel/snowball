@@ -208,6 +208,7 @@ export class UI {
   private avalancheBox = el('avalanche');
   private avalancheFill = el('avalanche-fill');
   private whiteout = el('whiteout');
+  private frost = el('frost');
   private avalancheOn = false;
   private lastThreat = -1;
 
@@ -660,6 +661,7 @@ export class UI {
     el('avalanche-label').textContent = label;
     const rgb = `${(color >> 16) & 255} ${(color >> 8) & 255} ${color & 255}`;
     this.whiteout.style.setProperty('--chase', rgb);
+    this.frost.style.setProperty('--chase', rgb);
   }
 
   /**
@@ -678,6 +680,8 @@ export class UI {
     this.avalancheBox.classList.toggle('close', level > 55);
     // The white-out only starts once it is properly close.
     this.whiteout.style.opacity = `${Math.max(0, (level - 50) / 50) * 0.9}`;
+    // Before that, it creeps in round the edges of the screen.
+    this.frost.style.opacity = `${Math.min(1, Math.max(0, (level - 15) / 55))}`;
   }
 
   /** Little bump on the size readout when something big is absorbed. */

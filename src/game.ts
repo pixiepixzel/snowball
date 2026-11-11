@@ -182,6 +182,10 @@ export class Game {
   private lastCrate: CrateResult | null = null;
   private cratesOpened = 0;
   private threat = 0;
+  /** The avalanche's buzz timer, and whether it has come close enough for a close call (and how many so far). */
+  private buzzClock = 0;
+  private closeArmed = false;
+  private closeCalls = 0;
   private pixelRatio = 1;
   private shadowsOn = false;
   private qualityLocked = false;
@@ -431,6 +435,9 @@ export class Game {
     this.avalancheOn = false;
     this.avalancheGap = CONFIG.AVALANCHE_MAX_GAP_K;
     this.avalancheD = 0;
+    this.buzzClock = 0;
+    this.closeArmed = false;
+    this.closeCalls = 0;
     this.hopeless = 0;
     this.surging = false;
     this.threat = 0;
@@ -658,6 +665,7 @@ export class Game {
     this.effects.update(dt, ball);
     this.rig.threat = this.state === 'playing' ? this.threat : 0;
     this.rig.update(realDt, ball, this.state !== 'title');
+    if (this.state === 'playing' && this.avalancheOn) this.effects.avalancheDebris(realDt, ball, this.threat, laneHalfWidth(ball.d));
     this.effects.updateAvalanche(this.avalancheOn && this.state !== 'ended', this.avalancheD, laneHalfWidth(ball.d), this.rig.camR, this.time, this.rig.eyeD);
     this.env.update(this.rig.camera, this.rig.camR, ball.x, ball.d);
     this.effects.updateSnowfall(realDt, this.rig.camera, this.rig.camR, Math.max(0, ball.speed) * scale, ball.wind * scale);
@@ -767,7 +775,9 @@ export class Game {
         this.rig.shake(0.8);
       }
     } else {
-      this.avalancheGap += ((ball.speed - C.AVALANCHE_SPEED * cruise) * dt) / ball.r;
+      // It gets faster the longer the run lasts.
+      const chase = Math.min(C.AVALANCHE_SPEED_MAX, C.AVALANCHE_SPEED + C.AVALANCHE_SPEED_GROWTH * (this.stats.time - C.AVALANCHE_DELAY));
+      this.avalancheGap += ((ball.speed - chase * cruise) * dt) / ball.r;
       // Shrunk past the point of no return: don't leave the player stranded among things
       // far too big to absorb. The avalanche comes for them.
       if (ball.r < designRadius(ball.d) * C.HOPELESS_BELOW) {
@@ -788,6 +798,23 @@ export class Game {
       const gap = this.avalancheGap;
       this.threat = clamp(1 - (gap - 1.5) / (C.AVALANCHE_WARN_K - 1.5), 0, 1);
       if (this.threat > 0.6) this.rig.shake(0.12 + 0.3 * (this.threat - 0.6));
+      // Right on the ball's heels the phone buzzes like a heartbeat.
+      if (this.threat > C.AVALANCHE_BUZZ_AT) {
+        this.buzzClock -= realDt;
+        if (this.buzzClock <= 0) {
+          this.buzzClock = C.AVALANCHE_BUZZ_EVERY;
+          this.vibrate(22);
+        }
+      }
+      // Nearly caught, then away again: a close call.
+      if (this.threat >= C.CLOSE_CALL_AT) this.closeArmed = true;
+      else if (this.closeArmed && this.threat <= C.CLOSE_CALL_CLEAR) {
+        this.closeArmed = false;
+        this.closeCalls++;
+        this.runCoins += C.CLOSE_CALL_COINS;
+        this.floatAtBall(`CLOSE CALL! +${C.CLOSE_CALL_COINS} COINS`, true);
+        this.audio.chime();
+      }
       if (gap < 0.6) {
         this.die('buried');
         return;
@@ -906,6 +933,7 @@ export class Game {
     this.tally.absorb++;
     this.combo = this.comboTimer > 0 ? this.combo + 1 : 0;
     this.comboTimer = C.COMBO_WINDOW;
+    if (this.combo >= C.AVALANCHE_COMBO_FROM) this.pushAvalanche(C.AVALANCHE_COMBO_PUSH);
 
     // Pop: the ball swells for a moment, more for bigger mouthfuls.
     ball.popVel += C.POP_BASE + C.POP_PER_Q * Math.min(q, 0.8);
@@ -1081,7 +1109,7 @@ export class Game {
       // The last wall of a world gets named: "DAM BUSTED!", "LAVA WALL BUSTED!"...
       this.floatAtBall(dam ? `${this.stage.gateName.toUpperCase()} BUSTED!` : 'SMASH!', true);
       // Breaking through buys some breathing room from the avalanche.
-      if (this.avalancheOn) this.avalancheGap = Math.max(this.avalancheGap, C.AVALANCHE_GATE_GAP_K);
+      this.pushAvalanche(C.AVALANCHE_GATE_PUSH);
     } else {
       // Too small: the wall holds and the run ends here.
       this.state = 'finishing';
@@ -1124,10 +1152,17 @@ export class Game {
     }
   }
 
+  /** Push the avalanche back by so many ball radii (never further than it is allowed to fall behind). */
+  private pushAvalanche(radii: number): void {
+    if (!this.avalancheOn || this.surging) return;
+    this.avalancheGap = Math.min(CONFIG.AVALANCHE_MAX_GAP_K, this.avalancheGap + radii);
+  }
+
   /** Rolled onto a ramp: up we go. */
   private onRamp(): void {
     if (this.state !== 'playing') return;
     if (this.ball.jump(CONFIG.RAMP_HEIGHT_K, true)) {
+      this.pushAvalanche(CONFIG.AVALANCHE_RAMP_PUSH);
       this.audio.jump(true);
       this.rig.kick(5);
     }
@@ -1379,7 +1414,8 @@ export class Game {
       XP_FOR.secret * this.tally.secrets +
       XP_FOR.superRare * superRare +
       XP_FOR.mythic * mythic +
-      XP_FOR.mission * this.runMissions;
+      XP_FOR.mission * this.runMissions +
+      XP_FOR.closeCall * this.closeCalls;
     const { before, after, chest, unlocked } = this.addXp(gained);
     this.lastGained = gained;
     this.xpDoubled = false;

@@ -43,6 +43,7 @@ export class Effects {
   private stretch = new Float32Array(this.n);
   private cursor = 0;
   private sprayAcc = 0;
+  private debrisAcc = 0;
   private lineAcc = 0;
   private windAcc = 0;
 
@@ -316,6 +317,7 @@ export class Effects {
     this.trailCount = 0;
     this.trail.geometry.setDrawRange(0, 0);
     this.sprayAcc = 0;
+    this.debrisAcc = 0;
     this.lineAcc = 0;
     this.avalanche.visible = false;
   }
@@ -383,6 +385,32 @@ export class Effects {
         r * (0.04 + Math.random() * 0.05),
         0.5 + Math.random() * 0.5,
         0,
+      );
+    }
+  }
+
+  /**
+   * The avalanche breathing down the ball's neck: lumps thrown forward from behind, past
+   * the ball and on down the slope. `threat` is 0 (far back) to 1 (about to bury it).
+   */
+  avalancheDebris(dt: number, ball: Ball, threat: number, halfWidth: number): void {
+    if (threat < 0.2 || !ball.mesh.visible) return;
+    const r = ball.r;
+    this.debrisAcc += CONFIG.AVALANCHE_DEBRIS_RATE * threat * threat * dt;
+    while (this.debrisAcc >= 1) {
+      this.debrisAcc -= 1;
+      const d = ball.d - r * (5 + Math.random() * 7);
+      const fast = Math.max(ball.speed, ball.cruiseSpeed() * 0.6) * (1.5 + Math.random() * 0.9);
+      this.emit(
+        ball.x + (Math.random() - 0.5) * Math.min(halfWidth * 2, r * 22),
+        groundY(d) + r * (0.3 + Math.random() * 3.5),
+        -d,
+        (Math.random() - 0.5) * r * 3,
+        r * (1 + Math.random() * 4) - fast * CONFIG.SLOPE,
+        -fast,
+        r * (0.12 + Math.random() * 0.3),
+        0.8 + Math.random() * 0.7,
+        r * 10,
       );
     }
   }
