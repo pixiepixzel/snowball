@@ -31,7 +31,8 @@ jobs:
           python-version: "3.13"
       # Writes source/game.js and source/index.html, the two files the game is made of.
       - run: python -X utf8 source/build.py
-      - run: mkdir site && cp source/game.js source/index.html site/
+      # pages/ holds extra pages for the site, such as the privacy policy.
+      - run: mkdir site && cp source/game.js source/index.html pages/* site/
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
