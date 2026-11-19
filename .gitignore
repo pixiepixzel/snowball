@@ -1,6 +1,12 @@
+# Written by source/build.py
+source/game.js
+source/index.html
+# The folder the deploy step publishes (made from the two files above)
+site
 node_modules
 dist
 artifact
 *.local
 .claude/settings.local.json
 .DS_Store
+__pycache__

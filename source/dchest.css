@@ -1,0 +1,18 @@
+#dc-tag{position:absolute;z-index:2;transform:translate(-50%,0);display:flex;align-items:center;gap:5px;padding:3px 8px 4px;border:0;border-radius:999px;background:#fffffff2;color:#17365c;font:inherit;cursor:pointer;white-space:nowrap;box-shadow:0 3px 0 #b8c8dc,0 4px 10px #0b1a3340}
+#dc-tag:after{content:"";position:absolute;left:50%;top:-6px;margin-left:-6px;border:6px solid transparent;border-top:0;border-bottom-color:#fffffff2}
+#dc-tag i{width:30px;height:30px;background:center/contain no-repeat;filter:drop-shadow(0 1px 1px #0004)}
+#dc-tag span{display:flex;flex-direction:column;align-items:center;line-height:1.05;text-align:center;gap:2px}
+#dc-tag b{font-size:11px;font-weight:900}
+#dc-tag small{font-size:9.5px;font-weight:900;color:#2f78d8;font-variant-numeric:tabular-nums}
+#dc-tag em{display:block;width:72px;height:4px;height:5px;border-radius:3px;background:#dbe6f4;overflow:hidden}
+#dc-tag u{display:block;height:100%;width:0;background:linear-gradient(90deg,#5ac8ff,#2f78ff);border-radius:3px}
+#dc-tag.ready{background:linear-gradient(#5ac8ff,#2f78ff);color:#fff;box-shadow:0 3px 0 #1f56c0,0 0 16px #5ac8ffcc;animation:dcpulse 1s ease-in-out infinite}
+#dc-tag.ready:after{border-bottom-color:#5ac8ff}
+#dc-tag.ready small{color:#fff}
+#dc-tag.ready em{display:none}
+@keyframes dcpulse{50%{transform:translate(-50%,0) scale(1.08)}}
+.dc-fly{position:absolute;left:0;top:0;z-index:3;width:12px;height:12px;margin:-6px 0 0 -6px;border-radius:50%;background:radial-gradient(circle,#fff 0 30%,#8fe0ff 55%,#2f8cff00 72%);pointer-events:none;box-shadow:0 0 10px #8fe0ff}
+.dc-fly.dc-burst{width:16px;height:16px;margin:-8px 0 0 -8px;background:radial-gradient(circle,#fff 0 30%,#ffe066 55%,#ffb00000 72%);box-shadow:0 0 12px #ffe066}
+.dc-plus{position:absolute;left:0;top:0;z-index:3;pointer-events:none;font-size:26px;font-weight:900;color:#fff;white-space:nowrap;-webkit-text-stroke:1.5px #1f56c0;paint-order:stroke;text-shadow:0 3px 0 #1f56c0,0 0 14px #5ac8ff}
+#dc-tag.ready small{font-size:11px}
+#end-mission-drawer{display:none!important}

@@ -22,16 +22,20 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      # build.py runs `node --check` on the game it writes.
       - uses: actions/setup-node@v4
         with:
           node-version: 24
-          cache: npm
-      - run: npm ci
-      - run: npm run build
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      # Writes source/game.js and source/index.html, the two files the game is made of.
+      - run: python -X utf8 source/build.py
+      - run: mkdir site && cp source/game.js source/index.html site/
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: dist
+          path: site
 
   deploy:
     needs: build

@@ -1,0 +1,41 @@
+#cs-ov{position:fixed;inset:0;z-index:5000;display:flex;align-items:center;justify-content:center;background:radial-gradient(80% 60% at 50% 45%,#1d3a78ee,#081226f5);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);animation:csin .25s ease-out;color:#fff;font-family:inherit}
+@keyframes csin{from{opacity:0}}
+.cs-box{width:100%;max-width:520px;display:flex;flex-direction:column;align-items:center;gap:14px;padding:0 0 10px}
+.cs-hd{display:flex;align-items:center;gap:8px}
+.cs-hd i{width:44px;height:44px;background:center/contain no-repeat;filter:drop-shadow(0 2px 3px #0008);animation:csshake .5s ease-in-out infinite}
+@keyframes csshake{25%{transform:rotate(-6deg)}75%{transform:rotate(6deg)}}
+#cs-ov.done .cs-hd i{animation:none}
+.cs-hd b{font-size:22px;font-weight:900;color:#ffe066;text-shadow:0 2px 0 #a86a00,0 4px 10px #0007;text-transform:uppercase;letter-spacing:1px}
+.cs-reel{position:relative;width:100%;height:150px;overflow:hidden;background:linear-gradient(#0b1a3acc,#14284ecc);box-shadow:inset 0 0 0 2px #ffffff22,inset 0 10px 20px #0008,inset 0 -10px 20px #0008}
+.cs-reel:before,.cs-reel:after{content:"";position:absolute;top:0;bottom:0;width:60px;z-index:2;pointer-events:none}
+.cs-reel:before{left:0;background:linear-gradient(90deg,#081226,#08122600)}
+.cs-reel:after{right:0;background:linear-gradient(-90deg,#081226,#08122600)}
+.cs-strip{position:absolute;left:0;top:13px;display:flex;gap:6px;padding-left:3px;will-change:transform}
+.cs-t{flex:none;width:98px;height:124px;border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding:0 4px 7px;box-sizing:border-box;background:linear-gradient(#2a3e66,#1a2a4a);box-shadow:inset 0 -5px 0 var(--rc),inset 0 0 0 1.5px #ffffff1c;overflow:hidden;position:relative}
+.cs-t:before{content:"";position:absolute;inset:auto 0 0 0;height:60%;background:linear-gradient(transparent,color-mix(in srgb,var(--rc) 45%,transparent))}
+.cs-ti{position:relative;flex:1;width:100%;display:grid;place-items:center}
+.cs-ti i{width:70px;height:62px;background:center/contain no-repeat;filter:drop-shadow(0 3px 3px #0008)}
+.cs-ti em{font-style:normal;font-size:36px}
+.cs-t b{position:relative;font-size:10.5px;font-weight:900;line-height:1.1;text-align:center;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cs-t small{position:relative;font-size:9px;font-weight:900;color:var(--rc);filter:brightness(1.4);text-transform:uppercase;letter-spacing:.3px}
+.cs-t.win{animation:cswin .6s ease-out forwards;box-shadow:inset 0 -5px 0 var(--rc),0 0 0 3px #ffe066,0 0 26px var(--rc)}
+@keyframes cswin{40%{transform:scale(1.12)}100%{transform:scale(1.06)}}
+.cs-mk{position:absolute;left:50%;top:0;bottom:0;width:3px;margin-left:-1.5px;background:#ffe066;box-shadow:0 0 10px #ffe066;z-index:3}
+.cs-mk:before,.cs-mk:after{content:"";position:absolute;left:50%;margin-left:-9px;border:9px solid transparent}
+.cs-mk:before{top:0;border-top-color:#ffe066}
+.cs-mk:after{bottom:0;border-bottom-color:#ffe066}
+.cs-rv{min-height:150px;width:100%;max-width:380px;padding:0 16px;box-sizing:border-box;display:flex;flex-direction:column;gap:10px}
+.cs-wc{display:flex;align-items:center;gap:12px;padding:12px;border-radius:20px;background:linear-gradient(135deg,color-mix(in srgb,var(--rc) 55%,#14284e),#14284e);box-shadow:0 0 0 2px var(--rc),0 0 30px color-mix(in srgb,var(--rc) 60%,transparent);animation:cspop .4s cubic-bezier(.2,1.5,.4,1)}
+@keyframes cspop{from{transform:scale(.6);opacity:0}}
+.cs-wi{flex:none;width:76px;height:76px;border-radius:16px;background:#ffffff1c;display:grid;place-items:center}
+.cs-wi i{width:66px;height:66px;background:center/contain no-repeat}
+.cs-wi em{font-style:normal;font-size:40px}
+.cs-wt{display:flex;flex-direction:column;gap:2px;min-width:0}
+.cs-wt span{font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.5px;color:var(--rc);filter:brightness(1.5)}
+.cs-wt b{font-size:18px;font-weight:900;line-height:1.15}
+.cs-ok{width:100%!important;max-width:none!important;margin:0!important;align-self:stretch;box-sizing:border-box}
+.cs-hint{font-size:12px;font-weight:800;opacity:.6}
+#cs-ov.done .cs-hint{display:none}
+.chest-odds{display:flex;flex-wrap:wrap;gap:2px 8px;margin-top:3px}
+.chest-odds span{display:inline-flex;align-items:center;gap:3px;font-size:10.5px;font-weight:900;color:#3a4a62}
+.chest-odds i{width:7px;height:7px;border-radius:50%;background:var(--g);box-shadow:0 0 0 1px #0002}

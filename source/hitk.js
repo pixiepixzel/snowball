@@ -1,0 +1,1 @@
+var HK={ref:.74,cap:.95,ramp:.25,hold:2.2,fade:1.8};function HITK(g,l){if(ENDL||DTW)return 1;let r=.74+.014*Math.min(Math.max(l,0),29),c=Math.min(1,HK.cap/r),k=Math.min(c,HK.ref/r),s=g.stats&&g.stats.time||0,t=s-(g.hitAt??-99);if(t<0||t>HK.hold+HK.fade)return c;let u=t<HK.ramp?t/HK.ramp:t<HK.hold?1:1-(t-HK.hold)/HK.fade;u=u*u*(3-2*u);return c-(c-k)*u}

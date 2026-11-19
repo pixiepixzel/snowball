@@ -1,0 +1,1 @@
+function PRN(W){let N=W.runN|0;if(W.poolList.length<120)return;for(let i=W.poolList.length-1;i>=0;i--){let p=W.poolList[i];if(N-(p.lr|0)>3&&p.live===0){W.scene.remove(p.mesh);try{p.mesh.geometry.dispose(),p.mesh.dispose&&p.mesh.dispose()}catch(e){}W.poolList.splice(i,1);p.did!=null&&W.pools.get(p.did)===p&&W.pools.delete(p.did)}}}

@@ -1,0 +1,39 @@
+#shop[data-mode=shop] #tab-trails,#shop[data-mode=shop] #tab-smash,#shop[data-mode=shop] #tab-names{display:none}
+#shop[data-mode=equip] .tabs{gap:2px;width:100%;box-sizing:border-box}
+#shop[data-mode=equip] .tabs .tab{flex:1;padding:6px 2px;font-size:12.5px;min-width:0}
+#style-list{touch-action:pan-y;grid-template-columns:repeat(3,1fr);gap:8px;width:100%;margin:14px 0 18px;display:grid;overflow-y:auto;align-content:start}
+#style-list[hidden]{display:none}
+.st-hd{grid-column:1/-1;display:flex;flex-direction:column;gap:1px;padding:6px 4px 0;text-align:left}
+.st-hd:first-child{padding-top:0}
+.st-hd b{font-size:15px;font-weight:900;color:var(--ink)}
+.st-hd span{font-size:11.5px;font-weight:700;color:#6b7c95}
+.st-ic{width:58px;height:54px;display:grid;place-items:center}
+.st-nsic{width:100%;height:54px;padding:0 4px;box-sizing:border-box}
+.st-nsic span{display:block;width:100%;max-width:100%;overflow:hidden;text-overflow:clip;white-space:nowrap;font-size:13px;padding:6px 5px;line-height:15px;text-align:center;border-radius:10px;background:#24324e;box-sizing:border-box}
+.ns-t{font-weight:900}
+.ns-t.ns-none{color:#fff}
+.ns-gold{background:linear-gradient(180deg,#ffe066,#e09a00);-webkit-background-clip:text;background-clip:text;color:transparent!important}
+.ns-ice{background:linear-gradient(180deg,#9ff0ff,#3a9aff);-webkit-background-clip:text;background-clip:text;color:transparent!important}
+.ns-fire{background:linear-gradient(180deg,#ffd23a,#ff4a1e);-webkit-background-clip:text;background-clip:text;color:transparent!important}
+.ns-candy{background:repeating-linear-gradient(120deg,#ff4f9a 0 5px,#ffb0d6 5px 10px);-webkit-background-clip:text;background-clip:text;color:transparent!important}
+.ns-neon{color:#4affb8!important;text-shadow:0 0 4px #2affa0,0 0 9px #00d08a}
+.ns-rainbow{background:linear-gradient(90deg,#ff4a4a,#ffb21a,#ffe03a,#3ad86a,#3a9aff,#9a5aff,#ff4a4a);background-size:200% 100%;-webkit-background-clip:text;background-clip:text;color:transparent!important;animation:nsrb 3s linear infinite}
+.ns-royal{background:linear-gradient(180deg,#fff2a0,#ffc21a 55%,#d08a00);-webkit-background-clip:text;background-clip:text;color:transparent!important}
+.ns-royal::before{content:"♛ "}
+@keyframes nsrb{to{background-position:200% 0}}
+#rank-title.ns-t{display:inline-block}
+.tn-row.me.nsr-gold{background:linear-gradient(90deg,#4a3206,#6a4a0e);color:#fff;box-shadow:0 0 0 2.5px #ffc21a,0 4px 0 #0005}
+.tn-row.me.nsr-ice{background:linear-gradient(90deg,#1e3a66,#24508a);color:#fff;box-shadow:0 0 0 2.5px #7fe0ff,0 4px 0 #0005}
+.tn-row.me.nsr-fire{background:linear-gradient(90deg,#4a1a10,#7a2a14);color:#fff;box-shadow:0 0 0 2.5px #ff8a3a,0 4px 0 #0005}
+.tn-row.me.nsr-candy{background:linear-gradient(90deg,#4a1838,#6a2050);color:#fff;box-shadow:0 0 0 2.5px #ff7ab0,0 4px 0 #0005}
+.tn-row.me.nsr-neon{background:linear-gradient(90deg,#10162a,#1c1238);color:#fff;box-shadow:0 0 0 2.5px #4affb8,0 0 12px #2affa088,0 4px 0 #0005}
+.tn-row.me.nsr-rainbow{background:linear-gradient(90deg,#26204a,#1a2a4a);color:#fff;box-shadow:0 0 0 2.5px #c85aff,0 4px 0 #0005}
+.tn-row.me.nsr-royal{background:linear-gradient(90deg,#4a1e86,#2e1260);color:#fff;box-shadow:0 0 0 2.5px #ffc21a,0 0 14px #ffc21a66,0 4px 0 #0005}
+.tn-row.me.nsr-gold .tn-rw,.tn-row.me.nsr-candy .tn-rw,.tn-row.me.nsr-ice .tn-rw,.tn-row.me.nsr-fire .tn-rw,.tn-row.me.nsr-neon .tn-rw,.tn-row.me.nsr-rainbow .tn-rw,.tn-row.me.nsr-royal .tn-rw{color:#ffd23a}
+.gear-rr{white-space:nowrap;margin-top:6px;align-self:flex-start;display:inline-flex;align-items:center;gap:6px;border:0;font:inherit;font-size:12px;font-weight:900;color:#5a2a9a;background:#f0e6ff;padding:5px 10px;border-radius:999px;box-shadow:0 2px 0 #cdb8ee;cursor:pointer}
+.gear-rr:active{transform:translateY(1px);box-shadow:0 1px 0 #cdb8ee}
+.gear-rr:disabled{opacity:.5;cursor:default}
+.rr-c{display:inline-flex;align-items:center;gap:3px;color:#5a3600;background:linear-gradient(#ffe07a,#ffc22e);padding:1px 7px;border-radius:999px}
+.rr-c i{width:.85em;height:.85em;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff3b0,#ffc92e 55%,#d9920a);box-shadow:inset 0 0 0 1px #8c54008c}
+.gear-perk.rr-new{animation:rrnew 1.1s ease-out}
+@keyframes rrnew{0%{background:#ffe680;transform:scale(1.06)}100%{background:transparent;transform:none}}
